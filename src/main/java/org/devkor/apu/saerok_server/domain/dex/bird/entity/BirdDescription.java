@@ -14,12 +14,4 @@ public class BirdDescription {
 
     @Column(name = "description_is_ai_generated")
     private Boolean isAiGenerated;
-
-    protected BirdDescription() { }
-
-    public BirdDescription(String description, String source, Boolean isAiGenerated) {
-        this.description = description;
-        this.source = source;
-        this.isAiGenerated = isAiGenerated;
-    }
 }

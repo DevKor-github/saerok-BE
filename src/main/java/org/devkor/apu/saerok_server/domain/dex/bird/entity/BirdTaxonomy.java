@@ -41,21 +41,4 @@ public class BirdTaxonomy {
 
     @Column(name = "species_kor", nullable = false)
     private String speciesKor;
-
-    protected BirdTaxonomy() { }
-
-    public BirdTaxonomy(String phylumEng, String phylumKor, String classEng, String classKor, String orderEng, String orderKor, String familyEng, String familyKor, String genusEng, String genusKor, String speciesEng, String speciesKor) {
-        this.phylumEng = phylumEng;
-        this.phylumKor = phylumKor;
-        this.classEng = classEng;
-        this.classKor = classKor;
-        this.orderEng = orderEng;
-        this.orderKor = orderKor;
-        this.familyEng = familyEng;
-        this.familyKor = familyKor;
-        this.genusEng = genusEng;
-        this.genusKor = genusKor;
-        this.speciesEng = speciesEng;
-        this.speciesKor = speciesKor;
-    }
 }

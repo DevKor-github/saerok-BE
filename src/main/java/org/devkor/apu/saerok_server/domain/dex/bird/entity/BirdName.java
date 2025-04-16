@@ -17,13 +17,4 @@ public class BirdName {
 
     @Column(name = "scientific_year")
     private Integer scientificYear;
-
-    protected BirdName() { }
-
-    public BirdName(String koreanName, String scientificName, String scientificAuthor, Integer scientificYear) {
-        this.koreanName = koreanName;
-        this.scientificName = scientificName;
-        this.scientificAuthor = scientificAuthor;
-        this.scientificYear = scientificYear;
-    }
 }
