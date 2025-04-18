@@ -13,3 +13,8 @@ spring:
 
   profiles:
     active: local
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
