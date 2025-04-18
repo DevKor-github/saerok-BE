@@ -3,10 +3,11 @@ package org.devkor.apu.saerok_server.domain.user.auth.entity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.entity.CreatedAtOnly;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(
@@ -30,10 +31,7 @@ public class SocialAuth extends CreatedAtOnly {
     private String providerUserId;
 
     @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
-
-    public void setLastLoginAt(LocalDateTime lastLoginAt) {
-        this.lastLoginAt = lastLoginAt;
-    }
+    @Setter
+    private OffsetDateTime lastLoginAt;
 
 }

@@ -5,25 +5,25 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @MappedSuperclass
 public abstract class Auditable {
 
     @Column(name = "created_at", updatable = false)
-    protected LocalDateTime createdAt;
+    protected OffsetDateTime createdAt;
 
     @Column(name = "updated_at")
-    protected LocalDateTime updatedAt;
+    protected OffsetDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = OffsetDateTime.now();
         updatedAt = createdAt;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = OffsetDateTime.now();
     }
 }
