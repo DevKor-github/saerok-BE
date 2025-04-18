@@ -29,4 +29,11 @@ public class SocialAuth extends CreatedAtOnly {
     @Column(name = "provider_user_id", nullable = false)
     private String providerUserId;
 
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
+    public void setLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
+    }
+
 }
