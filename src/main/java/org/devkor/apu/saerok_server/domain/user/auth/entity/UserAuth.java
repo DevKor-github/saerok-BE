@@ -3,10 +3,11 @@ package org.devkor.apu.saerok_server.domain.user.auth.entity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.entity.Auditable;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,9 +28,6 @@ public class UserAuth extends Auditable {
     private String password;
 
     @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
-
-    public void setLastLoginAt(LocalDateTime lastLoginAt) {
-        this.lastLoginAt = lastLoginAt;
-    }
+    @Setter
+    private OffsetDateTime lastLoginAt;
 }
