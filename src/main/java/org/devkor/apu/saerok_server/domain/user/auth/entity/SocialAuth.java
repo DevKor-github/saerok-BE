@@ -4,15 +4,16 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
-import org.devkor.apu.saerok_server.global.entity.Auditable;
+import org.devkor.apu.saerok_server.global.entity.CreatedAtOnly;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "social_auth",
         uniqueConstraints = @UniqueConstraint(columnNames = {"provider", "provider_user_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SocialAuth extends Auditable {
+public class SocialAuth extends CreatedAtOnly {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -22,7 +23,7 @@ public class SocialAuth extends Auditable {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "provider", nullable = false)
     private String provider;
 
     @Column(name = "provider_user_id", nullable = false)

@@ -9,7 +9,6 @@ import org.devkor.apu.saerok_server.global.entity.Auditable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_auth")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserAuth extends Auditable {
 
@@ -24,13 +23,13 @@ public class UserAuth extends Auditable {
     @Column(name = "login_id", nullable = false, unique = true)
     private String loginId;
 
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
-    public void updateLastLoginAt(LocalDateTime lastLoginAt) {
+    public void setLastLoginAt(LocalDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
     }
 }

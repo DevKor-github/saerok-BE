@@ -5,16 +5,15 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
-import org.devkor.apu.saerok_server.global.entity.Auditable;
+import org.devkor.apu.saerok_server.global.entity.CreatedAtOnly;
 
 @Entity
 @Table(
-        name = "user_bird_bookmark",
         uniqueConstraints = @UniqueConstraint(
                 columnNames = {"user_id", "bird_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserBirdBookmark extends Auditable {
+public class UserBirdBookmark extends CreatedAtOnly {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
