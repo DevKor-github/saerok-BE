@@ -60,7 +60,7 @@ jobs:
             echo ">>> 선택된 JAR: $JAR_NAME"
             
             # 기존 프로세스 종료
-            pkill -f 'java -jar' || true
+            pkill -f "$JAR_NAME" || true
             
             # 백그라운드 실행
             DB_URL="${{ secrets.DB_URL }}" \
