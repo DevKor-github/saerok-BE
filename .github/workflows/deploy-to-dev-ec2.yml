@@ -37,6 +37,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           source: build/libs/*.jar
           target: ~/saerok/
+          strip_components: '2'
 
       - name: Restart application on EC2
         uses: appleboy/ssh-action@v1
