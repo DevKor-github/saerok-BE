@@ -47,12 +47,31 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           debug: true
           script: |
-            set -e
-            pkill -f 'java -jar' || true
-            mkdir -p ~/saerok
-            cd ~/saerok
-            JAR_NAME=$(ls *.jar | tail -n 1)
-            DB_URL="${{ secrets.DB_URL }}" \
-            DB_USERNAME="${{ secrets.DB_USERNAME }}" \
-            DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-            nohup java -jar $JAR_NAME --spring.profiles.active=dev > app.log 2>&1 &
+            script: |
+              set -euxo pipefail
+        
+              echo ">>> 현재 디렉터리:"
+              pwd
+        
+              echo ">>> 파일 목록:"
+              ls -al
+        
+              echo ">>> ls *.jar 결과:"
+              ls *.jar || true
+        
+              cd ~/saerok
+        
+              echo ">>> 이동 후 파일 목록:"
+              ls -al
+        
+              echo ">>> saerok 내부 ls *.jar:"
+              ls *.jar || true
+        
+              JAR_NAME=$(ls -1t *.jar | head -n 1)
+              echo ">>> 선택된 JAR_NAME: $JAR_NAME"
+        
+              pkill -f 'java -jar' || true
+              DB_URL="${{ secrets.DB_URL }}" \
+              DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+              DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              nohup java -jar $JAR_NAME --spring.profiles.active=dev > app.log 2>&1 &
