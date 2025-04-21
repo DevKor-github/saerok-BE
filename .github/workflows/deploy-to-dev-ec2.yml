@@ -45,6 +45,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          debug: true
           script: |
             set -e
             pkill -f 'java -jar' || true
