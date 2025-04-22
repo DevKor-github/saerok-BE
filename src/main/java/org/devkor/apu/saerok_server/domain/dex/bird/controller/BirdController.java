@@ -101,6 +101,9 @@ public class BirdController {
 
         @Schema(description = "조류 설명", example = "전국 어디서나 흔하게 관찰되는 텃새입니다.")
         public String description;
+
+        @Schema(description = "조류 이미지 URL 목록", example = "[\"~~~.jpg\", \"~~~.png\"]")
+        public List<String> imageUrls;
     }
 
     @Schema(description = "분류학적 정보")
