@@ -18,3 +18,5 @@ spring:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 0
+
+api_prefix: /api/v1
