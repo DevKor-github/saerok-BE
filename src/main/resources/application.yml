@@ -19,4 +19,7 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
 
+  config:
+    import: "classpath:config/size_category_rules.yml"
+
 api_prefix: /api/v1
