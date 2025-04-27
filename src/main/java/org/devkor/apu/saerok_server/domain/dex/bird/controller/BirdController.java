@@ -7,11 +7,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.devkor.apu.saerok_server.domain.dex.bird.dto.api.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Tag(name = "Birds API", description = "도감 기능 관련 API")
@@ -70,61 +72,49 @@ public class BirdController {
         // 미구현
     }
 
-    @Schema(description = "조류 목록 응답 DTO")
-    public static class BirdListResponse {
-        @Schema(description = "조류 ID", example = "1")
-        public Long id;
-
-        @Schema(description = "한글 이름", example = "까치")
-        public String koreanName;
-
-        @Schema(description = "학명", example = "Pica pica")
-        public String scientificName;
-
-        @Schema(description = "썸네일 이미지 URL", example = "https://example.com/images/bird-thumb.jpg")
-        public String thumbImageUrl;
+    @GetMapping("/full-sync")
+    @Operation(
+            summary = "🛠 [미구현] 조류 도감 전체 동기화 (App 전용)",
+            description = "조류 도감 전체 데이터를 제공합니다. (App 전용)<br>" +
+                    "[⚠️ 주의]️ 크기 카테고리 정보는 포함되어 있지 않습니다. GET /api/v1/birds/size-category-rules로 크기 카테고리 규칙을 다운로드받아 사용해야 합니다.",
+            responses = @ApiResponse(
+                    responseCode = "200",
+                    description = "도감 전체 데이터",
+                    content = @Content(schema = @Schema(implementation = BirdFullSyncResponse.class))
+            )
+    )
+    public void getBirdsFullSync() {
+        // 미구현
     }
 
-    @Schema(description = "조류 상세 응답 DTO")
-    public static class BirdDetailResponse {
-        @Schema(description = "조류 ID", example = "1")
-        public Long id;
-
-        @Schema(description = "한글 이름", example = "까치")
-        public String koreanName;
-
-        @Schema(description = "학명", example = "Pica pica")
-        public String scientificName;
-
-        @Schema(description = "분류학적 정보")
-        public BirdTaxonomy taxonomy;
-
-        @Schema(description = "조류 설명", example = "전국 어디서나 흔하게 관찰되는 텃새입니다.")
-        public String description;
-
-        @Schema(description = "조류 이미지 URL 목록", example = "[\"~~~.jpg\", \"~~~.png\"]")
-        public List<String> imageUrls;
+    @GetMapping("/size-category-rules")
+    @Operation(
+            summary = "🛠 [미구현] 조류 크기 카테고리 규칙 다운로드 (App 전용)",
+            description = "조류 크기 카테고리 규칙을 제공합니다. (App 전용)",
+            responses = @ApiResponse(
+                    responseCode = "200",
+                    description = "조류 크기 카테고리 규칙",
+                    content = @Content(schema = @Schema(implementation = BirdSizeCategoryRulesResponse.class))
+            )
+    )
+    public void getSizeCategoryRules() {
+        // 미구현
     }
 
-    @Schema(description = "분류학적 정보")
-    public static class BirdTaxonomy {
-        public String phylumEng;
-        public String phylumKor;
-        public String classEng;
-        public String classKor;
-        public String orderEng;
-        public String orderKor;
-        public String familyEng;
-        public String familyKor;
-        public String genusEng;
-        public String genusKor;
-        public String speciesEng;
-        public String speciesKor;
+    @GetMapping("/changes")
+    @Operation(
+            summary = "🛠 [미구현] 조류 도감 업데이트 동기화 (App 전용)",
+            description = "기준 시각 이후로 변경된 도감 데이터를 제공합니다. (App 전용)",
+            responses = @ApiResponse(
+                    responseCode = "200",
+                    description = "도감 업데이트 데이터",
+                    content = @Content(schema = @Schema(implementation = BirdChangesResponse.class))
+            )
+    )
+    public void getChanges(
+            @Parameter(description = "기준 시각") @RequestParam OffsetDateTime since
+            ) {
+        // 미구현
     }
 
-    @Schema(description = "조류 자동완성 응답 DTO")
-    public static class BirdAutocompleteResponse {
-        @Schema(description = "추천 이름 리스트", example = "[\"까치\", \"까마귀\"]")
-        public List<String> suggestions;
-    }
 }
