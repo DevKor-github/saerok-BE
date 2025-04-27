@@ -19,7 +19,8 @@ module.exports = {
             "coll",
             "map",
             "entity",
-            "infra"
+            "infra",
+            "db"
         ]],
         "footer-empty": [2, "always"],
         "subject-case": [2, "always", [
@@ -119,6 +120,9 @@ module.exports = {
                     },
                     infra: {
                         description: '🛠️ 설정/인프라 관련 변경 (예: 스크립트, 환경 설정)'
+                    },
+                    db: {
+                        description: '🗄️ DB 관련 변경 (예: Flyway 마이그레이션 추가)'
                     }
                 }
             },
