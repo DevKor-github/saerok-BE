@@ -2,8 +2,10 @@ package org.devkor.apu.saerok_server.domain.dex.bird.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.Data;
 
 @Embeddable
+@Data
 public class BirdTaxonomy {
 
     @Column(name = "phylum_eng", nullable = false)
