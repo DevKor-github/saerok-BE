@@ -1,10 +1,11 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.entity;
 
 import jakarta.persistence.*;
+import org.devkor.apu.saerok_server.domain.dex.bird.contract.HasBodyLength;
 import org.devkor.apu.saerok_server.global.entity.Auditable;
 
 @Entity
-public class Bird extends Auditable {
+public class Bird extends Auditable implements HasBodyLength {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -24,4 +25,9 @@ public class Bird extends Auditable {
 
     @Column(name = "nibr_url")
     private String nibrUrl;
+
+    @Override
+    public Double getBodyLengthCm() {
+        return bodyLengthCm;
+    }
 }

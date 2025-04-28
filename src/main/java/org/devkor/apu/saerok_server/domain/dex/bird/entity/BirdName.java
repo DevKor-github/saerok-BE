@@ -2,8 +2,13 @@ package org.devkor.apu.saerok_server.domain.dex.bird.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Embeddable
+@Data
+@NoArgsConstructor
 public class BirdName {
 
     @Column(name = "korean_name", nullable = false)
