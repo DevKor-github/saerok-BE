@@ -112,7 +112,7 @@ public class BirdController {
             )
     )
     public void getChanges(
-            @Parameter(description = "기준 시각") @RequestParam OffsetDateTime since
+            @Parameter(description = "기준 시각 (날짜 + T + 시간 + 타임존 오프셋)", example = "2024-04-28T15:30:00+09:00") @RequestParam OffsetDateTime since
             ) {
         // 미구현
     }
