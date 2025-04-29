@@ -1,8 +1,7 @@
 package org.devkor.apu.saerok_server.domain.collection.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import org.devkor.apu.saerok_server.domain.dex.bird.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.entity.Auditable;
 import org.locationtech.jts.geom.Point;

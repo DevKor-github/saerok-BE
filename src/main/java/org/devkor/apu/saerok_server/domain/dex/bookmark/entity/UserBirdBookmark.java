@@ -3,7 +3,7 @@ package org.devkor.apu.saerok_server.domain.dex.bookmark.entity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.devkor.apu.saerok_server.domain.dex.bird.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.entity.CreatedAtOnly;
 

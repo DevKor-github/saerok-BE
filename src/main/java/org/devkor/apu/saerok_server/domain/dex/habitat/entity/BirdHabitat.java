@@ -1,7 +1,7 @@
 package org.devkor.apu.saerok_server.domain.dex.habitat.entity;
 
 import jakarta.persistence.*;
-import org.devkor.apu.saerok_server.domain.dex.bird.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
 
 @Entity
 @Table(
