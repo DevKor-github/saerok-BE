@@ -80,7 +80,7 @@ public class BirdController {
 
     @GetMapping("/full-sync")
     @Operation(
-            summary = "🛠 [미구현] 조류 도감 전체 동기화 (App 전용)",
+            summary = "조류 도감 전체 동기화 (App 전용)",
             description = "조류 도감 전체 데이터를 제공합니다. (App 전용)<br>" +
                     "[⚠️ 주의]️ 크기 카테고리 정보는 포함되어 있지 않습니다. GET /api/v1/birds/size-category-rules로 크기 카테고리 규칙을 다운로드받아 사용해야 합니다.",
             responses = @ApiResponse(
