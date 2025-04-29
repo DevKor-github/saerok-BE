@@ -15,4 +15,7 @@ public interface BirdProfileViewMapper {
     BirdFullSyncResponse.BirdProfileItem toDto(BirdProfileView birdProfileView);
 
     List<BirdFullSyncResponse.BirdProfileItem> toDtoList(List<BirdProfileView> birdProfileViews);
+
+    // HINT: 여기에 BirdProfileView 타입을 BirdDetailResponse 타입으로 변환해주는 메서드를 정의하세요.
+    // MapStruct라는 걸 찾아보시면 도움이 될 겁니다.
 }

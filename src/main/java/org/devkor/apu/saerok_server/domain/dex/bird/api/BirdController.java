@@ -59,7 +59,8 @@ public class BirdController {
             )
     )
     public void getBirdDetail() {
-        // 미구현
+        // HINT: birdQueryService에서 만든 메서드를 호출하세요.
+        // 현재 이 메서드의 파라미터나 반환형도 수정이 필요할 겁니다.
     }
 
     @GetMapping("/autocomplete")

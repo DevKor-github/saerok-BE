@@ -28,4 +28,9 @@ public class BirdQueryService {
 
         return response;
     }
+
+    // HINT: 여기에 getBirdDetailResponse 메서드를 만들고,
+    // birdProfileViewRepository로 적절한 BirdProfileView를 가져오세요.
+    // 그리고 birdProfileViewMapper로 birdProfileView를 BirdDetailResponse 형태로 변환해서 return하면 됩니다.
+    // 이를 위해서는 birdProfileViewMapper에 새로 메서드를 추가해야 합니다. (참고: MapStruct)
 }
