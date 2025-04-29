@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.dex.bird.controller;
+package org.devkor.apu.saerok_server.domain.dex.bird.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -7,7 +7,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.devkor.apu.saerok_server.domain.dex.bird.dto.api.*;
+import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.*;
+import org.devkor.apu.saerok_server.domain.dex.bird.application.BirdQueryService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,8 +21,11 @@ import java.util.List;
 
 @Tag(name = "Birds API", description = "도감 기능 관련 API")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("${api_prefix}/birds")
 public class BirdController {
+
+    private final BirdQueryService birdQueryService;
 
     @GetMapping("/")
     @Operation(
@@ -83,8 +89,8 @@ public class BirdController {
                     content = @Content(schema = @Schema(implementation = BirdFullSyncResponse.class))
             )
     )
-    public void getBirdsFullSync() {
-        // 미구현
+    public ResponseEntity<BirdFullSyncResponse> getBirdsFullSync() {
+        return ResponseEntity.ok(birdQueryService.getBirdFullSyncResponse());
     }
 
     @GetMapping("/size-category-rules")
