@@ -1,11 +1,14 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.contract.HasBodyLength;
 import org.devkor.apu.saerok_server.global.entity.Auditable;
+import org.devkor.apu.saerok_server.global.entity.SoftDeletableAuditable;
 
 @Entity
-public class Bird extends Auditable implements HasBodyLength {
+@Getter
+public class Bird extends SoftDeletableAuditable implements HasBodyLength {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -18,6 +21,7 @@ public class Bird extends Auditable implements HasBodyLength {
     private BirdTaxonomy taxonomy;
 
     @Embedded
+    @Getter
     private BirdDescription description;
 
     @Column(name = "body_length_cm")
