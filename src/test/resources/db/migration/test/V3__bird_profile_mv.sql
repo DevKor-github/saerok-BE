@@ -108,5 +108,5 @@ WITH NO DATA;
 -- MV에 고유 인덱스 생성 (Concurrent Refresh 요건)
 CREATE UNIQUE INDEX idx_bird_profile_mv_id ON bird_profile_mv(id);
 
--- MV 초기 데이터 채우기 (Concurrent Refresh)
+-- MV 초기 데이터 채우기 (Refresh)
 REFRESH MATERIALIZED VIEW bird_profile_mv;
