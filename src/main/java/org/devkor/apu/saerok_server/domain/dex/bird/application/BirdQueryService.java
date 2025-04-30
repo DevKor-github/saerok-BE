@@ -1,13 +1,17 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdChangesResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.BirdProfileViewMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.repository.BirdProfileViewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -37,4 +41,22 @@ public class BirdQueryService {
     // birdProfileViewRepository로 적절한 BirdProfileView를 가져오세요.
     // 그리고 birdProfileViewMapper로 birdProfileView를 BirdDetailResponse 형태로 변환해서 return하면 됩니다.
     // 이를 위해서는 birdProfileViewMapper에 새로 메서드를 추가해야 합니다. (참고: MapStruct)
+
+    public BirdChangesResponse getBirdChangesResponse(OffsetDateTime since) {
+
+        List<BirdProfileView> birdsCreatedAfterSince = birdProfileViewRepository.findByCreatedAtAfter(since);
+        List<BirdProfileView> birdsUpdatedAfterSince = birdProfileViewRepository.findByUpdatedAtAfter(since);
+        List<BirdProfileView> birdsDeletedAfterSince = birdProfileViewRepository.findByDeletedAtAfter(since);
+
+        List<BirdFullSyncResponse.BirdProfileItem> created = birdProfileViewMapper.toDtoList(birdsCreatedAfterSince);
+        List<BirdFullSyncResponse.BirdProfileItem> updated = birdProfileViewMapper.toDtoList(birdsUpdatedAfterSince);
+        List<Long> deletedIds = birdProfileViewMapper.toIdList(birdsDeletedAfterSince);
+
+        BirdChangesResponse response = new BirdChangesResponse();
+        response.setSince(since);
+        response.setCreated(created);
+        response.setUpdated(updated);
+        response.setDeletedIds(deletedIds);
+        return response;
+    }
 }

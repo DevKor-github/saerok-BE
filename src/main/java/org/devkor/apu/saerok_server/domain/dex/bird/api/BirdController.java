@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.BirdQueryService;
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -92,9 +93,9 @@ public class BirdController {
                     content = @Content(schema = @Schema(implementation = BirdFullSyncResponse.class))
             ),
                     @ApiResponse(
-                            responseCode = "500",
-                            description = "서버 내부 오류 (예: 도감이 비어 있는 경우)",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    responseCode = "500",
+                    description = "서버 내부 오류 (예: 도감이 비어 있는 경우)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
                     )
             }
     )
@@ -119,18 +120,33 @@ public class BirdController {
 
     @GetMapping("/changes")
     @Operation(
-            summary = "🛠 [미구현] 조류 도감 업데이트 동기화 (App 전용)",
-            description = "기준 시각 이후로 변경된 도감 데이터를 제공합니다. (App 전용)",
-            responses = @ApiResponse(
+            summary = "조류 도감 업데이트 동기화 (App 전용)",
+            description = "기준 시각 이후로 추가/변경/삭제된 도감 데이터를 제공합니다. (App 전용)",
+            responses = {
+                    @ApiResponse(
                     responseCode = "200",
-                    description = "도감 업데이트 데이터",
+                    description = "기준 시각 이후 업데이트할 데이터가 있을 경우",
                     content = @Content(schema = @Schema(implementation = BirdChangesResponse.class))
-            )
+            ),
+                    @ApiResponse(
+                    responseCode = "204",
+                    description = "기준 시각 이후 업데이트할 데이터가 없을 경우",
+                    content = @Content()
+                    )
+            }
     )
-    public void getChanges(
-            @Parameter(description = "기준 시각 (날짜 + T + 시간 + 타임존 오프셋)", example = "2024-04-28T15:30:00+09:00") @RequestParam OffsetDateTime since
-            ) {
-        // 미구현
+    public ResponseEntity<BirdChangesResponse> getChanges(
+            @Parameter(description = "기준 시각 (날짜 + T + 시간 + 타임존 오프셋)" +
+                    "<br>참고: 한국 시간 오프셋 +09:00",
+                    example = "2025-05-01T15:30:00+09:00")
+            @RequestParam
+            OffsetDateTime since) {
+
+        BirdChangesResponse response = birdQueryService.getBirdChangesResponse(since);
+        if (response.hasNoChanges()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(response);
     }
 
 }
