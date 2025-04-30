@@ -9,9 +9,9 @@ spring:
 
   flyway:
     enabled: true
-    locations: classpath:db/migration/test
+    locations: classpath:db/migration
 
 logging:
   level:
-    org.hibernate.SQL: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    org.hibernate.SQL: info
+    org.hibernate.type.descriptor.sql.BasicBinder: off

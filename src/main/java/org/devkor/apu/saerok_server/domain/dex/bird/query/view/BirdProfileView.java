@@ -52,8 +52,14 @@ public class BirdProfileView implements HasBodyLength {
     @Column(name = "images")
     private List<Image> images;
 
+    @Column(name = "created_at")
+    private OffsetDateTime createdAt;
+
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
 
     @Data
     public static class SeasonWithRarity {

@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class BirdChangesResponse {
 
-    @Schema(description = "요청 기준 시각", example = "2025-04-28T00:00:00Z")
+    @Schema(description = "요청 기준 시각", example = "2025-04-28T00:00:00+09:00")
     private OffsetDateTime since;
 
     @Schema(description = "새로 추가된 조류 목록")
@@ -21,4 +21,8 @@ public class BirdChangesResponse {
 
     @Schema(description = "삭제된 조류 ID 목록", example = "[99, 102, 150]")
     private List<Long> deletedIds;
+
+    public boolean hasNoChanges() {
+        return created.isEmpty() && updated.isEmpty() && deletedIds.isEmpty();
+    }
 }

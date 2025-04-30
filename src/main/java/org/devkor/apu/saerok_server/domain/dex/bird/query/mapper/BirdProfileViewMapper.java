@@ -18,4 +18,10 @@ public interface BirdProfileViewMapper {
 
     // HINT: 여기에 BirdProfileView 타입을 BirdDetailResponse 타입으로 변환해주는 메서드를 정의하세요.
     // MapStruct라는 걸 찾아보시면 도움이 될 겁니다.
+
+    default Long toId(BirdProfileView birdProfileView) {
+        return birdProfileView == null ? null : birdProfileView.getId();
+    }
+
+    List<Long> toIdList(List<BirdProfileView> birdProfileViews);
 }
