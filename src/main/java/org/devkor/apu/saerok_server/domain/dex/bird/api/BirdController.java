@@ -13,10 +13,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.application.BirdQueryService
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -52,7 +49,7 @@ public class BirdController {
 
     @GetMapping("/{birdId}")
     @Operation(
-            summary = "🛠 [미구현] 특정 조류 상세 조회",
+            summary = "특정 조류 상세 조회",
             description = "birdId를 기반으로 해당 조류의 상세 정보를 조회합니다.",
             responses = @ApiResponse(
                     responseCode = "200",
@@ -60,9 +57,10 @@ public class BirdController {
                     content = @Content(schema = @Schema(implementation = BirdDetailResponse.class))
             )
     )
-    public void getBirdDetail() {
-        // HINT: birdQueryService에서 만든 메서드를 호출하세요.
-        // 현재 이 메서드의 파라미터나 반환형도 수정이 필요할 겁니다.
+    public ResponseEntity<BirdDetailResponse> getBirdDetail(
+            @Parameter(description = "조회할 조류의 ID", example = "1") @PathVariable Long birdId) {
+        BirdDetailResponse response = birdQueryService.getBirdDetailResponse(birdId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/autocomplete")
