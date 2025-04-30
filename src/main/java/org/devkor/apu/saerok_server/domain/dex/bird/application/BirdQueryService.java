@@ -21,6 +21,10 @@ public class BirdQueryService {
     public BirdFullSyncResponse getBirdFullSyncResponse() {
         List<BirdProfileView> birdProfileViews = birdProfileViewRepository.findAll();
 
+        if (birdProfileViews.isEmpty()) {
+            throw new IllegalStateException("도감 조회 결과가 비어 있습니다. 서버 상태를 점검하세요.");
+        }
+
         List<BirdFullSyncResponse.BirdProfileItem> dtoList = birdProfileViewMapper.toDtoList(birdProfileViews);
 
         BirdFullSyncResponse response = new BirdFullSyncResponse();

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.BirdQueryService;
+import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -84,14 +85,22 @@ public class BirdController {
             summary = "조류 도감 전체 동기화 (App 전용)",
             description = "조류 도감 전체 데이터를 제공합니다. (App 전용)<br>" +
                     "[⚠️ 주의]️ 크기 카테고리 정보는 포함되어 있지 않습니다. GET /api/v1/birds/size-category-rules로 크기 카테고리 규칙을 다운로드받아 사용해야 합니다.",
-            responses = @ApiResponse(
+            responses = {
+                    @ApiResponse(
                     responseCode = "200",
                     description = "도감 전체 데이터",
                     content = @Content(schema = @Schema(implementation = BirdFullSyncResponse.class))
-            )
+            ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "서버 내부 오류 (예: 도감이 비어 있는 경우)",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
     )
     public ResponseEntity<BirdFullSyncResponse> getBirdsFullSync() {
-        return ResponseEntity.ok(birdQueryService.getBirdFullSyncResponse());
+        BirdFullSyncResponse response = birdQueryService.getBirdFullSyncResponse();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/size-category-rules")
