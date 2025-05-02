@@ -15,7 +15,6 @@ import java.util.*;
 public class BirdRepository {
 
     private final EntityManager em;
-    private final JPAQueryFactory queryFactory;
 
     /**
      * Bird 엔티티를 조회합니다. soft delete된 항목은 조회하지 않습니다.
