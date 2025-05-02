@@ -2,10 +2,11 @@ package org.devkor.apu.saerok_server.domain.dex.bird.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 import org.devkor.apu.saerok_server.global.entity.Auditable;
 
 @Entity
-@Data
+@Getter
 public class BirdImage extends Auditable {
 
     @Id

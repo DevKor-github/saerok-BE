@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.dex.bird.query.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;

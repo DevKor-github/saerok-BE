@@ -4,17 +4,25 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdChangesResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdSearchResponse;
+import org.devkor.apu.saerok_server.domain.dex.bird.application.dto.BirdSearchCommand;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.mapper.BirdMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.service.SizeCategoryService;
+import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.BirdSearchDto;
+import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.CmRangeDto;
+import org.devkor.apu.saerok_server.domain.dex.bird.query.enums.SeasonType;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.BirdProfileViewMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.repository.BirdProfileViewRepository;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.util.EnumParser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,6 +30,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class BirdQueryService {
 
+    private final BirdRepository birdRepository;
+    private final BirdMapper birdMapper;
     private final BirdProfileViewRepository birdProfileViewRepository;
     private final BirdProfileViewMapper birdProfileViewMapper;
     private final SizeCategoryService sizeCategoryService;
@@ -48,10 +58,6 @@ public class BirdQueryService {
         response.sizeCategory = sizeCategoryService.getSizeCategory(birdProfileView).getLabel();
         return response;
     }
-    // HINT: 여기에 getBirdDetailResponse 메서드를 만들고,
-    // birdProfileViewRepository로 적절한 BirdProfileView를 가져오세요.
-    // 그리고 birdProfileViewMapper로 birdProfileView를 BirdDetailResponse 형태로 변환해서 return하면 됩니다.
-    // 이를 위해서는 birdProfileViewMapper에 새로 메서드를 추가해야 합니다. (참고: MapStruct)
 
     public BirdChangesResponse getBirdChangesResponse(OffsetDateTime since) {
 
@@ -69,5 +75,40 @@ public class BirdQueryService {
         response.setUpdated(updated);
         response.setDeletedIds(deletedIds);
         return response;
+    }
+
+    public BirdSearchResponse getBirdSearchResponse(BirdSearchCommand birdSearchCommand) {
+        if (!birdSearchCommand.hasValidPagination()) {
+            throw new IllegalStateException("not valid pagination");
+        }
+
+        try {
+            List<HabitatType> habitats = EnumParser.parseStringList(HabitatType.class, birdSearchCommand.getHabitats());
+            List<SeasonType> seasons = EnumParser.parseStringList(SeasonType.class, birdSearchCommand.getSeasons());
+            List<CmRangeDto> cmRanges = new ArrayList<>();
+            for (String sizeCategory : birdSearchCommand.getSizeCategories()) {
+                cmRanges.add(new CmRangeDto(
+                        sizeCategoryService.getMinCmFromCategory(sizeCategory),
+                        sizeCategoryService.getMaxCmFromCategory(sizeCategory)
+                ));
+            }
+
+            BirdSearchDto birdSearchDto = new BirdSearchDto(
+                    birdSearchCommand.getPage(),
+                    birdSearchCommand.getSize(),
+                    birdSearchCommand.getQ(),
+                    habitats,
+                    cmRanges,
+                    seasons
+            );
+
+            List<BirdSearchResponse.BirdSearchItem> birds = birdMapper.toDtoList(birdRepository.search(birdSearchDto));
+            BirdSearchResponse response = new BirdSearchResponse();
+            response.setBirds(birds);
+            return response;
+        }
+        catch (IllegalArgumentException e) {
+            throw new IllegalStateException("not valid string");
+        }
     }
 }

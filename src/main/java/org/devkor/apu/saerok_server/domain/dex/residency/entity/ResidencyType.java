@@ -10,9 +10,9 @@ public enum ResidencyType {
     PASSAGE("나그네새"),
     VAGRANT("길잃은새");
 
-    private final String koreanName;
+    private final String label;
 
-    ResidencyType(String koreanName) {
-        this.koreanName = koreanName;
+    ResidencyType(String label) {
+        this.label = label;
     }
 }
