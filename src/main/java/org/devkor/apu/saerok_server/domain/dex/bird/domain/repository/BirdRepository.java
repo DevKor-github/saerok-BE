@@ -30,7 +30,7 @@ public class BirdRepository {
     }
 
     /**
-     * 검색 – PostgreSQL 네이티브 쿼리
+     * 검색–PostgreSQL 네이티브 쿼리
      */
     public List<Bird> search(BirdSearchDto dto) {
 
