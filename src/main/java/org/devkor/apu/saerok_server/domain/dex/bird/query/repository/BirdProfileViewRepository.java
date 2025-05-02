@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,6 +49,27 @@ public class BirdProfileViewRepository {
                 .getResultList();
     }
 
+    public List<String> findKoreanNamesByKeyword(String keyword) {
+        List<String> prefixMatches = em.createQuery(
+                "SELECT b.name.koreanName FROM BirdProfileView b " +
+                "WHERE b.name.koreanName LIKE :prefix AND b.deletedAt IS NULL " +
+                "ORDER BY b.name.koreanName ASC", String.class)
+                .setParameter("prefix", keyword + "%")
+                .getResultList();
+
+        List<String> containsMatches = em.createQuery(
+                "SELECT b.name.koreanName FROM BirdProfileView b " +
+                "WHERE b.name.koreanName LIKE :contains AND b.name.koreanName NOT LIKE :prefix AND b.deletedAt IS NULL " +
+                "ORDER BY b.name.koreanName ASC", String.class)
+                .setParameter("contains", "%" + keyword + "%")
+                .setParameter("prefix", keyword + "%")
+                .getResultList();
+        
+        List<String> result = new ArrayList<>(prefixMatches);
+        result.addAll(containsMatches);
+        return result.size() <= 10 ? result : result.subList(0, 10);
+    }
+    
     @Transactional
     public void refreshMaterializedView() {
         em.createNativeQuery("REFRESH MATERIALIZED VIEW bird_profile_mv")
