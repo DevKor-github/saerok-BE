@@ -2,12 +2,15 @@ package org.devkor.apu.saerok_server.domain.dex.bird.application;
 
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdChangesResponse;
+import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.repository.BirdRepository;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.service.SizeCategoryService;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.BirdProfileViewMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.repository.BirdProfileViewRepository;
+import org.devkor.apu.saerok_server.global.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,7 @@ public class BirdQueryService {
 
     private final BirdProfileViewRepository birdProfileViewRepository;
     private final BirdProfileViewMapper birdProfileViewMapper;
+    private final SizeCategoryService sizeCategoryService;
 
     public BirdFullSyncResponse getBirdFullSyncResponse() {
         List<BirdProfileView> birdProfileViews = birdProfileViewRepository.findAll();
@@ -37,6 +41,13 @@ public class BirdQueryService {
         return response;
     }
 
+    public BirdDetailResponse getBirdDetailResponse(Long birdId) {
+        BirdProfileView birdProfileView = birdProfileViewRepository.findById(birdId)
+                .orElseThrow(() -> new NotFoundException("Bird", "id", birdId));
+        BirdDetailResponse response = birdProfileViewMapper.toBirdDetailResponse(birdProfileView);
+        response.sizeCategory = sizeCategoryService.getSizeCategory(birdProfileView).getLabel();
+        return response;
+    }
     // HINT: 여기에 getBirdDetailResponse 메서드를 만들고,
     // birdProfileViewRepository로 적절한 BirdProfileView를 가져오세요.
     // 그리고 birdProfileViewMapper로 birdProfileView를 BirdDetailResponse 형태로 변환해서 return하면 됩니다.
