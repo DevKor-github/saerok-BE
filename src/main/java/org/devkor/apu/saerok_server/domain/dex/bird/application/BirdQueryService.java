@@ -10,6 +10,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.domain.service.SizeCategoryS
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.BirdProfileViewMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.repository.BirdProfileViewRepository;
+import org.devkor.apu.saerok_server.global.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,7 @@ public class BirdQueryService {
 
     public BirdDetailResponse getBirdDetailResponse(Long birdId) {
         BirdProfileView birdProfileView = birdProfileViewRepository.findById(birdId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 조류를 찾을 수 없습니다: " + birdId));
+                .orElseThrow(() -> new NotFoundException("Bird", "id", birdId));
         BirdDetailResponse response = birdProfileViewMapper.toBirdDetailResponse(birdProfileView);
         response.sizeCategory = sizeCategoryService.getSizeCategory(birdProfileView).getLabel();
         return response;

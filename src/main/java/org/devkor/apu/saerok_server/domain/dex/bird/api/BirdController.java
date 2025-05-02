@@ -51,11 +51,18 @@ public class BirdController {
     @Operation(
             summary = "특정 조류 상세 조회",
             description = "birdId를 기반으로 해당 조류의 상세 정보를 조회합니다.",
-            responses = @ApiResponse(
+            responses = {
+                    @ApiResponse(
                     responseCode = "200",
                     description = "조류 상세 응답",
                     content = @Content(schema = @Schema(implementation = BirdDetailResponse.class))
-            )
+            ),
+                    @ApiResponse(
+                    responseCode = "404",
+                    description = "조류를 찾을 수 없습니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
     )
     public ResponseEntity<BirdDetailResponse> getBirdDetail(
             @Parameter(description = "조회할 조류의 ID", example = "1") @PathVariable Long birdId) {
@@ -65,7 +72,7 @@ public class BirdController {
 
     @GetMapping("/autocomplete")
     @Operation(
-            summary = "🛠 [미구현] 조류 자동완성",
+            summary = "조류 자동완성",
             description = "조류 이름 검색을 위한 자동완성 제안을 반환합니다.",
             responses = @ApiResponse(
                     responseCode = "200",
