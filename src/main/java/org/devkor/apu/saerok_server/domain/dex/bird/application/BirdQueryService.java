@@ -43,7 +43,9 @@ public class BirdQueryService {
     public BirdDetailResponse getBirdDetailResponse(Long birdId) {
         BirdProfileView birdProfileView = birdProfileViewRepository.findById(birdId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 조류를 찾을 수 없습니다: " + birdId));
-        return birdProfileViewMapper.toBirdDetailResponse(birdProfileView, sizeCategoryService);
+        BirdDetailResponse response = birdProfileViewMapper.toBirdDetailResponse(birdProfileView);
+        response.sizeCategory = sizeCategoryService.getSizeCategory(birdProfileView).getLabel();
+        return response;
     }
     // HINT: 여기에 getBirdDetailResponse 메서드를 만들고,
     // birdProfileViewRepository로 적절한 BirdProfileView를 가져오세요.

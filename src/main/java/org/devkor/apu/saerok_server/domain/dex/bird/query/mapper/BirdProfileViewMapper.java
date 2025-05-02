@@ -21,8 +21,8 @@ public interface BirdProfileViewMapper {
     @Mapping(source = "name.scientificName", target = "scientificName")
     @Mapping(source = "description.description", target = "description")
     @Mapping(source = "images", target = "imageUrls", qualifiedByName = "extractImageUrls")
-    @Mapping(target = "sizeCategory", expression = "java(sizeCategoryService.getSizeCategory(view).getLabel())")
-    BirdDetailResponse toBirdDetailResponse(BirdProfileView view, @Context SizeCategoryService sizeCategoryService);
+    @Mapping(target = "sizeCategory", ignore = true)
+    BirdDetailResponse toBirdDetailResponse(BirdProfileView view);
 
     @Named("extractImageUrls")
     default List<String> extractImageUrls(List<BirdProfileView.Image> images) {
