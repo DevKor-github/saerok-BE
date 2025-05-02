@@ -8,7 +8,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.domain.contract.HasBodyLengt
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.BirdDescription;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.BirdTaxonomy;
-import org.devkor.apu.saerok_server.domain.dex.habitat.entity.HabitatType;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
