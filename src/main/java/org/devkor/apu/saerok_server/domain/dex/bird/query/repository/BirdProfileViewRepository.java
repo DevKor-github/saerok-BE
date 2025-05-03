@@ -55,19 +55,24 @@ public class BirdProfileViewRepository {
                 "WHERE b.name.koreanName LIKE :prefix AND b.deletedAt IS NULL " +
                 "ORDER BY b.name.koreanName ASC", String.class)
                 .setParameter("prefix", keyword + "%")
+                .setMaxResults(10)
                 .getResultList();
 
-        List<String> containsMatches = em.createQuery(
-                "SELECT b.name.koreanName FROM BirdProfileView b " +
-                "WHERE b.name.koreanName LIKE :contains AND b.name.koreanName NOT LIKE :prefix AND b.deletedAt IS NULL " +
-                "ORDER BY b.name.koreanName ASC", String.class)
-                .setParameter("contains", "%" + keyword + "%")
-                .setParameter("prefix", keyword + "%")
-                .getResultList();
-        
-        List<String> result = new ArrayList<>(prefixMatches);
-        result.addAll(containsMatches);
-        return result.size() <= 10 ? result : result.subList(0, 10);
+        if (prefixMatches.size() < 10) {
+            List<String> containsMatches = em.createQuery(
+                    "SELECT b.name.koreanName FROM BirdProfileView b " +
+                    "WHERE b.name.koreanName LIKE :contains AND b.name.koreanName NOT LIKE :prefix AND b.deletedAt IS NULL " +
+                    "ORDER BY b.name.koreanName ASC", String.class)
+                    .setParameter("contains", "%" + keyword + "%")
+                    .setParameter("prefix", keyword + "%")
+                    .setMaxResults(10 - prefixMatches.size())
+                    .getResultList();
+            List<String> result = new ArrayList<>(prefixMatches);
+            result.addAll(containsMatches);
+            return result;
+        }
+
+        return prefixMatches;
     }
     
     @Transactional
