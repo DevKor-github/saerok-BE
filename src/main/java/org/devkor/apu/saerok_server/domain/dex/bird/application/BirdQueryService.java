@@ -5,18 +5,21 @@ import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdAutocom
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdChangesResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
+import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdSizeCategoryRulesResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.service.SizeCategoryService;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.BirdProfileViewMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.repository.BirdProfileViewRepository;
+import org.devkor.apu.saerok_server.global.config.SizeCategoryRulesConfig;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class BirdQueryService {
     private final BirdProfileViewRepository birdProfileViewRepository;
     private final BirdProfileViewMapper birdProfileViewMapper;
     private final SizeCategoryService sizeCategoryService;
+    private final SizeCategoryRulesConfig sizeCategoryRulesConfig;
 
     public BirdFullSyncResponse getBirdFullSyncResponse() {
         List<BirdProfileView> birdProfileViews = birdProfileViewRepository.findAll();
@@ -49,10 +53,6 @@ public class BirdQueryService {
         response.sizeCategory = sizeCategoryService.getSizeCategory(birdProfileView).getLabel();
         return response;
     }
-    // HINT: 여기에 getBirdDetailResponse 메서드를 만들고,
-    // birdProfileViewRepository로 적절한 BirdProfileView를 가져오세요.
-    // 그리고 birdProfileViewMapper로 birdProfileView를 BirdDetailResponse 형태로 변환해서 return하면 됩니다.
-    // 이를 위해서는 birdProfileViewMapper에 새로 메서드를 추가해야 합니다. (참고: MapStruct)
 
     public BirdAutocompleteResponse getBirdAutocompleteResponse(String query) {
         List<String> suggestions = birdProfileViewRepository.findKoreanNamesByKeyword(query);
@@ -61,9 +61,8 @@ public class BirdQueryService {
         response.suggestions = suggestions;
         return response;
     }
-
+    
     public BirdChangesResponse getBirdChangesResponse(OffsetDateTime since) {
-
         List<BirdProfileView> birdsCreatedAfterSince = birdProfileViewRepository.findByCreatedAtAfter(since);
         List<BirdProfileView> birdsUpdatedAfterSince = birdProfileViewRepository.findByUpdatedAtAfter(since);
         List<BirdProfileView> birdsDeletedAfterSince = birdProfileViewRepository.findByDeletedAtAfter(since);
@@ -77,6 +76,25 @@ public class BirdQueryService {
         response.setCreated(created);
         response.setUpdated(updated);
         response.setDeletedIds(deletedIds);
+        return response;
+    }
+
+    public BirdSizeCategoryRulesResponse getSizeCategoryRulesResponse() {
+        BirdSizeCategoryRulesResponse response = new BirdSizeCategoryRulesResponse();
+        response.setVersion(sizeCategoryRulesConfig.getVersion());
+
+        List<BirdSizeCategoryRulesResponse.Boundary> boundaries = sizeCategoryRulesConfig.getBoundaries().stream()
+                .map(boundary -> {
+                    BirdSizeCategoryRulesResponse.Boundary dto = new BirdSizeCategoryRulesResponse.Boundary();
+                    dto.setCategory(boundary.getCategory());
+                    dto.setMaxCm(boundary.getMaxCm());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        response.setBoundaries(boundaries);
+        response.setLabels(sizeCategoryRulesConfig.getLabels());
+
         return response;
     }
 }
