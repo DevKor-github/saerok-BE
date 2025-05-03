@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdAutocompleteResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdChangesResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
@@ -52,6 +53,14 @@ public class BirdQueryService {
     // birdProfileViewRepository로 적절한 BirdProfileView를 가져오세요.
     // 그리고 birdProfileViewMapper로 birdProfileView를 BirdDetailResponse 형태로 변환해서 return하면 됩니다.
     // 이를 위해서는 birdProfileViewMapper에 새로 메서드를 추가해야 합니다. (참고: MapStruct)
+
+    public BirdAutocompleteResponse getBirdAutocompleteResponse(String query) {
+        List<String> suggestions = birdProfileViewRepository.findKoreanNamesByKeyword(query);
+        
+        BirdAutocompleteResponse response = new BirdAutocompleteResponse();
+        response.suggestions = suggestions;
+        return response;
+    }
 
     public BirdChangesResponse getBirdChangesResponse(OffsetDateTime since) {
 

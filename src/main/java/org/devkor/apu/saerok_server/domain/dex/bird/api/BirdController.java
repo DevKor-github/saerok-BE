@@ -80,10 +80,11 @@ public class BirdController {
                     content = @Content(schema = @Schema(implementation = BirdAutocompleteResponse.class))
             )
     )
-    public void getBirdAutocomplete(
+    public ResponseEntity<BirdAutocompleteResponse> getBirdAutocomplete(
             @Parameter(description = "검색 키워드 (한글 이름)") @RequestParam String q
     ) {
-        // 미구현
+        BirdAutocompleteResponse response = birdQueryService.getBirdAutocompleteResponse(q);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/full-sync")
