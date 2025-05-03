@@ -9,6 +9,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdSizeCat
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.service.SizeCategoryService;
+import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.SizeCategoryRulesMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.BirdProfileViewMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.repository.BirdProfileViewRepository;
@@ -28,6 +29,7 @@ public class BirdQueryService {
 
     private final BirdProfileViewRepository birdProfileViewRepository;
     private final BirdProfileViewMapper birdProfileViewMapper;
+    private final SizeCategoryRulesMapper sizeCategoryRulesMapper;
     private final SizeCategoryService sizeCategoryService;
     private final SizeCategoryRulesConfig sizeCategoryRulesConfig;
 
@@ -80,21 +82,6 @@ public class BirdQueryService {
     }
 
     public BirdSizeCategoryRulesResponse getSizeCategoryRulesResponse() {
-        BirdSizeCategoryRulesResponse response = new BirdSizeCategoryRulesResponse();
-        response.setVersion(sizeCategoryRulesConfig.getVersion());
-
-        List<BirdSizeCategoryRulesResponse.Boundary> boundaries = sizeCategoryRulesConfig.getBoundaries().stream()
-                .map(boundary -> {
-                    BirdSizeCategoryRulesResponse.Boundary dto = new BirdSizeCategoryRulesResponse.Boundary();
-                    dto.setCategory(boundary.getCategory());
-                    dto.setMaxCm(boundary.getMaxCm());
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
-        response.setBoundaries(boundaries);
-        response.setLabels(sizeCategoryRulesConfig.getLabels());
-
-        return response;
+        return sizeCategoryRulesMapper.toDto(sizeCategoryRulesConfig);
     }
 }
