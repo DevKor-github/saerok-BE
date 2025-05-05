@@ -1,19 +1,17 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.application.dto;
 
-import lombok.Data;
-
 import java.util.List;
 
-@Data
-public class BirdSearchCommand {
-
-    private Integer page;
-    private Integer size;
-    private String q;
-    private List<String> habitats;
-    private List<String> sizeCategories;
-    private List<String> seasons;
-
+public record BirdSearchCommand (
+        Integer page,
+        Integer size,
+        String q,
+        List<String> habitats,
+        List<String> sizeCategories,
+        List<String> seasons,
+        String sort,
+        String sortDir
+){
     /**
      * size와 page 중 한쪽만 null일 수 없고,
      * size >= 1, page >= 1

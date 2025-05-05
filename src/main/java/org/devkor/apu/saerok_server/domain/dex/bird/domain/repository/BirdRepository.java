@@ -101,7 +101,10 @@ public class BirdRepository {
         }
 
         /* 정렬 */
-        sql.append(" ORDER BY b.korean_name ");
+        sql.append(" ORDER BY b.")
+            .append(dto.sortBy().getColumn())
+            .append(" ")
+            .append(dto.sortDir().name());
 
         Query query = em.createNativeQuery(sql.toString(), Bird.class);
 

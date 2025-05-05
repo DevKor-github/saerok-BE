@@ -6,6 +6,10 @@ import java.util.List;
 public class EnumParser {
 
     public static <T extends Enum<T>> T fromString(Class<T> enumType, String value) {
+        if (value == null) {
+            return null;
+        }
+
         return Enum.valueOf(enumType, value.toUpperCase());
     }
 
