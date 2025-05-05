@@ -1,7 +1,9 @@
-package org.devkor.apu.saerok_server.domain.dex.habitat.entity;
+package org.devkor.apu.saerok_server.domain.dex.bird.domain.entity;
 
 import jakarta.persistence.*;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(
@@ -20,6 +22,7 @@ public class BirdHabitat {
     private Bird bird;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "habitat_type")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "habitat_type", columnDefinition = "habitat_type_enum")
     private HabitatType habitatType;
 }

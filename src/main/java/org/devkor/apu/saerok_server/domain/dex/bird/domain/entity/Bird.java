@@ -6,6 +6,8 @@ import org.devkor.apu.saerok_server.domain.dex.bird.domain.contract.HasBodyLengt
 import org.devkor.apu.saerok_server.global.entity.Auditable;
 import org.devkor.apu.saerok_server.global.entity.SoftDeletableAuditable;
 
+import java.util.List;
+
 @Entity
 @Getter
 public class Bird extends SoftDeletableAuditable implements HasBodyLength {
@@ -29,6 +31,9 @@ public class Bird extends SoftDeletableAuditable implements HasBodyLength {
 
     @Column(name = "nibr_url")
     private String nibrUrl;
+
+    @OneToMany(mappedBy = "bird", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BirdImage> images;
 
     @Override
     public Double getBodyLengthCm() {

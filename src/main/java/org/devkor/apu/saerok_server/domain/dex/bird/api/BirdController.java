@@ -8,10 +8,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.BirdQueryService;
+import org.devkor.apu.saerok_server.domain.dex.bird.application.dto.BirdSearchCommand;
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,23 +29,74 @@ public class BirdController {
 
     @GetMapping("/")
     @Operation(
-            summary = "🛠 [미구현] 조류 목록 조회 및 검색",
-            description = "도감에 등록된 조류 목록을 조회하거나, 필터 조건 및 키워드를 이용해 검색할 수 있습니다.",
+            summary = "도감 조회/검색",
+            description = """
+            도감에 등록된 조류 목록을 조회하거나, 검색 키워드 및 다양한 필터를 조합해 검색할 수 있습니다.
+            
+            현재는 가나다순 정렬로 제공합니다. 필요에 따라 업데이트할 예정입니다.
+            
+            ✅ **일반 조회**
+            - `q`를 비우면 전체 도감 목록을 조회합니다.
+            
+            🔍 **검색**
+            - `q`에 검색 키워드를 입력하면 해당 단어를 포함하는 조류를 찾습니다.
+            - `habitats`, `sizeCategories`, `seasons`에 필터를 추가하면 조건에 따라 결과를 좁힙니다.
+            - **같은 필터 항목 내에서는 OR**, **다른 필터 항목 간에는 AND**로 적용됩니다.
+            
+            📄 **페이징 (선택)**
+            - `page`는 1부터 시작합니다.
+            - `page`와 `size`는 둘 다 제공해야 하며, 하나만 제공 시 Bad Request가 발생합니다.
+            - 생략하면 전체 결과를 반환합니다.
+            
+            🔧 **쿼리 파라미터 예시**
+            - `habitats=forest&habitats=marine&sizeCategories=small&seasons=summer`
+            - List 타입 필터는 파라미터를 중복 선언하여 입력합니다.
+            
+            📌 **허용된 필터 값 목록** (대소문자 구분 없음, 잘못된 값 입력 시 Bad Request)
+            
+            - **habitats**:
+                - mudflat (갯벌)
+                - farmland (경작지/들판)
+                - forest (산림/계곡)
+                - marine (해양)
+                - residential (거주지역)
+                - plains_forest (평지숲)
+                - river_lake (하천/호수)
+                - artificial (인공시설)
+                - cave (동굴)
+                - wetland (습지)
+                - others (기타)
+            
+            - **sizeCategories**:
+                - xsmall, small, medium, large
+            
+            - **seasons**:
+                - spring, summer, autumn, winter
+            """,
             responses = @ApiResponse(
                     responseCode = "200",
-                    description = "조류 목록 응답",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = BirdListResponse.class)))
+                    description = "도감 조회/검색 응답",
+                    content = @Content(schema = @Schema(implementation = BirdSearchResponse.class))
             )
     )
-    public void getBirds(
-            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(required = false) Integer page,
-            @Parameter(description = "페이지 크기", example = "20") @RequestParam(required = false) Integer size,
+    public ResponseEntity<BirdSearchResponse> getBirds(
+            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(required = false) Integer page,
+            @Parameter(description = "페이지 크기", example = "10") @RequestParam(required = false) Integer size,
             @Parameter(description = "검색 키워드 (한글 이름)") @RequestParam(required = false) String q,
-            @Parameter(description = "서식지 필터", example = "[\"FOREST\", \"WETLAND\"]") @RequestParam(required = false) List<String> habitat,
-            @Parameter(description = "크기 필터", example = "[\"SMALL\", \"MEDIUM\"]") @RequestParam(required = false) List<String> bodySize,
-            @Parameter(description = "계절 필터", example = "[\"SPRING\", \"SUMMER\"]") @RequestParam(required = false) List<String> season
+            @Parameter(description = "서식지 필터") @RequestParam(required = false) List<String> habitats,
+            @Parameter(description = "크기 필터") @RequestParam(required = false) List<String> sizeCategories,
+            @Parameter(description = "계절 필터") @RequestParam(required = false) List<String> seasons
     ) {
-        // 미구현
+        BirdSearchCommand birdSearchCommand = new BirdSearchCommand();
+        birdSearchCommand.setPage(page);
+        birdSearchCommand.setSize(size);
+        birdSearchCommand.setQ(q);
+        birdSearchCommand.setHabitats(habitats);
+        birdSearchCommand.setSizeCategories(sizeCategories);
+        birdSearchCommand.setSeasons(seasons);
+
+        BirdSearchResponse response = birdQueryService.getBirdSearchResponse(birdSearchCommand);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{birdId}")
@@ -112,8 +164,8 @@ public class BirdController {
 
     @GetMapping("/size-category-rules")
     @Operation(
-            summary = "🛠 [미구현] 조류 크기 카테고리 규칙 다운로드 (App 전용)",
-            description = "조류 크기 카테고리 규칙을 제공합니다. (App 전용)",
+            summary = "🛠 [미구현] 조류 크기 카테고리 규칙 다운로드",
+            description = "조류 크기 카테고리 규칙을 제공합니다.",
             responses = @ApiResponse(
                     responseCode = "200",
                     description = "조류 크기 카테고리 규칙",

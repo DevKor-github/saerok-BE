@@ -28,4 +28,51 @@ public class SizeCategoryService {
 
         return SizeCategoryDto.Empty();
     }
+
+    /**
+     * 최소 길이(cm)를 반환한다.
+     * size_category_rules.yml의 순서를 그대로 신뢰한다.
+     * 매칭되는 category가 없으면 IllegalArgumentException.
+     */
+    public Double getMinCmFromCategory(String category) {
+
+        if (category == null || category.isBlank()) {
+            throw new IllegalArgumentException("크기 카테고리 값이 비어있습니다.");
+        }
+
+        Double prevMax = 0.0;
+
+        for (SizeCategoryRulesConfig.Boundary boundary : rules.getBoundaries()) {
+
+            if (boundary.getCategory().equals(category.toLowerCase())) {
+                return prevMax;
+            }
+
+            if (boundary.getMaxCm() != null) {
+                prevMax = boundary.getMaxCm();
+            }
+        }
+
+        throw new IllegalArgumentException("유효하지 않은 크기 카테고리: " + category);
+    }
+
+    /**
+     * 최대 길이(cm)를 반환한다.
+     * size_category_rules.yml의 순서를 그대로 신뢰한다.
+     * 매칭되는 category가 없으면 IllegalArgumentException.
+     */
+    public Double getMaxCmFromCategory(String category) {
+
+        if (category == null || category.isBlank()) {
+            throw new IllegalArgumentException("크기 카테고리 값이 비어있습니다.");
+        }
+
+        for (SizeCategoryRulesConfig.Boundary boundary : rules.getBoundaries()) {
+            if (boundary.getCategory().equals(category.toLowerCase())) {
+                return boundary.getMaxCm();
+            }
+        }
+
+        throw new IllegalArgumentException("유효하지 않은 크기 카테고리: " + category);
+    }
 }
