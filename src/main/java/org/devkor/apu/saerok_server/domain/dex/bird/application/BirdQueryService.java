@@ -9,14 +9,18 @@ import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdSearchR
 import org.devkor.apu.saerok_server.domain.dex.bird.application.dto.BirdSearchCommand;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.mapper.BirdMapper;
+import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdSizeCategoryRulesResponse;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.service.SizeCategoryService;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.BirdSearchDto;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.CmRangeDto;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.enums.SeasonType;
+import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.SizeCategoryRulesMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.mapper.BirdProfileViewMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.repository.BirdProfileViewRepository;
+import org.devkor.apu.saerok_server.global.config.SizeCategoryRulesConfig;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.util.EnumParser;
 import org.springframework.stereotype.Service;
@@ -25,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +40,9 @@ public class BirdQueryService {
     private final BirdMapper birdMapper;
     private final BirdProfileViewRepository birdProfileViewRepository;
     private final BirdProfileViewMapper birdProfileViewMapper;
+    private final SizeCategoryRulesMapper sizeCategoryRulesMapper;
     private final SizeCategoryService sizeCategoryService;
+    private final SizeCategoryRulesConfig sizeCategoryRulesConfig;
 
     public BirdFullSyncResponse getBirdFullSyncResponse() {
         List<BirdProfileView> birdProfileViews = birdProfileViewRepository.findAll();
@@ -69,7 +76,6 @@ public class BirdQueryService {
     }
 
     public BirdChangesResponse getBirdChangesResponse(OffsetDateTime since) {
-
         List<BirdProfileView> birdsCreatedAfterSince = birdProfileViewRepository.findByCreatedAtAfter(since);
         List<BirdProfileView> birdsUpdatedAfterSince = birdProfileViewRepository.findByUpdatedAtAfter(since);
         List<BirdProfileView> birdsDeletedAfterSince = birdProfileViewRepository.findByDeletedAtAfter(since);
@@ -119,5 +125,9 @@ public class BirdQueryService {
         catch (IllegalArgumentException e) {
             throw new IllegalStateException("not valid string");
         }
+    }
+
+    public BirdSizeCategoryRulesResponse getSizeCategoryRulesResponse() {
+        return sizeCategoryRulesMapper.toDto(sizeCategoryRulesConfig);
     }
 }

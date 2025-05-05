@@ -164,7 +164,7 @@ public class BirdController {
 
     @GetMapping("/size-category-rules")
     @Operation(
-            summary = "🛠 [미구현] 조류 크기 카테고리 규칙 다운로드",
+            summary = "조류 크기 카테고리 규칙 다운로드",
             description = "조류 크기 카테고리 규칙을 제공합니다.",
             responses = @ApiResponse(
                     responseCode = "200",
@@ -172,8 +172,9 @@ public class BirdController {
                     content = @Content(schema = @Schema(implementation = BirdSizeCategoryRulesResponse.class))
             )
     )
-    public void getSizeCategoryRules() {
-        // 미구현
+    public ResponseEntity<BirdSizeCategoryRulesResponse> getSizeCategoryRules() {
+        BirdSizeCategoryRulesResponse response = birdQueryService.getSizeCategoryRulesResponse();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/changes")
