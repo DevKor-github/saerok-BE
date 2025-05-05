@@ -61,17 +61,9 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-// QueryDSL 의존성 설정
-def querydslDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
-
 tasks.withType(JavaCompile).configureEach {
-	options.generatedSourceOutputDirectory.set(querydslDir)
-}
-
-sourceSets {
-	main.java.srcDirs += [ querydslDir ]
-}
-
-clean.doLast {
-	file(querydslDir).deleteDir()
+	options.compilerArgs += [
+			'-Amapstruct.incrementalProcessing=true',
+			'-Amapstruct.suppressGeneratorTimestamp=true'
+	]
 }
