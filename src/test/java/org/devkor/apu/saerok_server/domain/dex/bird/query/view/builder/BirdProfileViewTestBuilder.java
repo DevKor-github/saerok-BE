@@ -4,7 +4,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.BirdDescriptio
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.BirdTaxonomy;
-import org.devkor.apu.saerok_server.domain.dex.habitat.entity.HabitatType;
+import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.OffsetDateTime;
