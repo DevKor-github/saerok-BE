@@ -13,9 +13,6 @@ public class User extends SoftDeletableAuditable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
     @Column(name = "nickname", nullable = false)
     private String nickname;
 
