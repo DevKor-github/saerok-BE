@@ -1,12 +1,14 @@
 package org.devkor.apu.saerok_server.domain.user.core.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.devkor.apu.saerok_server.global.entity.SoftDeletableAuditable;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "users")
+@Getter
 public class User extends SoftDeletableAuditable {
 
     @Id
