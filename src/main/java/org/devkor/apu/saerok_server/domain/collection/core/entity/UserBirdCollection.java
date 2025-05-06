@@ -38,6 +38,9 @@ public class UserBirdCollection extends Auditable {
     @Column(name = "note")
     private String note;
 
+    @Column(name = "is_pinned")
+    private boolean isPinned;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "access_level", nullable = false)
     private AccessLevelType accessLevel;
