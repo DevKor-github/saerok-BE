@@ -2,7 +2,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
 
 import java.time.OffsetDateTime;
 import java.util.List;

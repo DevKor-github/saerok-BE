@@ -1,8 +1,7 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.query.repository;
 
-import org.assertj.core.api.Assertions;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.repository.BirdRepository;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.testsupport.AbstractPostgresContainerTest;
 import org.junit.jupiter.api.Disabled;

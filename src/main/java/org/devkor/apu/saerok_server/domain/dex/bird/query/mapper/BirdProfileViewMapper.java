@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.dex.bird.query.mapper;
 
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.service.SizeCategoryService;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.mapstruct.*;
 

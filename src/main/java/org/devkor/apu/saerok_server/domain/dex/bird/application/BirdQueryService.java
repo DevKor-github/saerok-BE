@@ -7,11 +7,11 @@ import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailR
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdSearchResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.dto.BirdSearchCommand;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.mapper.BirdMapper;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.mapper.BirdMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdSizeCategoryRulesResponse;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.repository.BirdRepository;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.service.SizeCategoryService;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.service.SizeCategoryService;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.BirdSearchDto;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.CmRangeDto;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.enums.BirdSearchSortDirType;

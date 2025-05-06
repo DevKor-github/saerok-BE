@@ -1,7 +1,6 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.query.dto;
 
-import lombok.Data;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.enums.BirdSearchSortDirType;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.enums.BirdSearchSortType;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.enums.SeasonType;
