@@ -1,7 +1,7 @@
-package org.devkor.apu.saerok_server.domain.dex.bird.domain.entity;
+package org.devkor.apu.saerok_server.domain.dex.bird.core.entity;
 
 import jakarta.persistence.*;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 

@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.dex.bird.domain.entity;
+package org.devkor.apu.saerok_server.domain.dex.bird.core.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

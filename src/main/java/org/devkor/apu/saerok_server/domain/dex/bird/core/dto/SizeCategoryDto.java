@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.dex.bird.domain.dto;
+package org.devkor.apu.saerok_server.domain.dex.bird.core.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

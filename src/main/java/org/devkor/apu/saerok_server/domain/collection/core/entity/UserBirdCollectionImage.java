@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.collection.entity;
+package org.devkor.apu.saerok_server.domain.collection.core.entity;
 
 import jakarta.persistence.*;
 import org.devkor.apu.saerok_server.global.entity.Auditable;

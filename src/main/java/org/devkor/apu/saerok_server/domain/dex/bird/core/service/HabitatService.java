@@ -1,6 +1,6 @@
-package org.devkor.apu.saerok_server.domain.dex.bird.domain.service;
+package org.devkor.apu.saerok_server.domain.dex.bird.core.service;
 
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.enums.HabitatType;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

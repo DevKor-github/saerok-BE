@@ -1,10 +1,9 @@
-package org.devkor.apu.saerok_server.domain.dex.bird.domain.repository;
+package org.devkor.apu.saerok_server.domain.dex.bird.core.repository;
 
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.dex.bird.domain.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.BirdSearchDto;
 import org.springframework.stereotype.Repository;
 

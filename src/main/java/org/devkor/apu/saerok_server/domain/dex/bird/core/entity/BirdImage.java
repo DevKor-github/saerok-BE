@@ -1,7 +1,6 @@
-package org.devkor.apu.saerok_server.domain.dex.bird.domain.entity;
+package org.devkor.apu.saerok_server.domain.dex.bird.core.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import org.devkor.apu.saerok_server.global.entity.Auditable;
 

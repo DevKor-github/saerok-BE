@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.dex.bird.domain.enums;
+package org.devkor.apu.saerok_server.domain.dex.bird.core.enums;
 
 import lombok.Getter;
 
