@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.dex.bookmark.entity;
+package org.devkor.apu.saerok_server.domain.dex.bookmark.core.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
