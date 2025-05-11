@@ -30,22 +30,20 @@ public class BookmarkRepository {
     }
 
     /**
-     * 사용자 ID와 조류 ID로 단일 북마크를 조회합니다.
-     * 북마크가 true인지 아닌지 여부와 단일 북마크 정보가 필요한 상황에 이용 가능. (후자의 상황이 없다면 추후 성능을 위해 수정 예정)
+     * 사용자와 조류 ID를 기준으로 북마크 존재 여부를 확인합니다.
+     * @param userId 사용자 ID
+     * @param birdId 조류 ID
+     * @return 북마크 존재 여부
      */
-    public Optional<UserBirdBookmark> findByUserIdAndBirdId(Long userId, Long birdId) {
-        try {
-            UserBirdBookmark bookmark = em.createQuery(
-                    "SELECT b FROM UserBirdBookmark b " +
-                    "WHERE b.user.id = :userId " +
-                    "AND b.bird.id = :birdId", UserBirdBookmark.class)
-                    .setParameter("userId", userId)
-                    .setParameter("birdId", birdId)
-                    .getSingleResult();
-            return Optional.of(bookmark);
-        } catch (NoResultException e) {
-            return Optional.empty();
-        }
+    public boolean existsByUserIdAndBirdId(Long userId, Long birdId) {
+        Long count = em.createQuery(
+                "SELECT COUNT(b) FROM UserBirdBookmark b " +
+                "WHERE b.user.id = :userId " +
+                "AND b.bird.id = :birdId", Long.class)
+                .setParameter("userId", userId)
+                .setParameter("birdId", birdId)
+                .getSingleResult();
+        return count > 0;
     }
 
     /**

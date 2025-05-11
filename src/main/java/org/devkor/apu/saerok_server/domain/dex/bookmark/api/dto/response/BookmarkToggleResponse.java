@@ -1,9 +1,9 @@
 package org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @Schema(description = "북마크 토글 응답")
 public class BookmarkToggleResponse {
 

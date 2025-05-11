@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.dex.bookmark.core.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -13,6 +14,7 @@ import org.devkor.apu.saerok_server.global.entity.CreatedAtOnly;
                 columnNames = {"user_id", "bird_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class UserBirdBookmark extends CreatedAtOnly {
 
     @Id

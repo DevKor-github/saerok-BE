@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.dex.bookmark.application;
 
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkResponse;
+import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkStatusResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkedBirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.core.entity.UserBirdBookmark;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.core.mapper.BookmarkMapper;
@@ -37,5 +38,16 @@ public class BookmarkService {
     public List<BookmarkedBirdDetailResponse> getBookmarkedBirdDetails(Long userId) {
         List<UserBirdBookmark> bookmarks = bookmarkRepository.findAllWithBirdDetailsByUserId(userId);
         return bookmarkMapper.toBookmarkedBirdDetailResponseList(bookmarks);
+    }
+    
+    /**
+     * 특정 조류에 대한 북마크 상태를 확인합니다.
+     * @param userId 사용자 ID
+     * @param birdId 조류 ID
+     * @return 북마크 상태 응답
+     */
+    public BookmarkStatusResponse getBookmarkStatusResponse(Long userId, Long birdId) {
+        boolean bookmarked = bookmarkRepository.existsByUserIdAndBirdId(userId, birdId);
+        return bookmarkMapper.toBookmarkStatusResponse(birdId, bookmarked);
     }
 }

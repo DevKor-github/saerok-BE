@@ -1,12 +1,12 @@
 package org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.Data;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
-@Getter
+@Data
 @Schema(description = "북마크된 조류 상세 정보 응답")
 public class BookmarkedBirdDetailResponse {
 

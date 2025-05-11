@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkResponse;
+import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkStatusResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkedBirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.application.BookmarkService;
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
@@ -20,12 +21,12 @@ import java.util.List;
 @Tag(name = "Bookmarks API", description = "북마크 기능 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/${api_prefix}/birds/bookmarks")
+@RequestMapping("/api/v1/birds/bookmarks")
 public class BookmarkController {
 
     private final BookmarkService bookmarkService;
 
-    @GetMapping
+    @GetMapping("/")
     @Operation(
             summary = "내 북마크 목록 조회",
             description = "사용자가 북마크한 조류 목록을 조회합니다. 북마크 엔티티의 정보만 포함합니다.",
@@ -86,10 +87,28 @@ public class BookmarkController {
 
     @GetMapping("/{birdId}/status")
     @Operation(
-            summary = "[미구현] 조류 북마크 상태 확인",
-            description = "특정 조류에 대한 북마크 상태를 확인합니다."
+            summary = "조류 북마크 상태 확인",
+            description = "특정 조류에 대한 북마크 상태를 확인합니다.",
+            responses = {
+                @ApiResponse(
+                    responseCode = "200", 
+                    description = "조회 성공", 
+                    content = @Content(schema = @Schema(implementation = BookmarkStatusResponse.class))
+                ),
+                @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                )
+            }
     )
-    public void getBookmarkStatus() {
-        // 미구현
+    public ResponseEntity<BookmarkStatusResponse> getBookmarkStatus(
+            @PathVariable Long birdId,
+            Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
+        
+        BookmarkStatusResponse statusResponse = bookmarkService.getBookmarkStatusResponse(userId, birdId);
+        return ResponseEntity.ok(statusResponse);
     }
 }
