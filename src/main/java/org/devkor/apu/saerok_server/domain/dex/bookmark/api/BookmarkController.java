@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkStatusResponse;
+import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkToggleResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkedBirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.application.BookmarkService;
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
@@ -47,7 +48,7 @@ public class BookmarkController {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         Long userId = userPrincipal.getId();
         
-        List<BookmarkResponse> bookmarks = bookmarkService.getBookmarks(userId);
+        List<BookmarkResponse> bookmarks = bookmarkService.getBookmarksResponse(userId);
         return ResponseEntity.ok(bookmarks);
     }
 
@@ -72,17 +73,40 @@ public class BookmarkController {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         Long userId = userPrincipal.getId();
         
-        List<BookmarkedBirdDetailResponse> birdDetails = bookmarkService.getBookmarkedBirdDetails(userId);
+        List<BookmarkedBirdDetailResponse> birdDetails = bookmarkService.getBookmarkedBirdDetailsResponse(userId);
         return ResponseEntity.ok(birdDetails);
     }
 
     @PostMapping("/{birdId}/toggle")
     @Operation(
-            summary = "[미구현] 조류 북마크 토글",
-            description = "특정 조류에 대한 북마크를 추가하거나 제거합니다."
+            summary = "조류 북마크 토글",
+            description = "특정 조류에 대한 북마크를 추가하거나 제거합니다.",
+            responses = {
+                @ApiResponse(
+                    responseCode = "200", 
+                    description = "토글 성공", 
+                    content = @Content(schema = @Schema(implementation = BookmarkToggleResponse.class))
+                ),
+                @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                ),
+                @ApiResponse(
+                    responseCode = "404",
+                    description = "조류를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                )
+            }
     )
-    public void postBookmarkToggle() {
-        // 미구현
+    public ResponseEntity<BookmarkToggleResponse> toggleBookmark(
+            @PathVariable Long birdId,
+            Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
+        
+        BookmarkToggleResponse response = bookmarkService.toggleBookmarkResponse(userId, birdId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{birdId}/status")

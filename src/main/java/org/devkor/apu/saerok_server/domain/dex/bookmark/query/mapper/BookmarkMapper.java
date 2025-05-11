@@ -1,8 +1,9 @@
-package org.devkor.apu.saerok_server.domain.dex.bookmark.core.mapper;
+package org.devkor.apu.saerok_server.domain.dex.bookmark.query.mapper;
 
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdImage;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkStatusResponse;
+import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkToggleResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkedBirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.core.entity.UserBirdBookmark;
 import org.mapstruct.*;
@@ -31,11 +32,6 @@ public interface BookmarkMapper {
     // List<UserBirdBookmark> -> List<BookmarkedBirdDetailResponse>
     List<BookmarkedBirdDetailResponse> toBookmarkedBirdDetailResponseList(List<UserBirdBookmark> bookmarks);
 
-    // 북마크 상태 응답 생성
-    @Mapping(source = "birdId", target = "birdId")
-    @Mapping(source = "bookmarked", target = "bookmarked")
-    BookmarkStatusResponse toBookmarkStatusResponse(Long birdId, boolean bookmarked);
-
     /**
      * 조류 이미지 URL 목록을 추출합니다.
      * @param images 조류 이미지 목록
@@ -51,4 +47,13 @@ public interface BookmarkMapper {
                 .map(BirdImage::getS3Url)
                 .toList();
     }
+
+    // 북마크 상태 응답 생성
+    @Mapping(source = "birdId", target = "birdId")
+    @Mapping(source = "bookmarked", target = "bookmarked")
+    BookmarkStatusResponse toBookmarkStatusResponse(Long birdId, boolean bookmarked);
+
+    // 북마크 토글 응답 생성
+    BookmarkToggleResponse toBookmarkToggleResponse(Long birdId, boolean bookmarked, String action);
+
 }

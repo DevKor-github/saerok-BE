@@ -29,4 +29,8 @@ public class UserBirdBookmark extends CreatedAtOnly {
     @JoinColumn(name = "bird_id", nullable = false)
     private Bird bird;
 
+    public UserBirdBookmark(User user, Bird bird) {
+        this.user = user;
+        this.bird = bird;
+    }
 }

@@ -62,8 +62,27 @@ public class BookmarkRepository {
     public void save(UserBirdBookmark bookmark) {
         em.persist(bookmark);
     }
+    
+    /**
+     * 사용자와 조류 ID를 기준으로 북마크를 삭제합니다.
+     * @param userId 사용자 ID
+     * @param birdId 조류 ID
+     */
+    public void deleteByUserIdAndBirdId(Long userId, Long birdId) {
+        em.createQuery(
+                "DELETE FROM UserBirdBookmark b " +
+                "WHERE b.user.id = :userId " +
+                "AND b.bird.id = :birdId")
+                .setParameter("userId", userId)
+                .setParameter("birdId", birdId)
+                .executeUpdate();
+    }
 
-    public void delete(UserBirdBookmark bookmark) {
-        em.remove(bookmark);
+    public User findUserById(Long userId) {
+        return em.find(User.class, userId);
+    }
+
+    public Bird findBirdById(Long birdId) {
+        return em.find(Bird.class, birdId);
     }
 }
