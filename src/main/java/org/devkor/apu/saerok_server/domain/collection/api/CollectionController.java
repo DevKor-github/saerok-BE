@@ -1,12 +1,20 @@
 package org.devkor.apu.saerok_server.domain.collection.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.CollectionCommandService;
+import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
+import org.devkor.apu.saerok_server.global.security.UserPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Collections API", description = "컬렉션 기능 관련 API")
 @RestController
@@ -14,13 +22,50 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("${api_prefix}/collections/")
 public class CollectionController {
 
+    private final UserRepository userRepository;
+    private final CollectionWebMapper collectionWebMapper;
+    private final CollectionCommandService collectionCommandService;
+
     @PostMapping
     @Operation(
-            summary = "[미구현] 컬렉션 등록",
-            description = "새 컬렉션(관찰 기록)을 생성합니다. (이미지 제외한 메타데이터 전송)"
+            summary = "컬렉션 등록 (종추)",
+            description = "새 컬렉션(관찰 기록)을 생성합니다. (이미지 제외한 메타데이터 전송)",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = """
+                            컬렉션 생성 요청 DTO.
+                            
+                            - `birdId`와 `tempBirdName` 둘 중 하나는 null이고, 다른 하나는 null이 아니어야 합니다. 위반 시 Bad Request
+                            <br> ex) 도감에 등록된 새라면 `birdId = 42, tempBirdName = null`. 그렇지 않으면 `birdId = null, tempBirdName = "이상한 새"`
+                            """,
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = CreateCollectionRequest.class),
+                            mediaType = "application/json"
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "컬렉션 생성 성공",
+                            content = @Content(
+                                    schema = @Schema(implementation = CreateCollectionResponse.class),
+                                    mediaType = "application/json"
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
     )
-    public void createCollection(/* @RequestBody CreateCollectionRequest request */) {
-        // TODO: 구현
+    public CreateCollectionResponse createCollection(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody CreateCollectionRequest request
+    ) {
+        Long userId = userPrincipal.getId();
+        Long collectionId = collectionCommandService.createCollection(collectionWebMapper.toCreateCollectionCommand(request, userId));
+        return collectionWebMapper.toCreateCollectionResponse(collectionId);
     }
 
     @PostMapping("/{collectionId}/images/presign")
