@@ -49,8 +49,6 @@ public interface BookmarkMapper {
     }
 
     // 북마크 상태 응답 생성
-    @Mapping(source = "birdId", target = "birdId")
-    @Mapping(source = "bookmarked", target = "bookmarked")
     BookmarkStatusResponse toBookmarkStatusResponse(Long birdId, boolean bookmarked);
 
     // 북마크 토글 응답 생성

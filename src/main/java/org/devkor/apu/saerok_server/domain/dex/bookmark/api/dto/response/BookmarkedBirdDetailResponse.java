@@ -30,7 +30,4 @@ public class BookmarkedBirdDetailResponse {
     
     @Schema(description = "조류 이미지 URL 목록")
     private List<String> imageUrls;
-    
-    @Schema(description = "북마크 생성 시간")
-    private OffsetDateTime createdAt;
 }

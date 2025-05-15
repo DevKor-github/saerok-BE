@@ -14,7 +14,4 @@ public class BookmarkResponse {
     
     @Schema(description = "조류 ID")
     private Long birdId;
-    
-    @Schema(description = "북마크 생성 시간")
-    private OffsetDateTime createdAt;
 }
