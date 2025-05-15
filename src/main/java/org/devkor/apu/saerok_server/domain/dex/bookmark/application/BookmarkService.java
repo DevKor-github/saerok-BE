@@ -67,20 +67,18 @@ public class BookmarkService {
         if (exists) {
             // 북마크가 이미 존재하면 제거
             bookmarkRepository.deleteByUserIdAndBirdId(userId, birdId);
-            return bookmarkMapper.toBookmarkToggleResponse(birdId, false, "removed");
+            return bookmarkMapper.toBookmarkToggleResponse(birdId, false);
         } else {
             // 북마크가 없으면 추가
-            User user = bookmarkRepository.findUserById(userId);
-            Bird bird = bookmarkRepository.findBirdById(birdId);
-            
-            if (user == null || bird == null) {
-                throw new IllegalArgumentException("사용자 또는 조류를 찾을 수 없습니다.");
-            }
+            User user = bookmarkRepository.findUserById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+            Bird bird = bookmarkRepository.findBirdById(birdId)
+                    .orElseThrow(() -> new IllegalArgumentException("조류를 찾을 수 없습니다."));
             
             UserBirdBookmark bookmark = new UserBirdBookmark(user, bird);
             bookmarkRepository.save(bookmark);
             
-            return bookmarkMapper.toBookmarkToggleResponse(birdId, true, "added");
+            return bookmarkMapper.toBookmarkToggleResponse(birdId, true);
         }
     }
 }

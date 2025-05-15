@@ -4,8 +4,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.core.entity.UserBirdBookmark;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,6 +18,8 @@ import java.util.Optional;
 public class BookmarkRepository {
 
     private final EntityManager em;
+    private final UserRepository userRepository;
+    private final BirdRepository birdRepository;
 
     /**
      * 사용자의 모든 북마크를 조회합니다.
@@ -42,6 +46,7 @@ public class BookmarkRepository {
                 "AND b.bird.id = :birdId", Long.class)
                 .setParameter("userId", userId)
                 .setParameter("birdId", birdId)
+                .setMaxResults(1)
                 .getSingleResult();
         return count > 0;
     }
@@ -78,11 +83,11 @@ public class BookmarkRepository {
                 .executeUpdate();
     }
 
-    public User findUserById(Long userId) {
-        return em.find(User.class, userId);
+    public Optional<User> findUserById(Long userId) {
+        return userRepository.findById(userId);
     }
 
-    public Bird findBirdById(Long birdId) {
-        return em.find(Bird.class, birdId);
+    public Optional<Bird> findBirdById(Long birdId) {
+        return birdRepository.findById(birdId);
     }
 }

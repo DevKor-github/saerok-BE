@@ -52,6 +52,6 @@ public interface BookmarkMapper {
     BookmarkStatusResponse toBookmarkStatusResponse(Long birdId, boolean bookmarked);
 
     // 북마크 토글 응답 생성
-    BookmarkToggleResponse toBookmarkToggleResponse(Long birdId, boolean bookmarked, String action);
+    BookmarkToggleResponse toBookmarkToggleResponse(Long birdId, boolean bookmarked);
 
 }
