@@ -64,6 +64,10 @@ jobs:
             DB_URL="${{ secrets.DB_URL }}" \
             DB_USERNAME="${{ secrets.DB_USERNAME }}" \
             DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            IAM_ACCESS_KEY="${{ secrets.IAM_ACCESS_KEY }}" \
+            IAM_SECRET_KEY="${{ secrets.IAM_SECRET_KEY }}" \
+            BUCKET_NAME="${{ vars.BUCKET_NAME }}" \
+            CLOUDFRONT_IMAGE_DOMAIN="${{ vars.CLOUDFRONT_IMAGE_DOMAIN }}" \
             nohup java -jar $JAR_NAME --spring.profiles.active=dev > app.log 2>&1 &
             
             echo "✅ 배포 완료"
