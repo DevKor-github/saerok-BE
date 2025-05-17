@@ -62,7 +62,7 @@ public class BirdQueryService {
 
     public BirdDetailResponse getBirdDetailResponse(Long birdId) {
         BirdProfileView birdProfileView = birdProfileViewRepository.findById(birdId)
-                .orElseThrow(() -> new NotFoundException("Bird", "id", birdId));
+                .orElseThrow(() -> new NotFoundException("해당 id의 birdProfileView를 찾지 못했어요"));
         BirdDetailResponse response = birdProfileViewMapper.toBirdDetailResponse(birdProfileView);
         response.sizeCategory = sizeCategoryService.getSizeCategory(birdProfileView).getLabel();
         return response;

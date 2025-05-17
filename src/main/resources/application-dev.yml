@@ -14,3 +14,13 @@ spring:
 
 server:
   port: 8080
+
+aws:
+  credentials:
+    access-key: ${IAM_ACCESS_KEY}
+    secret-key: ${IAM_SECRET_KEY}
+  region: ap-northeast-2
+  s3:
+    bucket: ${BUCKET_NAME}
+  cloudfront:
+    image-domain: ${CLOUDFRONT_IMAGE_DOMAIN}
