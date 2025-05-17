@@ -17,13 +17,13 @@ public class CreateCollectionRequest {
     @Schema(description = "사용자가 직접 입력한 새 이름 (종을 특정하지 못한 경우)", example = "이상한 새", nullable = true)
     private String tempBirdName;
 
-    @Schema(description = "관찰한 날짜 (yyyy-MM-dd 형식)", example = "2024-05-15")
+    @Schema(description = "관찰한 날짜 (yyyy-MM-dd 형식)", example = "2024-05-15", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDate discoveredDate;
 
-    @Schema(description = "관찰 지점의 위도", example = "33.2395")
+    @Schema(description = "관찰 지점의 위도", example = "33.2395", requiredMode = Schema.RequiredMode.REQUIRED)
     private Double latitude;
 
-    @Schema(description = "관찰 지점의 경도", example = "126.5583")
+    @Schema(description = "관찰 지점의 경도", example = "126.5583", requiredMode = Schema.RequiredMode.REQUIRED)
     private Double longitude;
 
     @Schema(description = "관찰 지점에 대한 사용자 지정 장소 별칭", example = "서귀포 갯벌", nullable = true)
