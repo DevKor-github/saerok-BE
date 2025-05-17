@@ -216,4 +216,151 @@ public class CollectionController {
                 collectionWebMapper.toCreateCollectionImageCommand(request)
         );
     }
+
+    /* ------------------------------------------------------------------
+       아직 미구현인 컬렉션 관련 추가 API
+       ------------------------------------------------------------------ */
+
+    @GetMapping("/{collectionId}")
+    @Operation(
+            summary = "[미구현] 컬렉션 상세 조회",
+            description = """
+            ✅ 응답 예시 필드
+            - collectionId
+            - imageUrl
+            - discoveredDate, latitude, longitude, locationAlias
+            - note(한 줄 평)
+            - bird : { birdId, koreanName }  ※ birdId가 없으면 tempBirdName 반환  
+            - user : { userId, nickname }
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "조회 성공"),
+                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
+    )
+    public void getCollectionDetail(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId
+    ) {
+        // TODO: 미구현
+    }
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "[미구현] 내 컬렉션 목록 조회 (핀 우선, 페이징)",
+            description = """
+            ✅ 쿼리 파라미터
+            - page (기본 0)  
+            - size (기본 20)
+
+            ✅ 응답 예시 필드  
+            - collectionId  
+            - imageUrl
+            - birdName (bird.koreanName 또는 tempBirdName)  
+
+            🔖 isPinned=true 인 항목을 항상 목록 최상단에 정렬
+            """,
+            responses = { @ApiResponse(responseCode = "200", description = "목록 조회 성공") }
+    )
+    public void listMyCollections(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        // TODO: 미구현
+    }
+
+    @PatchMapping("/{collectionId}/pin")
+    @Operation(
+            summary = "[미구현] 컬렉션 핀 토글",
+            description = """
+            컬렉션의 `is_pinned` 값을 토글합니다.
+            (핀 해제 → 핀 설정, 핀 설정 → 핀 해제)
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "토글 성공"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
+    )
+    public void toggleCollectionPin(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId
+    ) {
+        // TODO: 미구현
+    }
+
+    @GetMapping("/{collectionId}/edit")
+    @Operation(
+            summary = "[미구현] 컬렉션 수정 폼 데이터 조회",
+            description = """
+            컬렉션 수정 화면 진입 시 필요한 정보를 조회합니다.  
+            기존에 저장된 메타데이터(조류 정보, 관찰 일시 및 위치, 한 줄 평, 핀 여부 등)를 반환합니다.
+            
+            ✅ 이 API는 수정 폼에 데이터를 채워넣기 위한 용도로만 사용됩니다.
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "조회 성공"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
+    )
+    public void getCollectionEditForm(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId
+    ) {
+        // TODO: 미구현
+    }
+
+
+
+    @PutMapping("/{collectionId}/edit")
+    @Operation(
+            summary = "[미구현] 컬렉션 메타데이터 수정",
+            description = """
+            기존에 생성한 컬렉션의 메타데이터를 수정합니다.  
+            조류 정보, 장소 정보, 관찰 일시, 한 줄 평, 핀 여부 등을 변경할 수 있습니다.
+            
+            ⚠️ 수정 대상: 이미지 제외한 컬렉션의 모든 메타데이터
+            
+            ✅ 사용 예시:
+            - `birdId`와 `tempBirdName`은 생성 API와 동일하게 **둘 중 하나만 존재해야 함**
+            - `note`는 50자 이하
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "수정 성공"),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
+    )
+    public void updateCollection(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId
+            // @RequestBody UpdateCollectionRequest request
+    ) {
+        // TODO: 미구현
+    }
+
+
+    @DeleteMapping("/{collectionId}")
+    @Operation(
+            summary = "[미구현] 컬렉션 삭제",
+            description = """
+            컬렉션 및 연관된 이미지 레코드를 모두 삭제합니다.
+            (이미지 파일 자체 삭제 여부는 정책에 따라 구현)
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "삭제 성공"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCollection(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId
+    ) {
+        // TODO: 미구현
+    }
 }
