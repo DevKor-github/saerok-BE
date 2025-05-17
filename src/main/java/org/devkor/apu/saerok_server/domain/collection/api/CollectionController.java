@@ -108,14 +108,14 @@ public class CollectionController {
         클라이언트는 해당 주소로 직접 이미지 파일을 업로드해야 합니다.
 
         ---
-        📤 **업로드 방식 (중요)**  
+        📤 **업로드 방식 (중요)**
         Presigned URL이 발급되면, 클라이언트는 아래 조건에 맞춰 업로드 요청을 보내야 합니다:
 
-        - HTTP 메서드: `PUT`  
-        - 요청 URL: 이 API에서 발급받은 `url`  
-        - 요청 본문: 업로드할 이미지 바이너리  
+        - HTTP 메서드: `PUT`
+        - 요청 URL: 이 API에서 발급받은 `url`
+        - 요청 본문: 업로드할 이미지 바이너리
         - 요청 헤더:
-            - `Content-Type`: Presigned URL 발급 시 서버에 전달했던 `contentType`과 정확히 동일하게 설정해야 합니다  
+            - `Content-Type`: Presigned URL 발급 시 서버에 전달했던 `contentType`과 정확히 동일하게 설정해야 합니다
               (예: `image/jpeg`, `image/png` 등)
 
         ---
@@ -172,7 +172,7 @@ public class CollectionController {
     @Operation(
             summary = "컬렉션 이미지 메타데이터 등록",
             description = """
-        클라이언트가 S3에 이미지 업로드를 완료한 후, 
+        클라이언트가 S3에 이미지 업로드를 완료한 후,
         해당 이미지의 **메타데이터(objectKey, contentType)** 를 서버에 등록합니다.
 
         ⚙️ 서버는 해당 정보를 기반으로 DB에 이미지 정보를 저장하고,
