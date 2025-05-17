@@ -1,8 +1,11 @@
 package org.devkor.apu.saerok_server.domain.collection.mapper;
 
+import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionImageRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionImageCommand;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -17,4 +20,6 @@ public interface CollectionWebMapper {
 
     @Mapping(target = "collectionId", source = "collectionId")
     CreateCollectionResponse toCreateCollectionResponse(Long collectionId);
+
+    CreateCollectionImageCommand toCreateCollectionImageCommand(CreateCollectionImageRequest request);
 }

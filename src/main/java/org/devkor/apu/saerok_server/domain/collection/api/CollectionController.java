@@ -6,13 +6,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CollectionImagePresignRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionImageRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
-import org.devkor.apu.saerok_server.domain.collection.application.dto.CollectionCommandService;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
+import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.devkor.apu.saerok_server.global.security.UserPrincipal;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +27,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${api_prefix}/collections/")
 public class CollectionController {
 
-    private final UserRepository userRepository;
     private final CollectionWebMapper collectionWebMapper;
     private final CollectionCommandService collectionCommandService;
+    private final CollectionImageCommandService collectionImageCommandService;
 
     @PostMapping
     @Operation(
@@ -59,6 +64,7 @@ public class CollectionController {
                     )
             }
     )
+    @ResponseStatus(HttpStatus.CREATED)
     public CreateCollectionResponse createCollection(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody CreateCollectionRequest request
@@ -70,25 +76,82 @@ public class CollectionController {
 
     @PostMapping("/{collectionId}/images/presign")
     @Operation(
-            summary = "[미구현] 컬렉션 이미지 Presign 발급",
-            description = "클라이언트가 S3로 이미지를 직접 업로드할 수 있도록 Presigned URL을 발급합니다."
+            summary = "컬렉션 이미지 업로드 주소 발급",
+            description = "클라이언트가 컬렉션 이미지를 업로드할 수 있는 URL을 발급합니다. (S3 Presigned URL)",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = """
+                            컬렉션 이미지 업로드 주소 발급 요청 DTO.
+                            """,
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = CollectionImagePresignRequest.class),
+                            mediaType = "application/json"
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "컬렉션 이미지 업로드 주소 발급 성공",
+                            content = @Content(
+                                    schema = @Schema(implementation = PresignResponse.class),
+                                    mediaType = "application/json"
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "해당 컬렉션에 대한 권한 없음 (다른 사용자의 컬렉션 id로 요청한 경우)",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "존재하지 않는 컬렉션 (유효하지 않은 컬렉션 id)",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
     )
-    public void generatePresignedUrls(
-            @PathVariable Long collectionId
-            /* , @RequestBody CollectionImagePresignRequest request */
+    @ResponseStatus(HttpStatus.CREATED)
+    public PresignResponse generatePresignedUrls(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @RequestBody CollectionImagePresignRequest request
     ) {
-        // TODO: 구현
+        return collectionImageCommandService.generatePresignedUploadUrl(userPrincipal.getId(), collectionId, request.getContentType());
     }
 
     @PostMapping("/{collectionId}/images")
     @Operation(
-            summary = "[미구현] 컬렉션 이미지 업로드 완료 통보",
-            description = "클라이언트가 S3 이미지 업로드를 끝낸 뒤, 이미지 메타데이터(Object Key, orderIndex 등)를 서버에 등록합니다."
+            summary = "컬렉션 이미지 메타데이터 등록",
+            description = "클라이언트가 컬렉션 이미지를 업로드했음을 서버에게 알리고, 이미지 메타데이터를 서버에 등록합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "컬렉션 이미지 메타데이터 등록 성공",
+                            content = @Content(
+                                    schema = @Schema(implementation = CreateCollectionImageResponse.class),
+                                    mediaType = "application/json"
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "해당 컬렉션에 대한 권한 없음 (다른 사용자의 컬렉션 id로 요청한 경우)",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "존재하지 않는 컬렉션 (유효하지 않은 컬렉션 id)",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
     )
-    public void notifyImageUpload(
-            @PathVariable Long collectionId
-            /* , @RequestBody CollectionImageUploadCompleteRequest images */
+    public CreateCollectionImageResponse notifyImageUpload(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @RequestBody CreateCollectionImageRequest request
     ) {
-        // TODO: 구현
+        return collectionImageCommandService.saveImageMetadata(
+                userPrincipal.getId(),
+                collectionId,
+                collectionWebMapper.toCreateCollectionImageCommand(request)
+        );
     }
 }
