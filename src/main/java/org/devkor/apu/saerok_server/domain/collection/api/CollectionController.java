@@ -260,7 +260,11 @@ public class CollectionController {
             - birdName (bird.koreanName 또는 tempBirdName)  
 
             """,
-            responses = { @ApiResponse(responseCode = "200", description = "목록 조회 성공") }
+            responses = { 
+                @ApiResponse(responseCode = "200", description = "목록 조회 성공"),
+                @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
     )
     public List<MyCollectionsResponse> listMyCollections(
             @AuthenticationPrincipal UserPrincipal userPrincipal
