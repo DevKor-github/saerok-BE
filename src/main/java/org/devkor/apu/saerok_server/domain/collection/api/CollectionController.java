@@ -11,15 +11,19 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateColl
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
+import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.devkor.apu.saerok_server.global.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Collections API", description = "컬렉션 기능 관련 API")
 @RestController
@@ -30,6 +34,7 @@ public class CollectionController {
     private final CollectionWebMapper collectionWebMapper;
     private final CollectionCommandService collectionCommandService;
     private final CollectionImageCommandService collectionImageCommandService;
+    private final CollectionQueryService collectionQueryService;
 
     @PostMapping
     @Operation(
@@ -247,47 +252,21 @@ public class CollectionController {
 
     @GetMapping("/me")
     @Operation(
-            summary = "[미구현] 내 컬렉션 목록 조회 (핀 우선, 페이징)",
+            summary = "내 컬렉션 목록 조회",
             description = """
-            ✅ 쿼리 파라미터
-            - page (기본 0)  
-            - size (기본 20)
-
             ✅ 응답 예시 필드  
             - collectionId  
             - imageUrl
             - birdName (bird.koreanName 또는 tempBirdName)  
 
-            🔖 isPinned=true 인 항목을 항상 목록 최상단에 정렬
             """,
             responses = { @ApiResponse(responseCode = "200", description = "목록 조회 성공") }
     )
-    public void listMyCollections(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+    public List<MyCollectionsResponse> listMyCollections(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        // TODO: 미구현
-    }
-
-    @PatchMapping("/{collectionId}/pin")
-    @Operation(
-            summary = "[미구현] 컬렉션 핀 토글",
-            description = """
-            컬렉션의 `is_pinned` 값을 토글합니다.
-            (핀 해제 → 핀 설정, 핀 설정 → 핀 해제)
-            """,
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "토글 성공"),
-                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-            }
-    )
-    public void toggleCollectionPin(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable Long collectionId
-    ) {
-        // TODO: 미구현
+        Long userId = userPrincipal.getId();
+        return collectionQueryService.getMyCollectionsResponse(userId);
     }
 
     @GetMapping("/{collectionId}/edit")

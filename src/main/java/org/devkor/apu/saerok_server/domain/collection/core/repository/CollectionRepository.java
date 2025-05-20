@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,5 +25,13 @@ public class CollectionRepository {
 
     public void remove(UserBirdCollection collection) {
         em.remove(collection);
+    }
+    
+    public List<UserBirdCollection> findByUserId(Long userId) {
+        return em.createQuery(
+                "SELECT c FROM UserBirdCollection c " +
+                "WHERE c.user.id = :userId", UserBirdCollection.class)
+                .setParameter("userId", userId)
+                .getResultList();
     }
 }
