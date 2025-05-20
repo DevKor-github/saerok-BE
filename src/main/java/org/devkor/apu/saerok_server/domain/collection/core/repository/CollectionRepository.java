@@ -21,4 +21,8 @@ public class CollectionRepository {
         em.persist(collection);
         return collection.getId();
     }
+
+    public void remove(UserBirdCollection collection) {
+        em.remove(collection);
+    }
 }
