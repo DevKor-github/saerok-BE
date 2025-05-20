@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,5 +21,17 @@ public class CollectionImageRepository {
     public Long save(UserBirdCollectionImage image) {
         em.persist(image);
         return image.getId();
+    }
+
+    public List<String> findObjectKeysByCollectionId(Long collectionId) {
+        return em.createQuery("SELECT i.objectKey FROM UserBirdCollectionImage i WHERE i.collection.id = :collectionId", String.class)
+                .setParameter("collectionId", collectionId)
+                .getResultList();
+    }
+
+    public void removeByCollectionId(Long collectionId) {
+        em.createQuery("DELETE FROM UserBirdCollectionImage i WHERE i.collection.id = :collectionId")
+                .setParameter("collectionId", collectionId)
+                .executeUpdate();
     }
 }

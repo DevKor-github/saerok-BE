@@ -345,15 +345,14 @@ public class CollectionController {
 
     @DeleteMapping("/{collectionId}")
     @Operation(
-            summary = "[미구현] 컬렉션 삭제",
+            summary = "컬렉션 삭제",
             description = """
-            컬렉션 및 연관된 이미지 레코드를 모두 삭제합니다.
-            (이미지 파일 자체 삭제 여부는 정책에 따라 구현)
+            해당 컬렉션 및 컬렉션에 딸린 이미지를 모두 삭제합니다.
             """,
             responses = {
-                    @ApiResponse(responseCode = "204", description = "삭제 성공"),
-                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(responseCode = "204", description = "컬렉션 삭제 성공"),
+                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "요청한 컬렉션이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -361,6 +360,7 @@ public class CollectionController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long collectionId
     ) {
-        // TODO: 미구현
+        Long userId = userPrincipal.getId();
+        collectionCommandService.deleteCollection(collectionWebMapper.toDeleteCollectionCommand(userId, collectionId));
     }
 }
