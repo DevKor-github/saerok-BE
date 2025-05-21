@@ -42,22 +42,13 @@ public class CollectionCommandService {
 
     public Long createCollection(CreateCollectionCommand command) {
         User user = userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
-        if (command.birdId() == null && (command.tempBirdName() == null || command.tempBirdName().isEmpty())) {
-            throw new BadRequestException("조류 정보를 포함해주세요");
-        }
-        if (command.birdId() != null && (command.tempBirdName() != null && !command.tempBirdName().isEmpty())) {
-            throw new BadRequestException("조류 id와 사용자가 직접 입력한 새 이름을 둘 다 등록할 수는 없어요");
-        }
 
         Bird bird;
-        String tempBirdName;
 
         if (command.birdId() != null) {
             bird = birdRepository.findById(command.birdId()).orElseThrow(() -> new BadRequestException("유효하지 않은 조류 id예요"));
-            tempBirdName = null;
         } else {
             bird = null;
-            tempBirdName = command.tempBirdName();
         }
 
         if (command.discoveredDate() == null) {
@@ -79,7 +70,7 @@ public class CollectionCommandService {
         UserBirdCollection collection = UserBirdCollection.builder()
                 .user(user)
                 .bird(bird)
-                .tempBirdName(tempBirdName)
+                .tempBirdName(null) // 일단 tempBirdName 미사용하기로 하여 null로 설정
                 .discoveredDate(command.discoveredDate())
                 .location(location)
                 .locationAlias(command.locationAlias())
