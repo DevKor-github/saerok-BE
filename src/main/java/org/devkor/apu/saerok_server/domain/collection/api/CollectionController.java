@@ -11,9 +11,11 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateColl
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
+import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.devkor.apu.saerok_server.global.security.UserPrincipal;
@@ -30,6 +32,7 @@ public class CollectionController {
     private final CollectionWebMapper collectionWebMapper;
     private final CollectionCommandService collectionCommandService;
     private final CollectionImageCommandService collectionImageCommandService;
+    private final CollectionQueryService collectionQueryService;
 
     @PostMapping
     @Operation(
@@ -292,24 +295,21 @@ public class CollectionController {
 
     @GetMapping("/{collectionId}/edit")
     @Operation(
-            summary = "[미구현] 컬렉션 수정 폼 데이터 조회",
+            summary = "컬렉션 수정용 상세 조회",
             description = """
-            컬렉션 수정 화면 진입 시 필요한 정보를 조회합니다.  
-            기존에 저장된 메타데이터(조류 정보, 관찰 일시 및 위치, 한 줄 평, 핀 여부 등)를 반환합니다.
-            
-            ✅ 이 API는 수정 폼에 데이터를 채워넣기 위한 용도로만 사용됩니다.
+            컬렉션 수정 시 필요한 정보를 조회합니다.
             """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공"),
+                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionEditDataResponse.class))),
                     @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
                     @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public void getCollectionEditForm(
+    public GetCollectionEditDataResponse getCollectionEditData(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long collectionId
     ) {
-        // TODO: 미구현
+        return collectionQueryService.getCollectionEditDataResponse(collectionWebMapper.toGetCollectionDataCommand(userPrincipal.getId(), collectionId));
     }
 
 

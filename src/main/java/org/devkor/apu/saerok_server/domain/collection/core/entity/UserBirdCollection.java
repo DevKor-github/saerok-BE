@@ -72,4 +72,12 @@ public class UserBirdCollection extends Auditable {
         this.isPinned = isPinned;
         this.accessLevel = accessLevel == null ? AccessLevelType.PUBLIC : accessLevel;
     }
+
+    public double getLongitude() {
+        return location.getX();
+    }
+
+    public double getLatitude() {
+        return location.getY();
+    }
 }
