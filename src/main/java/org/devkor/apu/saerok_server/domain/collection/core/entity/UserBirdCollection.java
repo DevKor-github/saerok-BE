@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.entity.Auditable;
@@ -30,21 +31,26 @@ public class UserBirdCollection extends Auditable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bird_id", nullable = true)
+    @Setter
     private Bird bird;
 
     @Column(name = "temp_bird_name")
     private String tempBirdName;
 
     @Column(name = "discovered_date", nullable = false)
+    @Setter
     private LocalDate discoveredDate;
 
     @Column(name = "location", columnDefinition = "geometry(Point,4326)", nullable = false)
+    @Setter
     private Point location;
 
     @Column(name = "location_alias")
+    @Setter
     private String locationAlias;
 
     @Column(name = "note")
+    @Setter
     private String note;
 
     @Column(name = "is_pinned")
@@ -53,6 +59,7 @@ public class UserBirdCollection extends Auditable {
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "access_level", nullable = false, columnDefinition = "access_level_enum")
+    @Setter
     private AccessLevelType accessLevel;
 
     @Builder

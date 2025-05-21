@@ -9,10 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CollectionImagePresignRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionImageRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
@@ -312,32 +310,33 @@ public class CollectionController {
 
 
 
-    @PutMapping("/{collectionId}/edit")
+    @PatchMapping("/{collectionId}/edit")
     @Operation(
-            summary = "[미구현] 컬렉션 메타데이터 수정",
+            summary = "컬렉션 메타데이터 수정",
             description = """
-            기존에 생성한 컬렉션의 메타데이터를 수정합니다.  
-            조류 정보, 장소 정보, 관찰 일시, 한 줄 평, 핀 여부 등을 변경할 수 있습니다.
+            기존에 생성한 컬렉션의 메타데이터를 수정합니다.
+            수정하고 싶은 필드만 요청 json에 담아서 보낼 수 있습니다.
+            
+            birdId를 수정하려면 반드시 isBirdIdUpdated = true도 포함해야 합니다.
             
             ⚠️ 수정 대상: 이미지 제외한 컬렉션의 모든 메타데이터
             
-            ✅ 사용 예시:
-            - `birdId`와 `tempBirdName`은 생성 API와 동일하게 **둘 중 하나만 존재해야 함**
+            ✅ 유효성 조건:
             - `note`는 50자 이하
             """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "수정 성공"),
+                    @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(schema = @Schema(implementation = UpdateCollectionResponse.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
                     @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public void updateCollection(
+    public UpdateCollectionResponse updateCollection(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable Long collectionId
-            // @RequestBody UpdateCollectionRequest request
+            @PathVariable Long collectionId,
+            @RequestBody UpdateCollectionRequest request
     ) {
-        // TODO: 미구현
+        return collectionCommandService.updateCollection(collectionWebMapper.toUpdateCollectionCommand(request, userPrincipal.getId(), collectionId));
     }
 
 
