@@ -14,9 +14,6 @@ public class CreateCollectionRequest {
     @Schema(description = "관찰한 새의 ID", example = "null", nullable = true)
     private Long birdId;
 
-    @Schema(description = "사용자가 직접 입력한 새 이름 (종을 특정하지 못한 경우)", example = "이상한 새", nullable = true)
-    private String tempBirdName;
-
     @Schema(description = "관찰한 날짜 (yyyy-MM-dd 형식)", example = "2024-05-15", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDate discoveredDate;
 
