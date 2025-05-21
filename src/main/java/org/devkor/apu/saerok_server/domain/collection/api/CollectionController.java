@@ -38,7 +38,6 @@ public class CollectionController {
         새 컬렉션(관찰 기록)을 생성합니다. 이 단계에서는 **이미지를 제외한 메타데이터만 전송**합니다.
 
         ⚠️ 유효성 제약:
-        - birdId와 tempBirdName은 반드시 하나만 있어야 함
         - note는 50자 이하
 
         📌 이 API를 먼저 호출하여 컬렉션을 생성한 후,
@@ -63,8 +62,7 @@ public class CollectionController {
                     description = """
                             컬렉션 생성 요청 DTO.
                             
-                            - `birdId`와 `tempBirdName` 둘 중 하나는 null이고, 다른 하나는 null이 아니어야 합니다. 위반 시 Bad Request
-                            <br> ex) 도감에 등록된 새라면 `birdId = 42, tempBirdName = null`. 그렇지 않으면 `birdId = null, tempBirdName = "이상한 새"`
+                            - birdId가 null이면 종 미식별을 의미합니다.`
                             """,
                     required = true,
                     content = @Content(
