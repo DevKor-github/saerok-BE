@@ -35,6 +35,10 @@ public class CollectionImageRepository {
                 .getResultList();
     }
 
+    public void remove(UserBirdCollectionImage image) {
+        em.remove(image);
+    }
+
     public void removeByCollectionId(Long collectionId) {
         em.createQuery("DELETE FROM UserBirdCollectionImage i WHERE i.collection.id = :collectionId")
                 .setParameter("collectionId", collectionId)

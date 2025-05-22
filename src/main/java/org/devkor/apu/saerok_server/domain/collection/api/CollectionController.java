@@ -293,8 +293,8 @@ public class CollectionController {
     @Operation(
             summary = "컬렉션 수정용 상세 조회",
             description = """
-            컬렉션 수정 시 필요한 정보를 조회합니다.
-            """,
+                    컬렉션 수정 시 필요한 정보를 조회합니다.
+                    """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionEditDataResponse.class))),
                     @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -307,7 +307,6 @@ public class CollectionController {
     ) {
         return collectionQueryService.getCollectionEditDataResponse(collectionWebMapper.toGetCollectionDataCommand(userPrincipal.getId(), collectionId));
     }
-
 
 
     @PatchMapping("/{collectionId}/edit")
@@ -359,5 +358,29 @@ public class CollectionController {
     ) {
         Long userId = userPrincipal.getId();
         collectionCommandService.deleteCollection(collectionWebMapper.toDeleteCollectionCommand(userId, collectionId));
+    }
+
+    @DeleteMapping("/{collectionId}/images/{imageId}")
+    @Operation(
+            summary = "컬렉션 이미지 삭제",
+            description = """
+                    지정한 컬렉션 이미지를 삭제합니다.
+                    * imageId는 컬렉션 수정용 상세 조회 API를 통해 얻을 수 있습니다.
+                    * 컬렉션 이미지를 교체하고 싶으면, "컬렉션 이미지 삭제 -> 컬렉션 이미지 Presigned URL 발급 -> 해당 URL로 이미지 PUT 업로드 -> 컬렉션 이미지 메타데이터 등록"을 하면 됩니다.
+                    """,
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "컬렉션 이미지 삭제 성공"),
+                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCollectionImage(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @PathVariable Long imageId
+    ) {
+        Long userId = userPrincipal.getId();
+        collectionImageCommandService.deleteCollectionImage(userId, collectionId, imageId);
     }
 }
