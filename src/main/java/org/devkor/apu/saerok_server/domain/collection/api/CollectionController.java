@@ -11,6 +11,7 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateColl
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionRequest;
@@ -228,26 +229,26 @@ public class CollectionController {
 
     @GetMapping("/{collectionId}")
     @Operation(
-            summary = "[미구현] 컬렉션 상세 조회",
+            summary = "컬렉션 상세 조회",
             description = """
             ✅ 응답 예시 필드
             - collectionId
             - imageUrl
             - discoveredDate, latitude, longitude, locationAlias
             - note(한 줄 평)
-            - bird : { birdId, koreanName }  ※ birdId가 없으면 tempBirdName 반환  
+            - accessLevel
+            - bird : { birdId, koreanName }  ※ birdId가 없으면 { birdId : null, koreanName : "어디선가 본 새"} 반환
             - user : { userId, nickname }
             """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공"),
+                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionDetailResponse.class))),
                     @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public void getCollectionDetail(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
+    public GetCollectionDetailResponse getCollectionDetail(
             @PathVariable Long collectionId
     ) {
-        // TODO: 미구현
+        return collectionQueryService.getCollectionDetailResponse(collectionId);
     }
 
     @GetMapping("/me")

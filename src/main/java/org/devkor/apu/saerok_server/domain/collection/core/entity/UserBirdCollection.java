@@ -87,4 +87,12 @@ public class UserBirdCollection extends Auditable {
     public double getLatitude() {
         return location.getY();
     }
+
+    public String getBirdKoreanName() {
+        return bird != null ? bird.getName().getKoreanName() : "어디선가 본 새";
+    }
+
+    public Long getBirdIdOrNull() {
+        return bird != null ? bird.getId() : null;
+    }
 }
