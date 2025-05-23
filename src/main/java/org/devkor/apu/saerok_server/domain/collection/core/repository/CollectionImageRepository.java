@@ -29,6 +29,16 @@ public class CollectionImageRepository {
                 .getResultList();
     }
 
+    public List<UserBirdCollectionImage> findByCollectionId(Long collectionId) {
+        return em.createQuery("SELECT i FROM UserBirdCollectionImage i WHERE i.collection.id = :collectionId", UserBirdCollectionImage.class)
+                .setParameter("collectionId", collectionId)
+                .getResultList();
+    }
+
+    public void remove(UserBirdCollectionImage image) {
+        em.remove(image);
+    }
+
     public void removeByCollectionId(Long collectionId) {
         em.createQuery("DELETE FROM UserBirdCollectionImage i WHERE i.collection.id = :collectionId")
                 .setParameter("collectionId", collectionId)

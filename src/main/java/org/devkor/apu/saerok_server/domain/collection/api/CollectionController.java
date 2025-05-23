@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CollectionImagePresignRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionImageRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
+import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.devkor.apu.saerok_server.global.security.UserPrincipal;
@@ -30,6 +30,7 @@ public class CollectionController {
     private final CollectionWebMapper collectionWebMapper;
     private final CollectionCommandService collectionCommandService;
     private final CollectionImageCommandService collectionImageCommandService;
+    private final CollectionQueryService collectionQueryService;
 
     @PostMapping
     @Operation(
@@ -290,54 +291,51 @@ public class CollectionController {
 
     @GetMapping("/{collectionId}/edit")
     @Operation(
-            summary = "[미구현] 컬렉션 수정 폼 데이터 조회",
+            summary = "컬렉션 수정용 상세 조회",
             description = """
-            컬렉션 수정 화면 진입 시 필요한 정보를 조회합니다.  
-            기존에 저장된 메타데이터(조류 정보, 관찰 일시 및 위치, 한 줄 평, 핀 여부 등)를 반환합니다.
-            
-            ✅ 이 API는 수정 폼에 데이터를 채워넣기 위한 용도로만 사용됩니다.
-            """,
+                    컬렉션 수정 시 필요한 정보를 조회합니다.
+                    """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공"),
+                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionEditDataResponse.class))),
                     @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
                     @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public void getCollectionEditForm(
+    public GetCollectionEditDataResponse getCollectionEditData(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long collectionId
     ) {
-        // TODO: 미구현
+        return collectionQueryService.getCollectionEditDataResponse(collectionWebMapper.toGetCollectionDataCommand(userPrincipal.getId(), collectionId));
     }
 
 
-
-    @PutMapping("/{collectionId}/edit")
+    @PatchMapping("/{collectionId}/edit")
     @Operation(
-            summary = "[미구현] 컬렉션 메타데이터 수정",
+            summary = "컬렉션 메타데이터 수정",
             description = """
-            기존에 생성한 컬렉션의 메타데이터를 수정합니다.  
-            조류 정보, 장소 정보, 관찰 일시, 한 줄 평, 핀 여부 등을 변경할 수 있습니다.
+            기존에 생성한 컬렉션의 메타데이터를 수정합니다.
+            수정하고 싶은 필드만 요청 json에 담아서 보낼 수 있습니다.
+            
+            birdId를 수정하려면 반드시 isBirdIdUpdated = true도 포함해야 합니다.
             
             ⚠️ 수정 대상: 이미지 제외한 컬렉션의 모든 메타데이터
             
-            ✅ 사용 예시:
-            - `birdId`와 `tempBirdName`은 생성 API와 동일하게 **둘 중 하나만 존재해야 함**
+            ✅ 유효성 조건:
             - `note`는 50자 이하
             """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "수정 성공"),
+                    @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(schema = @Schema(implementation = UpdateCollectionResponse.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
                     @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public void updateCollection(
+    public UpdateCollectionResponse updateCollection(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable Long collectionId
-            // @RequestBody UpdateCollectionRequest request
+            @PathVariable Long collectionId,
+            @RequestBody UpdateCollectionRequest request
     ) {
-        // TODO: 미구현
+        return collectionCommandService.updateCollection(collectionWebMapper.toUpdateCollectionCommand(request, userPrincipal.getId(), collectionId));
     }
 
 
@@ -360,5 +358,29 @@ public class CollectionController {
     ) {
         Long userId = userPrincipal.getId();
         collectionCommandService.deleteCollection(collectionWebMapper.toDeleteCollectionCommand(userId, collectionId));
+    }
+
+    @DeleteMapping("/{collectionId}/images/{imageId}")
+    @Operation(
+            summary = "컬렉션 이미지 삭제",
+            description = """
+                    지정한 컬렉션 이미지를 삭제합니다.
+                    * imageId는 컬렉션 수정용 상세 조회 API를 통해 얻을 수 있습니다.
+                    * 컬렉션 이미지를 교체하고 싶으면, "컬렉션 이미지 삭제 -> 컬렉션 이미지 Presigned URL 발급 -> 해당 URL로 이미지 PUT 업로드 -> 컬렉션 이미지 메타데이터 등록"을 하면 됩니다.
+                    """,
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "컬렉션 이미지 삭제 성공"),
+                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCollectionImage(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @PathVariable Long imageId
+    ) {
+        Long userId = userPrincipal.getId();
+        collectionImageCommandService.deleteCollectionImage(userId, collectionId, imageId);
     }
 }
