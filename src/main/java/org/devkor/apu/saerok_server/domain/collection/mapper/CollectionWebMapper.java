@@ -4,6 +4,11 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateColl
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionImageCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.DeleteCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.*;
@@ -11,6 +16,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.Named;
 
 import java.util.List;
 
@@ -45,4 +51,18 @@ public interface CollectionWebMapper {
     @Mapping(target = "birdId", source = "collection.bird.id")
     @Mapping(target = "imageUrls", source = "imageUrls")
     UpdateCollectionResponse toUpdateCollectionResponse(UserBirdCollection collection, List<String> imageUrls);
+
+    @Mapping(target = "bird.birdId", source = "collection", qualifiedByName = "getBirdId")
+    @Mapping(target = "bird.koreanName", source = "collection", qualifiedByName = "getBirdKoreanName")
+    GetCollectionDetailResponse toGetCollectionDetailResponse(UserBirdCollection collection, String imageUrl);
+
+    @Named("getBirdId")
+    default Long getBirdId(UserBirdCollection collection) {
+        return collection.getBirdIdOrNull();
+    }
+
+    @Named("getBirdKoreanName")
+    default String getBirdKoreanName(UserBirdCollection collection) {
+        return collection.getBirdKoreanName();
+    }
 }

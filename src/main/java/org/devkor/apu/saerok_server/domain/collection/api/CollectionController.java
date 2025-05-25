@@ -9,6 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CollectionImagePresignRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionImageRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
@@ -20,6 +25,8 @@ import org.devkor.apu.saerok_server.global.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Collections API", description = "컬렉션 기능 관련 API")
 @RestController
@@ -222,71 +229,49 @@ public class CollectionController {
 
     @GetMapping("/{collectionId}")
     @Operation(
-            summary = "[미구현] 컬렉션 상세 조회",
+            summary = "컬렉션 상세 조회",
             description = """
             ✅ 응답 예시 필드
             - collectionId
             - imageUrl
             - discoveredDate, latitude, longitude, locationAlias
             - note(한 줄 평)
-            - bird : { birdId, koreanName }  ※ birdId가 없으면 tempBirdName 반환  
+            - accessLevel
+            - bird : { birdId, koreanName }  ※ birdId가 없으면 { birdId : null, koreanName : "어디선가 본 새"} 반환
             - user : { userId, nickname }
             """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공"),
+                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionDetailResponse.class))),
                     @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public void getCollectionDetail(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
+    public GetCollectionDetailResponse getCollectionDetail(
             @PathVariable Long collectionId
     ) {
-        // TODO: 미구현
+        return collectionQueryService.getCollectionDetailResponse(collectionId);
     }
 
     @GetMapping("/me")
     @Operation(
-            summary = "[미구현] 내 컬렉션 목록 조회 (핀 우선, 페이징)",
+            summary = "내 컬렉션 목록 조회",
             description = """
-            ✅ 쿼리 파라미터
-            - page (기본 0)  
-            - size (기본 20)
-
             ✅ 응답 예시 필드  
             - collectionId  
             - imageUrl
             - birdName (bird.koreanName 또는 tempBirdName)  
 
-            🔖 isPinned=true 인 항목을 항상 목록 최상단에 정렬
-            """,
-            responses = { @ApiResponse(responseCode = "200", description = "목록 조회 성공") }
-    )
-    public void listMyCollections(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        // TODO: 미구현
-    }
-
-    @PatchMapping("/{collectionId}/pin")
-    @Operation(
-            summary = "[미구현] 컬렉션 핀 토글",
-            description = """
-            컬렉션의 `is_pinned` 값을 토글합니다.
-            (핀 해제 → 핀 설정, 핀 설정 → 핀 해제)
             """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "토글 성공"),
-                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                @ApiResponse(responseCode = "200", description = "목록 조회 성공"),
+                @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public void toggleCollectionPin(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable Long collectionId
+    public List<MyCollectionsResponse> listMyCollections(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        // TODO: 미구현
+        Long userId = userPrincipal.getId();
+        return collectionQueryService.getMyCollectionsResponse(userId);
     }
 
     @GetMapping("/{collectionId}/edit")
