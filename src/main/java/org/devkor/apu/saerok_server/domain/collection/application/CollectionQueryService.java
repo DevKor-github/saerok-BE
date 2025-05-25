@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
-import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollectionDetail;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollectionEditDataCommand;
-import org.devkor.apu.saerok_server.domain.collection.application.dto.MyCollectionDto;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
@@ -56,20 +54,20 @@ public class CollectionQueryService {
 
     public List<MyCollectionsResponse> getMyCollectionsResponse(Long userId) {
         List<UserBirdCollection> collections = collectionRepository.findByUserId(userId);
-        List<MyCollectionDto> result = new ArrayList<>();
+        List<MyCollectionsResponse> result = new ArrayList<>();
 
         for (UserBirdCollection collection : collections) {
             List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collection.getId());
-            String imageUrl = objectKeys.isEmpty() ? null : objectKeys.getFirst();
+            String imageUrl = objectKeys.isEmpty() ? null : cloudFrontUrlService.toImageUrl(objectKeys.getFirst());
 
-            result.add(MyCollectionDto.builder()
-                    .collectionId(collection.getId())
-                    .imageUrl(imageUrl)
-                    .birdName(collection.getBirdKoreanName())
-                    .build());
+            MyCollectionsResponse response = new MyCollectionsResponse();
+            response.setCollectionId(collection.getId());
+            response.setImageUrl(imageUrl);
+            response.setBirdName(collection.getBirdKoreanName());
+            result.add(response);
         }
 
-        return collectionWebMapper.toMyCollectionsResponse(result);
+        return result;
     }
 
     public GetCollectionDetailResponse getCollectionDetailResponse(Long collectionId) {
@@ -79,7 +77,6 @@ public class CollectionQueryService {
         List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collectionId);
         String imageUrl = objectKeys.isEmpty() ? null : cloudFrontUrlService.toImageUrl(objectKeys.getFirst());
 
-        GetCollectionDetail dto = GetCollectionDetail.from(collection, imageUrl);
-        return collectionWebMapper.toGetCollectionDetailResponse(dto);
+        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl);
     }
 }

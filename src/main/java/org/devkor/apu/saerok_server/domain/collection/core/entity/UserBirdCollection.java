@@ -89,7 +89,7 @@ public class UserBirdCollection extends Auditable {
     }
 
     public String getBirdKoreanName() {
-        return bird != null ? bird.getName().getKoreanName() : "어디선가 본 새";
+        return bird != null ? bird.getName().getKoreanName() : null;
     }
 
     public Long getBirdIdOrNull() {

@@ -9,8 +9,6 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollect
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionImageCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.DeleteCollectionCommand;
-import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollectionDetail;
-import org.devkor.apu.saerok_server.domain.collection.application.dto.MyCollectionDto;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.*;
@@ -39,8 +37,6 @@ public interface CollectionWebMapper {
     @Mapping(target = "collectionId", source = "collectionId")
     DeleteCollectionCommand toDeleteCollectionCommand(Long userId, Long collectionId);
 
-    List<MyCollectionsResponse> toMyCollectionsResponse(List<MyCollectionDto> collections);
-
     @Mapping(target = "userId", source = "userId")
     @Mapping(target = "collectionId", source = "collectionId")
     GetCollectionEditDataCommand toGetCollectionDataCommand(Long userId, Long collectionId);
@@ -56,9 +52,17 @@ public interface CollectionWebMapper {
     @Mapping(target = "imageUrls", source = "imageUrls")
     UpdateCollectionResponse toUpdateCollectionResponse(UserBirdCollection collection, List<String> imageUrls);
 
-    @Mapping(target = "bird.birdId", source = "birdId")
-    @Mapping(target = "bird.koreanName", source = "birdKoreanName")
-    @Mapping(target = "user.userId", source = "userId")
-    @Mapping(target = "user.nickname", source = "userNickname")
-    GetCollectionDetailResponse toGetCollectionDetailResponse(GetCollectionDetail dto);
+    @Mapping(target = "bird.birdId", source = "collection", qualifiedByName = "getBirdId")
+    @Mapping(target = "bird.koreanName", source = "collection", qualifiedByName = "getBirdKoreanName")
+    GetCollectionDetailResponse toGetCollectionDetailResponse(UserBirdCollection collection, String imageUrl);
+
+    @Named("getBirdId")
+    default Long getBirdId(UserBirdCollection collection) {
+        return collection.getBirdIdOrNull();
+    }
+
+    @Named("getBirdKoreanName")
+    default String getBirdKoreanName(UserBirdCollection collection) {
+        return collection.getBirdKoreanName();
+    }
 }
