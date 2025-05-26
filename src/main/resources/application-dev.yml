@@ -15,6 +15,9 @@ spring:
 server:
   port: 8080
 
+swagger:
+  server-url: https://dev-api.saerok.app
+
 aws:
   credentials:
     access-key: ${IAM_ACCESS_KEY}

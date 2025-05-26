@@ -17,6 +17,9 @@ server:
 
 logging.level.org.hibernate.sql: debug
 
+swagger:
+  server-url: http://localhost:8080
+
 aws:
   credentials:
     access-key: ${IAM_ACCESS_KEY}
