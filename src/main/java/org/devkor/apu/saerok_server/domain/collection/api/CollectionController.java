@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CollectionImagePresignRequest;
@@ -42,6 +43,7 @@ public class CollectionController {
     @PostMapping
     @Operation(
             summary = "컬렉션 등록 (종추)",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
         새 컬렉션(관찰 기록)을 생성합니다. 이 단계에서는 **이미지를 제외한 메타데이터만 전송**합니다.
 
@@ -107,6 +109,7 @@ public class CollectionController {
     @PostMapping("/{collectionId}/images/presign")
     @Operation(
             summary = "컬렉션 이미지 Presigned URL 발급",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
         특정 컬렉션에 이미지 파일을 업로드할 수 있도록 **S3 Presigned URL을 발급**합니다.
 
@@ -177,6 +180,7 @@ public class CollectionController {
     @PostMapping("/{collectionId}/images")
     @Operation(
             summary = "컬렉션 이미지 메타데이터 등록",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
         클라이언트가 S3에 이미지 업로드를 완료한 후,
         해당 이미지의 **메타데이터(objectKey, contentType)** 를 서버에 등록합니다.
@@ -254,6 +258,7 @@ public class CollectionController {
     @GetMapping("/me")
     @Operation(
             summary = "내 컬렉션 목록 조회",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
             ✅ 응답 예시 필드  
             - collectionId  
@@ -277,6 +282,7 @@ public class CollectionController {
     @GetMapping("/{collectionId}/edit")
     @Operation(
             summary = "컬렉션 수정용 상세 조회",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
                     컬렉션 수정 시 필요한 정보를 조회합니다.
                     """,
@@ -297,6 +303,7 @@ public class CollectionController {
     @PatchMapping("/{collectionId}/edit")
     @Operation(
             summary = "컬렉션 메타데이터 수정",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
             기존에 생성한 컬렉션의 메타데이터를 수정합니다.
             수정하고 싶은 필드만 요청 json에 담아서 보낼 수 있습니다.
@@ -327,6 +334,7 @@ public class CollectionController {
     @DeleteMapping("/{collectionId}")
     @Operation(
             summary = "컬렉션 삭제",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
             해당 컬렉션 및 컬렉션에 딸린 이미지를 모두 삭제합니다.
             """,
@@ -348,6 +356,7 @@ public class CollectionController {
     @DeleteMapping("/{collectionId}/images/{imageId}")
     @Operation(
             summary = "컬렉션 이미지 삭제",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
                     지정한 컬렉션 이미지를 삭제합니다.
                     * imageId는 컬렉션 수정용 상세 조회 API를 통해 얻을 수 있습니다.
