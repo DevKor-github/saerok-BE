@@ -17,7 +17,7 @@ public class SocialAuthRepository {
     public Optional<SocialAuth> findByProviderAndProviderUserId(SocialProviderType provider, String providerUserId) {
         return em.createQuery(
                 "SELECT s FROM SocialAuth s WHERE s.provider = :provider AND s.providerUserId = :providerUserId", SocialAuth.class)
-                .setParameter("provider", provider.name())
+                .setParameter("provider", provider)
                 .setParameter("providerUserId", providerUserId)
                 .getResultStream()
                 .findFirst();
