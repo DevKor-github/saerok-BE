@@ -238,7 +238,7 @@ public class CollectionController {
             ✅ 응답 예시 필드
             - collectionId
             - imageUrl
-            - discoveredDate, latitude, longitude, locationAlias
+            - discoveredDate, latitude, longitude, locationAlias, address
             - note(한 줄 평)
             - accessLevel
             - bird : { birdId, koreanName, scientificName }  ※ birdId가 없으면 { birdId : null, koreanName : null, scientificName : null} 반환
