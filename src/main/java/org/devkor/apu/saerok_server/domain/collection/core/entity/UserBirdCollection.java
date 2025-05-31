@@ -61,8 +61,7 @@ public class UserBirdCollection extends Auditable {
     private boolean isPinned;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "access_level", nullable = false, columnDefinition = "access_level_enum")
+    @Column(name = "access_level", nullable = false)
     @Setter
     private AccessLevelType accessLevel;
 
