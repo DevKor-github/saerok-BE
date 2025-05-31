@@ -11,6 +11,7 @@ public record UpdateCollectionCommand (
         Double latitude,
         Double longitude,
         String locationAlias,
+        String address,
         String note
 ){
 }

@@ -49,6 +49,10 @@ public class UserBirdCollection extends Auditable {
     @Setter
     private String locationAlias;
 
+    @Column(name = "address", length = 512)
+    @Setter
+    private String address;
+
     @Column(name = "note")
     @Setter
     private String note;
@@ -63,7 +67,7 @@ public class UserBirdCollection extends Auditable {
     private AccessLevelType accessLevel;
 
     @Builder
-    public UserBirdCollection(User user, Bird bird, String tempBirdName, LocalDate discoveredDate, Point location, String locationAlias, String note, boolean isPinned, AccessLevelType accessLevel) {
+    public UserBirdCollection(User user, Bird bird, String tempBirdName, LocalDate discoveredDate, Point location, String locationAlias, String address, String note, boolean isPinned, AccessLevelType accessLevel) {
 
         if (user == null) throw new IllegalArgumentException("user는 null일 수 없습니다.");
         if (discoveredDate == null) throw new IllegalArgumentException("discoveredDate는 null일 수 없습니다.");
@@ -75,6 +79,7 @@ public class UserBirdCollection extends Auditable {
         this.discoveredDate = discoveredDate;
         this.location = location;
         this.locationAlias = locationAlias;
+        this.address = address;
         this.note = note;
         this.isPinned = isPinned;
         this.accessLevel = accessLevel == null ? AccessLevelType.PUBLIC : accessLevel;
@@ -90,9 +95,7 @@ public class UserBirdCollection extends Auditable {
 
     public String getBirdKoreanName() { return bird != null ? bird.getName().getKoreanName() : null; }
 
-    public String getBirdScientificName() {
-        return bird != null ? bird.getName().getScientificName() : null;
-    }
+    public String getBirdScientificName() { return bird != null ? bird.getName().getScientificName() : null; }
 
     public Long getBirdIdOrNull() {
         return bird != null ? bird.getId() : null;

@@ -79,6 +79,7 @@ public class CollectionCommandService {
                 .discoveredDate(command.discoveredDate())
                 .location(location)
                 .locationAlias(command.locationAlias())
+                .address(command.address())
                 .note(command.note())
                 .build();
 
@@ -140,6 +141,8 @@ public class CollectionCommandService {
         }
 
         if (command.locationAlias() != null) collection.setLocationAlias(command.locationAlias());
+
+        if (command.address() != null) collection.setAddress(command.address());
 
         if (command.note() != null) {
             if (command.note().length() > UserBirdCollection.NOTE_MAX_LENGTH) {

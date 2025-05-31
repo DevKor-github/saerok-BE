@@ -16,6 +16,7 @@ public class GetCollectionDetailResponse {
     private Double latitude;
     private Double longitude;
     private String locationAlias;
+    private String address;
     private String note;
     private AccessLevelType accessLevel;
     
