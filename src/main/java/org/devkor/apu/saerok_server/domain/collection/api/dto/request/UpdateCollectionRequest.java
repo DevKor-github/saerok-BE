@@ -29,6 +29,9 @@ public class UpdateCollectionRequest {
     @Schema(description = "관찰 지점에 대한 사용자 지정 장소 별칭", example = "서귀포 갯벌", nullable = true)
     private String locationAlias;
 
+    @Schema(description = "관찰 지점의 주소 (위/경도 기반 변환된 주소)", example = "제주특별자치도 서귀포시 안덕면 사계리", nullable = true)
+    private String address;
+
     @Schema(description = "관찰 기록에 대한 간단한 메모", example = "까치가 엄청 날아다녔다", nullable = true)
     private String note;
 }

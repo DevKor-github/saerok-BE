@@ -28,6 +28,9 @@ public class GetCollectionEditDataResponse {
     @Schema(description = "관찰 위치 별칭", example = "서울숲")
     private String locationAlias;
 
+    @Schema(description = "관찰 지점의 주소", example = "서울시 성동구 성수동")
+    private String address;
+
     @Schema(description = "한 줄 평", example = "까치가 무리를 지어 날아다님")
     private String note;
 
