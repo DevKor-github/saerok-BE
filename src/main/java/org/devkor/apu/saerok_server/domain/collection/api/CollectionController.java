@@ -241,7 +241,7 @@ public class CollectionController {
             - discoveredDate, latitude, longitude, locationAlias
             - note(한 줄 평)
             - accessLevel
-            - bird : { birdId, koreanName }  ※ birdId가 없으면 { birdId : null, koreanName : "어디선가 본 새"} 반환
+            - bird : { birdId, koreanName, scientificName }  ※ birdId가 없으면 { birdId : null, koreanName : null, scientificName : null} 반환
             - user : { userId, nickname }
             """,
             responses = {

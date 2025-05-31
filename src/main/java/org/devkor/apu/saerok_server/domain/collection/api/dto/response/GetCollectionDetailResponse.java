@@ -27,6 +27,7 @@ public class GetCollectionDetailResponse {
     public static class BirdInfo {
         private Long birdId;
         private String koreanName;
+        private String scientificName;
     }
 
     @Data
