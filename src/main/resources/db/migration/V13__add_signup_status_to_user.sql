@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN signup_status VARCHAR(30);
