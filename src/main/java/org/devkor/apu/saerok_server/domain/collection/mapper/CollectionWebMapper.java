@@ -5,7 +5,6 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateColl
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionImageCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.DeleteCollectionCommand;
@@ -54,6 +53,7 @@ public interface CollectionWebMapper {
 
     @Mapping(target = "bird.birdId", source = "collection", qualifiedByName = "getBirdId")
     @Mapping(target = "bird.koreanName", source = "collection", qualifiedByName = "getBirdKoreanName")
+    @Mapping(target = "bird.scientificName", source = "collection", qualifiedByName = "getBirdScientificName")
     GetCollectionDetailResponse toGetCollectionDetailResponse(UserBirdCollection collection, String imageUrl);
 
     @Named("getBirdId")
@@ -64,5 +64,10 @@ public interface CollectionWebMapper {
     @Named("getBirdKoreanName")
     default String getBirdKoreanName(UserBirdCollection collection) {
         return collection.getBirdKoreanName();
+    }
+
+    @Named("getBirdScientificName")
+    default String getBirdScientificName(UserBirdCollection collection) {
+        return collection.getBirdScientificName();
     }
 }
