@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.user.core.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.springframework.stereotype.Repository;
 
@@ -19,5 +18,10 @@ public class UserRepository {
                 .setParameter("id", id)
                 .getResultStream()
                 .findFirst();
+    }
+
+    public User save(User user) {
+        em.persist(user);
+        return user;
     }
 }

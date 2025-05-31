@@ -34,4 +34,11 @@ public class User extends SoftDeletableAuditable {
     @Enumerated(EnumType.STRING)
     @Column(name = "signup_status")
     private SignupStatusType signupStatus;
+
+    public static User createUser(String email) {
+        User user = new User();
+        user.email = email;
+        user.signupStatus = SignupStatusType.PROFILE_REQUIRED;
+        return user;
+    }
 }

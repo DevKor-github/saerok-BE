@@ -1,7 +1,8 @@
-package org.devkor.apu.saerok_server.domain.user.auth.entity;
+package org.devkor.apu.saerok_server.domain.user.auth.core.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -14,6 +15,7 @@ import java.time.OffsetDateTime;
         uniqueConstraints = @UniqueConstraint(columnNames = {"provider", "provider_user_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class SocialAuth extends CreatedAtOnly {
 
     @Id
@@ -24,8 +26,9 @@ public class SocialAuth extends CreatedAtOnly {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "provider", nullable = false)
-    private String provider;
+    private SocialProviderType provider;
 
     @Column(name = "provider_user_id", nullable = false)
     private String providerUserId;
@@ -34,4 +37,11 @@ public class SocialAuth extends CreatedAtOnly {
     @Setter
     private OffsetDateTime lastLoginAt;
 
+    public static SocialAuth createSocialAuth(User user, SocialProviderType provider, String providerUserId) {
+        SocialAuth socialAuth = new SocialAuth();
+        socialAuth.user = user;
+        socialAuth.provider = provider;
+        socialAuth.providerUserId = providerUserId;
+        return socialAuth;
+    }
 }

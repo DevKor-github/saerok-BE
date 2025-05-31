@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.user.auth.entity;
+package org.devkor.apu.saerok_server.domain.user.auth.core.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
