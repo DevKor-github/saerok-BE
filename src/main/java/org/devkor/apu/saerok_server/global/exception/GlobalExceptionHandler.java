@@ -49,4 +49,12 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(error);
     }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex) {
+        ErrorResponse error = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(error);
+    }
 }
