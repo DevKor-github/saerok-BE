@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtProvider {
@@ -18,7 +19,7 @@ public class JwtProvider {
     @Value("${jwt.secret}")
     private String secret;
 
-    public String createAccessToken(Long userId) {
+    public String createAccessToken(Long userId, List<String> roles) {
 
         long expirationMillisecond = 1000L * 60 * 60 * 24 * 7; // 7일
         Date now = new Date();
@@ -26,12 +27,13 @@ public class JwtProvider {
 
         return JWT.create()
                 .withSubject(userId.toString())
+                .withClaim("roles", roles)
                 .withIssuedAt(now)
                 .withExpiresAt(expiry)
                 .sign(Algorithm.HMAC256(secret));
     }
 
-    public DecodedJWT verifyAndDecode(String token) {
+    private DecodedJWT verifyAndDecode(String token) {
         try {
             return JWT.require(Algorithm.HMAC256(secret))
                     .build()
@@ -49,5 +51,10 @@ public class JwtProvider {
     public Long getUserId(String token) {
         DecodedJWT jwt = verifyAndDecode(token);
         return Long.parseLong(jwt.getSubject());
+    }
+
+    public List<String> getUserRoles(String token) {
+        DecodedJWT jwt = verifyAndDecode(token);
+        return jwt.getClaim("roles").asList(String.class);
     }
 }

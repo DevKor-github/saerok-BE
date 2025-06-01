@@ -4,27 +4,34 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.user.auth.api.dto.response.JwtResponse;
 import org.devkor.apu.saerok_server.domain.user.auth.core.entity.SocialAuth;
 import org.devkor.apu.saerok_server.domain.user.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.user.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.user.auth.infra.AppleApiClient;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
+import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.global.security.jwt.JwtProvider;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class AppleAuthService {
 
     private final AppleApiClient appleApiClient;
+    private final JwtProvider jwtProvider;
     private final SocialAuthRepository socialAuthRepository;
     private final UserRepository userRepository;
-    private final JwtProvider jwtProvider;
+    private final UserRoleRepository userRoleRepository;
 
     public JwtResponse authenticate(String authorizationCode) {
 
@@ -34,10 +41,14 @@ public class AppleAuthService {
         String sub = jwt.getClaim("sub").asString();
         String email = jwt.getClaim("email").asString();
 
+        log.info("애플 서버로부터 받은 ID TOKEN 정보 [sub: {}, email: {}]", sub, email);
+
         SocialAuth socialAuth = socialAuthRepository
                 .findByProviderAndProviderUserId(SocialProviderType.APPLE, sub)
                 .orElseGet(() -> {
                     User user = userRepository.save(User.createUser(email));
+                    userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
+
                     return socialAuthRepository.save(
                             SocialAuth.createSocialAuth(user, SocialProviderType.APPLE, sub)
                     );
@@ -45,7 +56,11 @@ public class AppleAuthService {
 
         socialAuth.setLastLoginAt(OffsetDateTime.now());
 
-        String accessToken = jwtProvider.createAccessToken(socialAuth.getUser().getId());
+        List<String> roles = userRoleRepository.findByUser(socialAuth.getUser()).stream()
+                .map(ur -> ur.getRole().name())
+                .toList();
+
+        String accessToken = jwtProvider.createAccessToken(socialAuth.getUser().getId(), roles);
         return new JwtResponse(accessToken);
 
     }
