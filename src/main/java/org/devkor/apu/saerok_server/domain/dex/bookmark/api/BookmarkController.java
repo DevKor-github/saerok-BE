@@ -34,21 +34,23 @@ public class BookmarkController {
             security = @SecurityRequirement(name = "bearerAuth"),
             description = "사용자가 북마크한 조류 목록을 조회합니다. 북마크 엔티티의 정보만 포함합니다.",
             responses = {
-                @ApiResponse(
-                    responseCode = "200", 
-                    description = "조회 성공", 
-                    content = @Content(schema = @Schema(implementation = BookmarkResponse.class))
-                ),
-                @ApiResponse(
-                    responseCode = "401",
-                    description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                )
+                    @ApiResponse(
+                        responseCode = "200",
+                        description = "조회 성공",
+                        content = @Content(schema = @Schema(implementation = BookmarkResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
             }
     )
     public ResponseEntity<List<BookmarkResponse>> getBookmarks(
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         Long userId = userPrincipal.getId();
+
+        System.out.println(userId);
         
         List<BookmarkResponse> bookmarks = bookmarkService.getBookmarksResponse(userId);
         return ResponseEntity.ok(bookmarks);
@@ -60,16 +62,16 @@ public class BookmarkController {
             security = @SecurityRequirement(name = "bearerAuth"),
             description = "사용자가 북마크한 조류들의 상세 정보를 조회합니다.",
             responses = {
-                @ApiResponse(
-                    responseCode = "200", 
-                    description = "조회 성공", 
-                    content = @Content(schema = @Schema(implementation = BookmarkedBirdDetailResponse.class))
-                ),
-                @ApiResponse(
-                    responseCode = "401",
-                    description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                )
+                    @ApiResponse(
+                        responseCode = "200",
+                        description = "조회 성공",
+                        content = @Content(schema = @Schema(implementation = BookmarkedBirdDetailResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
             }
     )
     public ResponseEntity<List<BookmarkedBirdDetailResponse>> getBookmarkedBirdDetails(
@@ -86,21 +88,21 @@ public class BookmarkController {
             security = @SecurityRequirement(name = "bearerAuth"),
             description = "특정 조류에 대한 북마크를 추가하거나 제거합니다.",
             responses = {
-                @ApiResponse(
-                    responseCode = "200", 
-                    description = "토글 성공", 
-                    content = @Content(schema = @Schema(implementation = BookmarkToggleResponse.class))
-                ),
-                @ApiResponse(
-                    responseCode = "401",
-                    description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                ),
-                @ApiResponse(
-                    responseCode = "404",
-                    description = "조류를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                )
+                    @ApiResponse(
+                        responseCode = "200",
+                        description = "토글 성공",
+                        content = @Content(schema = @Schema(implementation = BookmarkToggleResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                        responseCode = "404",
+                        description = "조류를 찾을 수 없음",
+                        content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
             }
     )
     public ResponseEntity<BookmarkToggleResponse> toggleBookmark(
@@ -118,16 +120,16 @@ public class BookmarkController {
             security = @SecurityRequirement(name = "bearerAuth"),
             description = "특정 조류에 대한 북마크 상태를 확인합니다.",
             responses = {
-                @ApiResponse(
-                    responseCode = "200", 
-                    description = "조회 성공", 
-                    content = @Content(schema = @Schema(implementation = BookmarkStatusResponse.class))
-                ),
-                @ApiResponse(
-                    responseCode = "401",
-                    description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                )
+                    @ApiResponse(
+                        responseCode = "200",
+                        description = "조회 성공",
+                        content = @Content(schema = @Schema(implementation = BookmarkStatusResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
             }
     )
     public ResponseEntity<BookmarkStatusResponse> getBookmarkStatus(
