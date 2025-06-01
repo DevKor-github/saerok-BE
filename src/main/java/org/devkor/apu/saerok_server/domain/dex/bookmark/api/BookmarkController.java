@@ -15,6 +15,7 @@ import org.devkor.apu.saerok_server.domain.dex.bookmark.application.BookmarkServ
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.devkor.apu.saerok_server.global.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ public class BookmarkController {
     private final BookmarkService bookmarkService;
 
     @GetMapping("/")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "내 북마크 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -57,6 +59,7 @@ public class BookmarkController {
     }
 
     @GetMapping("/items")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "북마크한 조류 상세 정보 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -83,6 +86,7 @@ public class BookmarkController {
     }
 
     @PostMapping("/{birdId}/toggle")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "조류 북마크 토글",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -115,6 +119,7 @@ public class BookmarkController {
     }
 
     @GetMapping("/{birdId}/status")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "조류 북마크 상태 확인",
             security = @SecurityRequirement(name = "bearerAuth"),

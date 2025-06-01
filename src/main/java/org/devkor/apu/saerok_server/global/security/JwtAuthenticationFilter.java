@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.global.security.jwt.JwtProvider;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,6 +24,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -49,6 +51,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.info("JWT 인증 성공 - id: {}, roles: {}", userId, roles);
             } catch (Exception e) {
                 log.warn("JWT 인증 실패: {}", e.getMessage());
+
+                jwtAuthenticationEntryPoint.commence(request, response, new InsufficientAuthenticationException("JWT Invalid", e));
+                return;
             }
         }
 

@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.user.auth.api;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.auth.api.dto.request.AppleLoginRequest;
 import org.devkor.apu.saerok_server.domain.user.auth.api.dto.response.JwtResponse;
@@ -19,6 +20,7 @@ public class AuthController {
     private final AppleAuthService appleAuthService;
 
     @PostMapping("/apple/login")
+    @PermitAll
     public JwtResponse appleLogin(
             @RequestBody AppleLoginRequest request
     ) {

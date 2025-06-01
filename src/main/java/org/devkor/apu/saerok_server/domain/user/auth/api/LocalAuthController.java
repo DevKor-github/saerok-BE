@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.user.auth.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.auth.api.dto.response.JwtResponse;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
@@ -27,6 +28,7 @@ public class LocalAuthController {
             description = "로컬 환경에서 USER 권한을 가진 더미 유저의 JWT 토큰을 발급합니다."
     )
     @GetMapping("/dummy-user-token")
+    @PermitAll
     public JwtResponse issueLocalDummyUserToken() {
         String token = jwtProvider.createAccessToken(
                 99999L,
