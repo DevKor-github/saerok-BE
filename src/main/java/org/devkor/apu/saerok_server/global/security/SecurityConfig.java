@@ -14,7 +14,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final DummyAuthenticationFilter dummyAuthenticationFilter;
+    private static final String[] USER_ONLY = {
+            "/api/v1/birds/bookmarks/**",
+            "/api/v1/collections/**"
+    };
+
+    private static final String[] PUBLIC = {
+            "/api/v1/auth/**",
+            "/api/v1/birds/**",
+            "/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**", "/webjars/**",
+            "/api/v1/local/**"
+    };
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -22,8 +34,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .addFilterBefore(dummyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(USER_ONLY).hasRole("USER")
+                        .requestMatchers(PUBLIC).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }
