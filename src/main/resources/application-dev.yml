@@ -12,6 +12,9 @@ spring:
     hibernate:
       ddl-auto: validate
 
+  flyway:
+    locations: classpath:db/migration
+
 server:
   port: 8080
 

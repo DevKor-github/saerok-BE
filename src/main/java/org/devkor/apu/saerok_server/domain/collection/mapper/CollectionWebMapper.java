@@ -49,11 +49,14 @@ public interface CollectionWebMapper {
 
     @Mapping(target = "birdId", source = "collection.bird.id")
     @Mapping(target = "imageUrls", source = "imageUrls")
+    @Mapping(target = "collectionId", source = "collection.id")
     UpdateCollectionResponse toUpdateCollectionResponse(UserBirdCollection collection, List<String> imageUrls);
 
     @Mapping(target = "bird.birdId", source = "collection", qualifiedByName = "getBirdId")
     @Mapping(target = "bird.koreanName", source = "collection", qualifiedByName = "getBirdKoreanName")
     @Mapping(target = "bird.scientificName", source = "collection", qualifiedByName = "getBirdScientificName")
+    @Mapping(target = "collectionId", source = "collection.id")
+    @Mapping(target = "user.userId", source = "collection.user.id")
     GetCollectionDetailResponse toGetCollectionDetailResponse(UserBirdCollection collection, String imageUrl);
 
     @Named("getBirdId")

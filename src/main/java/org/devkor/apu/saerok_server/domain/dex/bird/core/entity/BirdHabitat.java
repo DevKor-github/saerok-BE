@@ -22,7 +22,6 @@ public class BirdHabitat {
     private Bird bird;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "habitat_type", columnDefinition = "habitat_type_enum")
+    @Column(name = "habitat_type")
     private HabitatType habitatType;
 }

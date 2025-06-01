@@ -12,6 +12,9 @@ spring:
     hibernate:
       ddl-auto: validate
 
+  flyway:
+    locations: classpath:db/migration,classpath:db/migration-local
+
 server:
   port: 8080
 
@@ -26,6 +29,6 @@ aws:
     secret-key: ${IAM_SECRET_KEY}
   region: ap-northeast-2
   s3:
-    bucket: ${BUCKET_NAME}
+    bucket: ${LOCAL_BUCKET_NAME}
   cloudfront:
-    image-domain: ${CLOUDFRONT_IMAGE_DOMAIN}
+    image-domain: ${LOCAL_CLOUDFRONT_IMAGE_DOMAIN}

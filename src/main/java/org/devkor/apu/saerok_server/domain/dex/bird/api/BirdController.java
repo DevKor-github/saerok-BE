@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.BirdQueryService;
@@ -27,6 +28,7 @@ public class BirdController {
     private final BirdQueryService birdQueryService;
 
     @GetMapping("/")
+    @PermitAll
     @Operation(
             summary = "도감 조회/검색",
             description = """
@@ -127,6 +129,7 @@ public class BirdController {
     }
 
     @GetMapping("/{birdId}")
+    @PermitAll
     @Operation(
             summary = "특정 조류 상세 조회",
             description = "birdId를 기반으로 해당 조류의 상세 정보를 조회합니다.",
@@ -150,6 +153,7 @@ public class BirdController {
     }
 
     @GetMapping("/autocomplete")
+    @PermitAll
     @Operation(
             summary = "조류 자동완성",
             description = "조류 이름 검색을 위한 자동완성 제안을 반환합니다.",
@@ -167,6 +171,7 @@ public class BirdController {
     }
 
     @GetMapping("/full-sync")
+    @PermitAll
     @Operation(
             summary = "조류 도감 전체 동기화 (App 전용)",
             description = "조류 도감 전체 데이터를 제공합니다. (App 전용)<br>" +
@@ -190,6 +195,7 @@ public class BirdController {
     }
 
     @GetMapping("/size-category-rules")
+    @PermitAll
     @Operation(
             summary = "조류 크기 카테고리 규칙 다운로드",
             description = "조류 크기 카테고리 규칙을 제공합니다.",
@@ -205,6 +211,7 @@ public class BirdController {
     }
 
     @GetMapping("/changes")
+    @PermitAll
     @Operation(
             summary = "조류 도감 업데이트 동기화 (App 전용)",
             description = "기준 시각 이후로 추가/변경/삭제된 도감 데이터를 제공합니다. (App 전용)",

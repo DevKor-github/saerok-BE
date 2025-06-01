@@ -15,7 +15,7 @@ public class User extends SoftDeletableAuditable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname")
     private String nickname;
 
     @Column(name = "birth_date")
@@ -30,4 +30,15 @@ public class User extends SoftDeletableAuditable {
     @Enumerated(EnumType.STRING)
     @Column(name = "gender")
     private GenderType gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "signup_status")
+    private SignupStatusType signupStatus;
+
+    public static User createUser(String email) {
+        User user = new User();
+        user.email = email;
+        user.signupStatus = SignupStatusType.PROFILE_REQUIRED;
+        return user;
+    }
 }

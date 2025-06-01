@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CollectionImagePresignRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionImageRequest;
@@ -24,6 +25,7 @@ import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper
 import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.devkor.apu.saerok_server.global.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +43,7 @@ public class CollectionController {
     private final CollectionQueryService collectionQueryService;
 
     @PostMapping
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "컬렉션 등록 (종추)",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -93,7 +96,12 @@ public class CollectionController {
                             responseCode = "400",
                             description = "잘못된 요청",
                             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
             }
     )
     @ResponseStatus(HttpStatus.CREATED)
@@ -107,6 +115,7 @@ public class CollectionController {
     }
 
     @PostMapping("/{collectionId}/images/presign")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "컬렉션 이미지 Presigned URL 발급",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -157,6 +166,11 @@ public class CollectionController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
                             responseCode = "403",
                             description = "해당 컬렉션에 대한 권한 없음 (다른 사용자의 컬렉션 id로 요청한 경우)",
                             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
@@ -178,6 +192,7 @@ public class CollectionController {
     }
 
     @PostMapping("/{collectionId}/images")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "컬렉션 이미지 메타데이터 등록",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -204,6 +219,11 @@ public class CollectionController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
                             responseCode = "403",
                             description = "해당 컬렉션에 대한 권한 없음 (다른 사용자의 컬렉션 id로 요청한 경우)",
                             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
@@ -227,11 +247,8 @@ public class CollectionController {
         );
     }
 
-    /* ------------------------------------------------------------------
-       아직 미구현인 컬렉션 관련 추가 API
-       ------------------------------------------------------------------ */
-
     @GetMapping("/{collectionId}")
+    @PermitAll
     @Operation(
             summary = "컬렉션 상세 조회",
             description = """
@@ -246,6 +263,11 @@ public class CollectionController {
             """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionDetailResponse.class))),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
                     @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
@@ -256,6 +278,7 @@ public class CollectionController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "내 컬렉션 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -267,9 +290,20 @@ public class CollectionController {
 
             """,
             responses = {
-                @ApiResponse(responseCode = "200", description = "목록 조회 성공"),
-                @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "목록 조회 성공"
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "서버 오류",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
             }
     )
     public List<MyCollectionsResponse> listMyCollections(
@@ -280,6 +314,7 @@ public class CollectionController {
     }
 
     @GetMapping("/{collectionId}/edit")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "컬렉션 수정용 상세 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -287,9 +322,26 @@ public class CollectionController {
                     컬렉션 수정 시 필요한 정보를 조회합니다.
                     """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionEditDataResponse.class))),
-                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공",
+                            content = @Content(schema = @Schema(implementation = GetCollectionEditDataResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "권한 없음",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "컬렉션 없음",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
             }
     )
     public GetCollectionEditDataResponse getCollectionEditData(
@@ -301,6 +353,7 @@ public class CollectionController {
 
 
     @PatchMapping("/{collectionId}/edit")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "컬렉션 메타데이터 수정",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -318,6 +371,11 @@ public class CollectionController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(schema = @Schema(implementation = UpdateCollectionResponse.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
                     @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
                     @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
@@ -332,6 +390,7 @@ public class CollectionController {
 
 
     @DeleteMapping("/{collectionId}")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "컬렉션 삭제",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -340,6 +399,11 @@ public class CollectionController {
             """,
             responses = {
                     @ApiResponse(responseCode = "204", description = "컬렉션 삭제 성공"),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
                     @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
                     @ApiResponse(responseCode = "404", description = "요청한 컬렉션이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
@@ -354,6 +418,7 @@ public class CollectionController {
     }
 
     @DeleteMapping("/{collectionId}/images/{imageId}")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "컬렉션 이미지 삭제",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -364,6 +429,11 @@ public class CollectionController {
                     """,
             responses = {
                     @ApiResponse(responseCode = "204", description = "컬렉션 이미지 삭제 성공"),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "사용자 인증 실패",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
                     @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
                     @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }

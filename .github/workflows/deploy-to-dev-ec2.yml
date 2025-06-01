@@ -68,6 +68,11 @@ jobs:
             IAM_SECRET_KEY="${{ secrets.IAM_SECRET_KEY }}" \
             BUCKET_NAME="${{ vars.BUCKET_NAME }}" \
             CLOUDFRONT_IMAGE_DOMAIN="${{ vars.CLOUDFRONT_IMAGE_DOMAIN }}" \
+            APPLE_CLIENT_ID="${{ secrets.APPLE_CLIENT_ID }}" \
+            APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}" \
+            APPLE_KEY_ID="${{ secrets.APPLE_KEY_ID }}" \
+            APPLE_PRIVATE_KEY="${{ secrets.APPLE_PRIVATE_KEY }}" \
+            JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             nohup java -jar $JAR_NAME --spring.profiles.active=dev > app.log 2>&1 &
             
             echo "✅ 배포 완료"
