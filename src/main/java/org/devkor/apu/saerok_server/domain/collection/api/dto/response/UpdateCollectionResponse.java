@@ -9,6 +9,7 @@ public record UpdateCollectionResponse (
         LocalDate discoveredDate,
         Double longitude,
         Double latitude,
+        String address,
         String locationAlias,
         String note,
         List<String> imageUrls
