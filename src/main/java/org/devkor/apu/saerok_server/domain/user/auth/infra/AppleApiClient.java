@@ -46,7 +46,7 @@ public class AppleApiClient {
                             log.error("Apple 인증 에러: {} (code: {})", error.getError(), authorizationCode);
 
                             RuntimeException ex = switch (error.getError()) {
-                                case "invalid_grant"  -> new AppleAuthException("유효하지 않거나 만료된 인증 코드");
+                                case "invalid_grant"  -> new AppleAuthException("유효하지 않거나 만료된 인가 코드");
                                 case "invalid_client" -> new IllegalStateException("애플 client_id, secret 등 서버 설정 오류");
                                 default               -> new AppleAuthException("Apple 인증 실패: " + error.getError());
                             };
