@@ -18,7 +18,7 @@ public class UserProfileUpdateService {
 
     public void changeNickname(User user, String nickname) {
 
-        if (user.getNickname().equals(nickname)) return;
+        if (user.getNickname() != null && user.getNickname().equals(nickname)) return;
 
         if (!userProfilePolicy.isNicknameValid(nickname)) {
             throw new IllegalArgumentException("해당 닉네임은 정책상 사용할 수 없습니다.");
