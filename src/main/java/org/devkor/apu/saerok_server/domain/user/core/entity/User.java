@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.user.core.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 import org.devkor.apu.saerok_server.global.entity.SoftDeletableAuditable;
 
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ public class User extends SoftDeletableAuditable {
     private Long id;
 
     @Column(name = "nickname")
+    @Setter
     private String nickname;
 
     @Column(name = "birth_date")
@@ -33,6 +35,7 @@ public class User extends SoftDeletableAuditable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "signup_status")
+    @Setter
     private SignupStatusType signupStatus;
 
     public static User createUser(String email) {
