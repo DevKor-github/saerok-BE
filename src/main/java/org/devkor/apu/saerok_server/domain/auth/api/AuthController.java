@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.user.auth.api;
+package org.devkor.apu.saerok_server.domain.auth.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -7,9 +7,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.user.auth.api.dto.request.AppleLoginRequest;
-import org.devkor.apu.saerok_server.domain.user.auth.api.dto.response.JwtResponse;
-import org.devkor.apu.saerok_server.domain.user.auth.application.AppleAuthService;
+import org.devkor.apu.saerok_server.domain.auth.api.dto.request.AppleLoginRequest;
+import org.devkor.apu.saerok_server.domain.auth.api.dto.response.JwtResponse;
+import org.devkor.apu.saerok_server.domain.auth.application.AppleAuthService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

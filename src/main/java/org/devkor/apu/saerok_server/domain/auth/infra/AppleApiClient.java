@@ -1,11 +1,11 @@
-package org.devkor.apu.saerok_server.domain.user.auth.infra;
+package org.devkor.apu.saerok_server.domain.auth.infra;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.devkor.apu.saerok_server.domain.user.auth.infra.dto.AppleErrorResponse;
-import org.devkor.apu.saerok_server.domain.user.auth.infra.dto.AppleTokenResponse;
+import org.devkor.apu.saerok_server.domain.auth.infra.dto.AppleErrorResponse;
+import org.devkor.apu.saerok_server.domain.auth.infra.dto.AppleTokenResponse;
 import org.devkor.apu.saerok_server.global.config.AppleProperties;
 import org.devkor.apu.saerok_server.global.exception.AppleAuthException;
 import org.springframework.http.HttpStatusCode;

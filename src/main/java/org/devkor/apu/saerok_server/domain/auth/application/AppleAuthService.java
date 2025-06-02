@@ -1,15 +1,15 @@
-package org.devkor.apu.saerok_server.domain.user.auth.application;
+package org.devkor.apu.saerok_server.domain.auth.application;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.devkor.apu.saerok_server.domain.user.auth.api.dto.response.JwtResponse;
-import org.devkor.apu.saerok_server.domain.user.auth.core.entity.SocialAuth;
-import org.devkor.apu.saerok_server.domain.user.auth.core.entity.SocialProviderType;
-import org.devkor.apu.saerok_server.domain.user.auth.core.repository.SocialAuthRepository;
-import org.devkor.apu.saerok_server.domain.user.auth.infra.AppleApiClient;
+import org.devkor.apu.saerok_server.domain.auth.api.dto.response.JwtResponse;
+import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialAuth;
+import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
+import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
+import org.devkor.apu.saerok_server.domain.auth.infra.AppleApiClient;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;

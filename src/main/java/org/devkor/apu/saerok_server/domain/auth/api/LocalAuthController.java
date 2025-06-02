@@ -1,10 +1,10 @@
-package org.devkor.apu.saerok_server.domain.user.auth.api;
+package org.devkor.apu.saerok_server.domain.auth.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.user.auth.api.dto.response.JwtResponse;
+import org.devkor.apu.saerok_server.domain.auth.api.dto.response.JwtResponse;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.global.security.jwt.JwtProvider;
 import org.springframework.context.annotation.Profile;

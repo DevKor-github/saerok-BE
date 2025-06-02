@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.user.auth.infra.dto;
+package org.devkor.apu.saerok_server.domain.auth.infra.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

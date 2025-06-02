@@ -1,9 +1,9 @@
-package org.devkor.apu.saerok_server.domain.user.auth.core.repository;
+package org.devkor.apu.saerok_server.domain.auth.core.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.user.auth.core.entity.SocialAuth;
-import org.devkor.apu.saerok_server.domain.user.auth.core.entity.SocialProviderType;
+import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialAuth;
+import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
