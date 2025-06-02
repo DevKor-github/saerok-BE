@@ -28,9 +28,14 @@ public class AuthController {
     @Operation(
             summary = "Apple 소셜 로그인",
             description = """
-                    애플 로그인 인가 코드를 이용해 회원가입 및 로그인을 처리하고, 서버에게 신원을 인증하기 위한 액세스 토큰을 발급받습니다.
+                    애플 로그인 인가 코드를 이용해 회원가입 및 로그인을 처리합니다. 
                     
-                    액세스 토큰의 유효 기간은 7일입니다.
+                    응답에는 accessToken, signupStatus가 들어 있습니다.<br>
+                    accessToken으로 서버에게 사용자 신원을 인증할 수 있습니다. (유효 기간: 7일)<br>
+                    signupStatus는 회원가입 상태를 나타냅니다. 사용자가 회원가입 절차를 마쳤는지 알 수 있습니다.<br>
+                    signupStatus가 가질 수 있는 값:
+                     - PROFILE_REQUIRED: 필수 회원 정보 입력이 필요함
+                     - COMPLETED: 회원가입 절차를 마쳤음
                     
                     """,
             responses = {

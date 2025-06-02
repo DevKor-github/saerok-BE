@@ -56,12 +56,13 @@ public class AppleAuthService {
 
         socialAuth.setLastLoginAt(OffsetDateTime.now());
 
-        List<String> roles = userRoleRepository.findByUser(socialAuth.getUser()).stream()
+        User user = socialAuth.getUser();
+        List<String> roles = userRoleRepository.findByUser(user).stream()
                 .map(ur -> ur.getRole().name())
                 .toList();
 
-        String accessToken = jwtProvider.createAccessToken(socialAuth.getUser().getId(), roles);
-        return new JwtResponse(accessToken);
+        String accessToken = jwtProvider.createAccessToken(user.getId(), roles);
+        return new JwtResponse(accessToken, user.getSignupStatus().name());
 
     }
 }
