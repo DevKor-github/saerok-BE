@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.collection.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -84,24 +85,13 @@ public class CollectionController {
                     )
             ),
             responses = {
-                    @ApiResponse(
-                            responseCode = "201",
-                            description = "컬렉션 생성 성공",
+                    @ApiResponse(responseCode = "201", description = "컬렉션 생성 성공",
                             content = @Content(
-                                    schema = @Schema(implementation = CreateCollectionResponse.class),
-                                    mediaType = "application/json"
+                                    schema = @Schema(implementation = CreateCollectionResponse.class)
                             )
                     ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "잘못된 요청",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
             }
     )
     @ResponseStatus(HttpStatus.CREATED)
@@ -157,29 +147,14 @@ public class CollectionController {
                     )
             ),
             responses = {
-                    @ApiResponse(
-                            responseCode = "201",
-                            description = "컬렉션 이미지 업로드 주소 발급 성공",
+                    @ApiResponse(responseCode = "201", description = "컬렉션 이미지 업로드 주소 발급 성공",
                             content = @Content(
-                                    schema = @Schema(implementation = PresignResponse.class),
-                                    mediaType = "application/json"
+                                    schema = @Schema(implementation = PresignResponse.class)
                             )
                     ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "403",
-                            description = "해당 컬렉션에 대한 권한 없음 (다른 사용자의 컬렉션 id로 요청한 경우)",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "존재하지 않는 컬렉션 (유효하지 않은 컬렉션 id)",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    )
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음 (다른 사용자의 컬렉션 id로 요청한 경우)", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "존재하지 않는 컬렉션 (유효하지 않은 컬렉션 id)", content = @Content),
             }
     )
     @ResponseStatus(HttpStatus.CREATED)
@@ -210,29 +185,14 @@ public class CollectionController {
         📌 반드시 `컬렉션 생성 API → presigned URL 발급 API → 해당 URL로 이미지 업로드 → 이미지 메타데이터 등록 API`의 순서를 따라야 합니다.
         """,
             responses = {
-                    @ApiResponse(
-                            responseCode = "201",
-                            description = "컬렉션 이미지 메타데이터 등록 성공",
+                    @ApiResponse(responseCode = "201", description = "컬렉션 이미지 메타데이터 등록 성공",
                             content = @Content(
-                                    schema = @Schema(implementation = CreateCollectionImageResponse.class),
-                                    mediaType = "application/json"
+                                    schema = @Schema(implementation = CreateCollectionImageResponse.class)
                             )
                     ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "403",
-                            description = "해당 컬렉션에 대한 권한 없음 (다른 사용자의 컬렉션 id로 요청한 경우)",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "존재하지 않는 컬렉션 (유효하지 않은 컬렉션 id)",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    )
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음 (다른 사용자의 컬렉션 id로 요청한 경우)", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "존재하지 않는 컬렉션 (유효하지 않은 컬렉션 id)", content = @Content),
             }
     )
     public CreateCollectionImageResponse notifyImageUpload(
@@ -286,19 +246,16 @@ public class CollectionController {
             """,
             responses = {
                     @ApiResponse(
-                            responseCode = "200",
-                            description = "목록 조회 성공"
+                            responseCode = "200", description = "목록 조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = MyCollectionsResponse.class)
+                                    )
+                            )
                     ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "500",
-                            description = "서버 오류",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    )
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content),
             }
     )
     public List<MyCollectionsResponse> listMyCollections(
@@ -317,26 +274,10 @@ public class CollectionController {
                     컬렉션 수정 시 필요한 정보를 조회합니다.
                     """,
             responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "조회 성공",
-                            content = @Content(schema = @Schema(implementation = GetCollectionEditDataResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "403",
-                            description = "권한 없음",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "컬렉션 없음",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    )
+                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content),
             }
     )
     public GetCollectionEditDataResponse getCollectionEditData(
@@ -365,14 +306,10 @@ public class CollectionController {
             """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(schema = @Schema(implementation = UpdateCollectionResponse.class))),
-                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content),
             }
     )
     public UpdateCollectionResponse updateCollection(
@@ -394,13 +331,9 @@ public class CollectionController {
             """,
             responses = {
                     @ApiResponse(responseCode = "204", description = "컬렉션 삭제 성공"),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "요청한 컬렉션이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "요청한 컬렉션이 없음", content = @Content),
             }
     )
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -424,13 +357,9 @@ public class CollectionController {
                     """,
             responses = {
                     @ApiResponse(responseCode = "204", description = "컬렉션 이미지 삭제 성공"),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "해당 컬렉션에 대한 권한 없음", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "요청한 자원이 없음", content = @Content),
             }
     )
     @ResponseStatus(HttpStatus.NO_CONTENT)
