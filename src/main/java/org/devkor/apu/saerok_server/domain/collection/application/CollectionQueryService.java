@@ -5,12 +5,12 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollec
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollectionEditDataCommand;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
-import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
@@ -34,7 +34,7 @@ public class CollectionQueryService {
     private final CloudFrontUrlService cloudFrontUrlService;
 
     public GetCollectionEditDataResponse getCollectionEditDataResponse(GetCollectionEditDataCommand command) {
-        User user = userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
+        userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
         UserBirdCollection collection = collectionRepository.findById(command.collectionId()).orElseThrow(() -> new NotFoundException("해당 id의 컬렉션이 존재하지 않아요"));
         if (!command.userId().equals(collection.getUser().getId())) {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
@@ -53,6 +53,7 @@ public class CollectionQueryService {
     }
 
     public List<MyCollectionsResponse> getMyCollectionsResponse(Long userId) {
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
         List<UserBirdCollection> collections = collectionRepository.findByUserId(userId);
         List<MyCollectionsResponse> result = new ArrayList<>();
 
@@ -70,9 +71,18 @@ public class CollectionQueryService {
         return result;
     }
 
-    public GetCollectionDetailResponse getCollectionDetailResponse(Long collectionId) {
+    public GetCollectionDetailResponse getCollectionDetailResponse(Long userId, Long collectionId) {
+
+        if (userId != null) {
+            userRepository.findById(userId).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
+        }
+
         UserBirdCollection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new NotFoundException("해당 id의 컬렉션이 존재하지 않아요"));
+
+        if (collection.getAccessLevel() == AccessLevelType.PRIVATE && (userId == null || !userId.equals(collection.getUser().getId()))) {
+            throw new ForbiddenException("해당 컬렉션을 볼 수 있는 권한이 없어요");
+        }
 
         List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collectionId);
         String imageUrl = objectKeys.isEmpty() ? null : cloudFrontUrlService.toImageUrl(objectKeys.getFirst());

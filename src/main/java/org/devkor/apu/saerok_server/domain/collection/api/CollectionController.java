@@ -251,30 +251,25 @@ public class CollectionController {
     @PermitAll
     @Operation(
             summary = "컬렉션 상세 조회",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-            ✅ 응답 예시 필드
-            - collectionId
-            - imageUrl
-            - discoveredDate, latitude, longitude, locationAlias, address
-            - note(한 줄 평)
-            - accessLevel
-            - bird : { birdId, koreanName, scientificName }  ※ birdId가 없으면 { birdId : null, koreanName : null, scientificName : null} 반환
-            - user : { userId, nickname }
+            컬렉션 상세 정보를 조회합니다. 액세스 토큰이 없어도 조회할 수 있지만, 비공개 컬렉션(accessLevel = PRIVATE)은 해당 컬렉션의 소유자만 조회할 수 있습니다.
+            
+            ※ birdId가 없으면 { birdId : null, koreanName : null, scientificName : null} 반환
             """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionDetailResponse.class))),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "사용자 인증 실패",
-                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "컬렉션 조회 권한 없음", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "사용자 또는 컬렉션 없음", content = @Content)
             }
     )
     public GetCollectionDetailResponse getCollectionDetail(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long collectionId
     ) {
-        return collectionQueryService.getCollectionDetailResponse(collectionId);
+        Long userId = userPrincipal == null ? null : userPrincipal.getId();
+        return collectionQueryService.getCollectionDetailResponse(userId, collectionId);
     }
 
     @GetMapping("/me")
@@ -283,8 +278,8 @@ public class CollectionController {
             summary = "내 컬렉션 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-            ✅ 응답 예시 필드  
-            - collectionId  
+            ✅ 응답 예시 필드
+            - collectionId
             - imageUrl
             - birdName (bird.koreanName 또는 tempBirdName)  
 
