@@ -3,13 +3,10 @@ package org.devkor.apu.saerok_server.domain.collection.mapper;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionImageRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionRequest;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionImageCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.DeleteCollectionCommand;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.*;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.mapstruct.Mapper;
@@ -58,6 +55,10 @@ public interface CollectionWebMapper {
     @Mapping(target = "collectionId", source = "collection.id")
     @Mapping(target = "user.userId", source = "collection.user.id")
     GetCollectionDetailResponse toGetCollectionDetailResponse(UserBirdCollection collection, String imageUrl);
+
+    @Mapping(target = "collectionId", source = "collection.id")
+    @Mapping(target = "koreanName", source = "collection.bird.name.koreanName")
+    GetNearbyCollectionsResponse.Item toGetNearbyCollectionsResponseItem(UserBirdCollection collection, String imageUrl);
 
     @Named("getBirdId")
     default Long getBirdId(UserBirdCollection collection) {
