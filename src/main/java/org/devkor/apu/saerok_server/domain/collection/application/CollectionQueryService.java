@@ -11,7 +11,6 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
-import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
@@ -74,8 +73,9 @@ public class CollectionQueryService {
 
     public GetCollectionDetailResponse getCollectionDetailResponse(Long userId, Long collectionId) {
 
-        User user = userId == null ? null :
-                userRepository.findById(userId).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
+        if (userId != null) {
+            userRepository.findById(userId).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
+        }
 
         UserBirdCollection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new NotFoundException("해당 id의 컬렉션이 존재하지 않아요"));

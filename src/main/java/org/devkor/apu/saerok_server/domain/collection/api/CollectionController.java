@@ -278,8 +278,8 @@ public class CollectionController {
             summary = "내 컬렉션 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-            ✅ 응답 예시 필드  
-            - collectionId  
+            ✅ 응답 예시 필드
+            - collectionId
             - imageUrl
             - birdName (bird.koreanName 또는 tempBirdName)  
 
