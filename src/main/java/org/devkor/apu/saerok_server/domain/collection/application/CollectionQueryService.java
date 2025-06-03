@@ -34,7 +34,7 @@ public class CollectionQueryService {
     private final CloudFrontUrlService cloudFrontUrlService;
 
     public GetCollectionEditDataResponse getCollectionEditDataResponse(GetCollectionEditDataCommand command) {
-        User user = userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
+        userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
         UserBirdCollection collection = collectionRepository.findById(command.collectionId()).orElseThrow(() -> new NotFoundException("해당 id의 컬렉션이 존재하지 않아요"));
         if (!command.userId().equals(collection.getUser().getId())) {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
@@ -53,6 +53,7 @@ public class CollectionQueryService {
     }
 
     public List<MyCollectionsResponse> getMyCollectionsResponse(Long userId) {
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
         List<UserBirdCollection> collections = collectionRepository.findByUserId(userId);
         List<MyCollectionsResponse> result = new ArrayList<>();
 
