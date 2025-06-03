@@ -87,7 +87,7 @@ public class CollectionCommandService {
     }
 
     public void deleteCollection(DeleteCollectionCommand command) {
-        User user = userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
+        userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         UserBirdCollection collection = collectionRepository.findById(command.collectionId()).orElseThrow(() -> new NotFoundException("해당 id의 컬렉션이 존재하지 않아요"));
         if (!command.userId().equals(collection.getUser().getId())) {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
@@ -113,7 +113,7 @@ public class CollectionCommandService {
     }
 
     public UpdateCollectionResponse updateCollection(UpdateCollectionCommand command) {
-        User user = userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
+        userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         UserBirdCollection collection = collectionRepository.findById(command.collectionId()).orElseThrow(() -> new NotFoundException("해당 id의 컬렉션이 존재하지 않아요"));
         if (!command.userId().equals(collection.getUser().getId())) {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
