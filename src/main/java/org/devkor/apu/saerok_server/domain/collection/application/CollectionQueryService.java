@@ -3,19 +3,23 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetNearbyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollectionEditDataCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.collection.infra.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.util.CloudFrontUrlService;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,7 @@ public class CollectionQueryService {
     private final CollectionWebMapper collectionWebMapper;
     private final UserRepository userRepository;
     private final CloudFrontUrlService cloudFrontUrlService;
+    private final PointFactory pointFactory;
 
     public GetCollectionEditDataResponse getCollectionEditDataResponse(GetCollectionEditDataCommand command) {
         userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
@@ -67,6 +72,8 @@ public class CollectionQueryService {
             response.setBirdName(collection.getBirdKoreanName());
             result.add(response);
         }
+        // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도
+
 
         return result;
     }
@@ -88,5 +95,23 @@ public class CollectionQueryService {
         String imageUrl = objectKeys.isEmpty() ? null : cloudFrontUrlService.toImageUrl(objectKeys.getFirst());
 
         return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl);
+    }
+
+    public GetNearbyCollectionsResponse getNearbyCollections(GetNearbyCollectionsCommand command) {
+        Point refPoint = pointFactory.create(command.latitude(), command.longitude());
+        List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId());
+
+        List<GetNearbyCollectionsResponse.Item> items = collections.stream()
+                .map(collection -> {
+                    List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collection.getId());
+                    String imageUrl = objectKeys.isEmpty() ? null : cloudFrontUrlService.toImageUrl(objectKeys.getFirst());
+                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl);
+                })
+                .toList();
+        // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도
+
+        GetNearbyCollectionsResponse response = new GetNearbyCollectionsResponse();
+        response.setItems(items);
+        return response;
     }
 }

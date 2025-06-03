@@ -9,21 +9,18 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CollectionImagePresignRequest;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionImageRequest;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.request.*;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
-import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
 import org.devkor.apu.saerok_server.global.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -370,5 +367,29 @@ public class CollectionController {
     ) {
         Long userId = userPrincipal.getId();
         collectionImageCommandService.deleteCollectionImage(userId, collectionId, imageId);
+    }
+
+    @GetMapping("/nearby")
+    @PermitAll
+    @Operation(
+            summary = "주위의 컬렉션 조회 (우리 지도)",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+                    주위의 컬렉션을 조회합니다.
+                    """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "컬렉션 이미지 삭제 성공")
+            }
+    )
+    public GetNearbyCollectionsResponse getNearbyCollections(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam Double radiusMeters
+    ) {
+        Long userId = userPrincipal == null ? null : userPrincipal.getId();
+        return collectionQueryService.getNearbyCollections(
+                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters)
+        );
     }
 }

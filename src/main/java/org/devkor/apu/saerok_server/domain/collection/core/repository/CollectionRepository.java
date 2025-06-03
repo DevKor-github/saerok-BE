@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.collection.core.repository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -31,6 +32,31 @@ public class CollectionRepository {
         return em.createQuery(
                 "SELECT c FROM UserBirdCollection c " +
                 "WHERE c.user.id = :userId", UserBirdCollection.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId) {
+        return em.createNativeQuery("""
+                        SELECT *
+                        FROM user_bird_collection c
+                        WHERE ST_DWithin(
+                              c.location::geography,
+                              CAST(:refPoint AS geography),
+                              :radius
+                            )
+                            AND (
+                                c.access_level = 'PUBLIC'
+                                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
+                                )
+                        ORDER BY ST_Distance(
+                                 c.location::geography,
+                                 CAST(:refPoint AS geography)
+                        )
+                        """, UserBirdCollection.class)
+                .setParameter("refPoint", ref)
+                .setParameter("radius", radiusMeters)
                 .setParameter("userId", userId)
                 .getResultList();
     }
