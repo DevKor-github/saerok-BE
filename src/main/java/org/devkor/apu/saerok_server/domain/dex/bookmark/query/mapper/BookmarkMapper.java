@@ -24,9 +24,6 @@ public interface BookmarkMapper {
     @Mapping(source = "bird.id", target = "birdId")
     @Mapping(source = "bird.name.koreanName", target = "koreanName")
     @Mapping(source = "bird.name.scientificName", target = "scientificName")
-    @Mapping(source = "bird.description.description", target = "description")
-    @Mapping(source = "bird.bodyLengthCm", target = "bodyLengthCm")
-    @Mapping(source = "bird.images", target = "imageUrls", qualifiedByName = "extractImageUrls")
     BookmarkedBirdDetailResponse toBookmarkedBirdDetailResponse(UserBirdBookmark bookmark);
 
     // List<UserBirdBookmark> -> List<BookmarkedBirdDetailResponse>

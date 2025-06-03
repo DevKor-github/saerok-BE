@@ -21,13 +21,4 @@ public class BookmarkedBirdDetailResponse {
     
     @Schema(description = "조류 이름 (학명)")
     private String scientificName;
-    
-    @Schema(description = "조류 설명")
-    private String description;
-    
-    @Schema(description = "체장 (cm)")
-    private Double bodyLengthCm;
-    
-    @Schema(description = "조류 이미지 URL 목록")
-    private List<String> imageUrls;
 }
