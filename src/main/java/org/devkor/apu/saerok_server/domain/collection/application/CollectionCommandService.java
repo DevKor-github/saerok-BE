@@ -9,6 +9,7 @@ import org.devkor.apu.saerok_server.domain.collection.application.dto.UpdateColl
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.collection.infra.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
@@ -41,6 +42,7 @@ public class CollectionCommandService {
     private final CollectionImageRepository collectionImageRepository;
     private final CloudFrontUrlService cloudFrontUrlService;
     private final CollectionWebMapper collectionWebMapper;
+    private final PointFactory pointFactory;
 
     @Value("${aws.s3.bucket}")
     private String bucket;
@@ -68,9 +70,7 @@ public class CollectionCommandService {
             throw new BadRequestException("한 줄 평 길이는 " + UserBirdCollection.NOTE_MAX_LENGTH + "자 이하여야 해요");
         }
 
-        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-        Coordinate coordinate = new Coordinate(command.longitude(), command.latitude());
-        Point location = geometryFactory.createPoint(coordinate);
+        Point location = pointFactory.create(command.latitude(), command.longitude());
 
         UserBirdCollection collection = UserBirdCollection.builder()
                 .user(user)
