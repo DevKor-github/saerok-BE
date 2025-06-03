@@ -98,8 +98,16 @@ public class CollectionQueryService {
     }
 
     public GetNearbyCollectionsResponse getNearbyCollections(GetNearbyCollectionsCommand command) {
+        if (command.userId() != null) {
+            userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
+        }
+
+        if (command.userId() == null && command.isMineOnly()) {
+            throw new BadRequestException("비회원 사용자는 isMineOnly = false만 사용 가능해요.");
+        }
+
         Point refPoint = pointFactory.create(command.latitude(), command.longitude());
-        List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId());
+        List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId(), command.isMineOnly());
 
         List<GetNearbyCollectionsResponse.Item> items = collections.stream()
                 .map(collection -> {

@@ -37,24 +37,51 @@ public class CollectionRepository {
     }
 
     @SuppressWarnings("unchecked")
-    public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId) {
-        return em.createNativeQuery("""
-                        SELECT *
-                        FROM user_bird_collection c
-                        WHERE ST_DWithin(
-                              c.location::geography,
-                              CAST(:refPoint AS geography),
-                              :radius
-                            )
-                            AND (
-                                c.access_level = 'PUBLIC'
-                                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
-                                )
-                        ORDER BY ST_Distance(
-                                 c.location::geography,
-                                 CAST(:refPoint AS geography)
-                        )
-                        """, UserBirdCollection.class)
+    public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId, boolean isMineOnly) {
+
+        // 1) 주위의 "내 컬렉션"만 조회 (a.k.a 내 지도)
+        if (isMineOnly && userId != null) {
+            String sqlMineOnly = """
+            SELECT *
+            FROM user_bird_collection c
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND c.user_id = :userId
+            ORDER BY ST_Distance(
+                     c.location::geography,
+                     CAST(:refPoint AS geography)
+            )
+            """;
+            return em.createNativeQuery(sqlMineOnly, UserBirdCollection.class)
+                    .setParameter("refPoint", ref)
+                    .setParameter("radius",  radiusMeters)
+                    .setParameter("userId",  userId)
+                    .getResultList();
+        }
+
+        // 2) 주위의 PUBLIC 컬렉션 + 내 컬렉션 조회 (a.k.a 우리 지도)
+        // 비회원의 경우 PUBLIC 컬렉션만 조회 (내 컬렉션이라는 개념이 없으니까)
+        String sqlAll = """
+            SELECT *
+            FROM user_bird_collection c
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND (
+                   c.access_level = 'PUBLIC'
+                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
+              )
+            ORDER BY ST_Distance(
+                     c.location::geography,
+                     CAST(:refPoint AS geography)
+            )
+            """;
+        return em.createNativeQuery(sqlAll, UserBirdCollection.class)
                 .setParameter("refPoint", ref)
                 .setParameter("radius", radiusMeters)
                 .setParameter("userId", userId)

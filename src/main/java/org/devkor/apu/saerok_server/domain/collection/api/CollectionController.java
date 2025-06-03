@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.collection.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -372,24 +373,38 @@ public class CollectionController {
     @GetMapping("/nearby")
     @PermitAll
     @Operation(
-            summary = "주위의 컬렉션 조회 (우리 지도)",
+            summary = "주위의 컬렉션 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
                     주위의 컬렉션을 조회합니다.
+                    
+                    내 지도 기능은 isMineOnly = true, 우리 지도 기능은 false를 사용하면 됩니다.
+                     - 비회원인데 isMineOnly = true이면 400 Bad Request
                     """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "컬렉션 이미지 삭제 성공")
+                    @ApiResponse(
+                            responseCode = "200", description = "조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = GetNearbyCollectionsResponse.class)
+                            )
+                    ),
             }
     )
     public GetNearbyCollectionsResponse getNearbyCollections(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Parameter(description = "검색 중심 위도", example = "37.5665", required = true)
             @RequestParam Double latitude,
+            @Parameter(description = "검색 중심 경도", example = "126.9780", required = true)
             @RequestParam Double longitude,
-            @RequestParam Double radiusMeters
+            @Parameter(description = "검색 반경 (m)", example = "500", required = true)
+            @RequestParam Double radiusMeters,
+            @Parameter(description = "주위의 내 컬렉션만 조회 여부. 비회원은 false만 허용", example = "false")
+            @RequestParam(required = false, defaultValue = "false") Boolean isMineOnly
     ) {
         Long userId = userPrincipal == null ? null : userPrincipal.getId();
         return collectionQueryService.getNearbyCollections(
-                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters)
+                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters, isMineOnly)
         );
     }
 }
