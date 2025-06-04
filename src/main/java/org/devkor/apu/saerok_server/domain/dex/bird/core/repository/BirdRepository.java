@@ -53,9 +53,8 @@ public class BirdRepository {
             sql.append(" AND (");
             for (int i = 0; i < dto.habitats().size(); i++) {
                 if (i > 0) sql.append(" OR ");
-                sql.append("bh.habitat_type = cast(:habitat")
-                        .append(i)
-                        .append(" AS habitat_type_enum)");
+                sql.append("bh.habitat_type = :habitat")
+                        .append(i);
                 // 파라미터는 문자열( enum.name() )로 주고, SQL에서 enum 타입으로 캐스팅
                 params.put("habitat" + i, dto.habitats().get(i).name());
             }
