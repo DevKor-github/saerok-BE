@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.AppleErrorResponse;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.AppleTokenResponse;
 import org.devkor.apu.saerok_server.global.config.AppleProperties;
-import org.devkor.apu.saerok_server.global.exception.AppleAuthException;
+import org.devkor.apu.saerok_server.global.exception.OAuthException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -46,9 +46,9 @@ public class AppleApiClient {
                             log.error("Apple 인증 에러: {} (code: {})", error.getError(), authorizationCode);
 
                             RuntimeException ex = switch (error.getError()) {
-                                case "invalid_grant"  -> new AppleAuthException("유효하지 않거나 만료된 인가 코드");
-                                case "invalid_client" -> new IllegalStateException("애플 client_id, secret 등 서버 설정 오류");
-                                default               -> new AppleAuthException("Apple 인증 실패: " + error.getError());
+                                case "invalid_grant"  -> new OAuthException("유효하지 않거나 만료된 인가 코드", 401);
+                                case "invalid_client" -> new OAuthException("Apple client_id, secret 등 서버 설정 오류", 401);
+                                default               -> new OAuthException("Apple 인증 실패: " + error.getError(), 401);
                             };
                             return Mono.error(ex);
                         }))
