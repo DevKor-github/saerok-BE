@@ -54,8 +54,6 @@ public class AppleAuthService {
                     );
                 });
 
-        socialAuth.setLastLoginAt(OffsetDateTime.now());
-
         User user = socialAuth.getUser();
         List<String> roles = userRoleRepository.findByUser(user).stream()
                 .map(ur -> ur.getRole().name())

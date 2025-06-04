@@ -33,10 +33,6 @@ public class SocialAuth extends CreatedAtOnly {
     @Column(name = "provider_user_id", nullable = false)
     private String providerUserId;
 
-    @Column(name = "last_login_at")
-    @Setter
-    private OffsetDateTime lastLoginAt;
-
     public static SocialAuth createSocialAuth(User user, SocialProviderType provider, String providerUserId) {
         SocialAuth socialAuth = new SocialAuth();
         socialAuth.user = user;
