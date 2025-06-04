@@ -57,4 +57,13 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(error);
     }
+
+    @ExceptionHandler(OAuthException.class)
+    public ResponseEntity<ErrorResponse> handleOAuthException(OAuthException ex) {
+        ErrorResponse error = new ErrorResponse(ex.getStatusCode(), ex.getMessage());
+        HttpStatus httpStatus = HttpStatus.resolve(ex.getStatusCode());
+        return ResponseEntity
+                .status(httpStatus != null ? httpStatus : HttpStatus.UNAUTHORIZED)
+                .body(error);
+    }
 }
