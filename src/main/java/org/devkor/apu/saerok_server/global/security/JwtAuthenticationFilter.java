@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.devkor.apu.saerok_server.global.security.jwt.JwtProvider;
+import org.devkor.apu.saerok_server.global.security.token.AccessTokenProvider;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtProvider jwtProvider;
+    private final AccessTokenProvider accessTokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Override
@@ -35,8 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             String token = bearerToken.substring(7);
             try {
-                Long userId = jwtProvider.getUserId(token);
-                List<String> roles = jwtProvider.getUserRoles(token);
+                Long userId = accessTokenProvider.getUserId(token);
+                List<String> roles = accessTokenProvider.getUserRoles(token);
 
                 List<SimpleGrantedAuthority> authorities = roles.stream()
                         .map(role -> new SimpleGrantedAuthority("ROLE_" + role))

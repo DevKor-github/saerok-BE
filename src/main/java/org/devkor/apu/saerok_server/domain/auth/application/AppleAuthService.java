@@ -5,7 +5,9 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.devkor.apu.saerok_server.domain.auth.api.dto.response.JwtResponse;
+import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResponse;
+import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade;
+import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade.AuthBundle;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialAuth;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
@@ -15,11 +17,11 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
-import org.devkor.apu.saerok_server.global.security.jwt.JwtProvider;
+import org.devkor.apu.saerok_server.global.security.token.AccessTokenProvider;
+import org.devkor.apu.saerok_server.global.util.dto.ClientInfo;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -28,12 +30,12 @@ import java.util.List;
 public class AppleAuthService {
 
     private final AppleApiClient appleApiClient;
-    private final JwtProvider jwtProvider;
     private final SocialAuthRepository socialAuthRepository;
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final AuthTokenFacade authTokenFacade;
 
-    public JwtResponse authenticate(String authorizationCode) {
+    public ResponseEntity<AccessTokenResponse> authenticate(String authorizationCode, ClientInfo clientInfo) {
 
         String idToken = appleApiClient.requestIdToken(authorizationCode);
 
@@ -55,12 +57,12 @@ public class AppleAuthService {
                 });
 
         User user = socialAuth.getUser();
-        List<String> roles = userRoleRepository.findByUser(user).stream()
-                .map(ur -> ur.getRole().name())
-                .toList();
+        AuthBundle bundle = authTokenFacade.issueTokens(user, clientInfo);
 
-        String accessToken = jwtProvider.createAccessToken(user.getId(), roles);
-        return new JwtResponse(accessToken, user.getSignupStatus().name());
+        return ResponseEntity
+                .ok()
+                .header(HttpHeaders.SET_COOKIE, bundle.cookie().toString())
+                .body(bundle.body());
 
     }
 }
