@@ -43,3 +43,7 @@ kakao:
   client-id: ${DEV_KAKAO_CLIENT_ID}
   redirect-uri: ${LOCAL_KAKAO_REDIRECT_URI} # 로컬 테스트에 대응하기 위함
   client-secret: ${DEV_KAKAO_CLIENT_SECRET}
+
+app:
+  cookie:
+    secure: false
