@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.auth.api.dto.response.LocalJwtResponse;
+import org.devkor.apu.saerok_server.domain.auth.api.dto.response.LocalAccessTokenResponse;
 import org.devkor.apu.saerok_server.domain.auth.application.LocalAuthService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +26,7 @@ public class LocalAuthController {
     )
     @GetMapping("/dummy-user-token")
     @PermitAll
-    public LocalJwtResponse issueLocalDummyUserToken() {
+    public LocalAccessTokenResponse issueLocalDummyUserToken() {
         return localAuthService.issueLocalDummyUserToken();
     }
 }

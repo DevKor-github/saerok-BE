@@ -32,3 +32,18 @@ aws:
     bucket: ${LOCAL_BUCKET_NAME}
   cloudfront:
     image-domain: ${LOCAL_CLOUDFRONT_IMAGE_DOMAIN}
+
+apple:
+  client-id: ${APPLE_CLIENT_ID}
+  team-id: ${APPLE_TEAM_ID}
+  key-id: ${APPLE_KEY_ID}
+  private-key: ${APPLE_PRIVATE_KEY}
+
+kakao:
+  client-id: ${DEV_KAKAO_CLIENT_ID}
+  redirect-uri: ${LOCAL_KAKAO_REDIRECT_URI} # 로컬 테스트에 대응하기 위함
+  client-secret: ${DEV_KAKAO_CLIENT_SECRET}
+
+app:
+  cookie:
+    secure: false

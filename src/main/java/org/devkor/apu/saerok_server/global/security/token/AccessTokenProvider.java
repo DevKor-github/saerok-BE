@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.global.security.jwt;
+package org.devkor.apu.saerok_server.global.security.token;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -14,14 +14,14 @@ import java.util.Date;
 import java.util.List;
 
 @Component
-public class JwtProvider {
+public class AccessTokenProvider {
 
     @Value("${jwt.secret}")
     private String secret;
 
     public String createAccessToken(Long userId, List<String> roles) {
 
-        long expirationMillisecond = 1000L * 60 * 60 * 24 * 7; // 7일
+        long expirationMillisecond = 1000L * 60 * 60; // 1시간
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMillisecond);
 
