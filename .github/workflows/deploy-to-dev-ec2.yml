@@ -73,6 +73,9 @@ jobs:
             APPLE_KEY_ID="${{ secrets.APPLE_KEY_ID }}" \
             APPLE_PRIVATE_KEY="${{ secrets.APPLE_PRIVATE_KEY }}" \
             JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            DEV_KAKAO_CLIENT_ID="${{ secrets.DEV_KAKAO_CLIENT_ID }}" \
+            DEV_KAKAO_REDIRECT_URI="${{ secrets.DEV_KAKAO_REDIRECT_URI }}" \
+            DEV_KAKAO_CLIENT_SECRET="${{ secrets.DEV_KAKAO_CLIENT_SECRET }}" \
             nohup java -jar $JAR_NAME --spring.profiles.active=dev > app.log 2>&1 &
             
             echo "✅ 배포 완료"
