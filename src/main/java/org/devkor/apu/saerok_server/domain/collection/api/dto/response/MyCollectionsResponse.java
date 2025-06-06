@@ -1,17 +1,23 @@
 package org.devkor.apu.saerok_server.domain.collection.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 
-@Data
+import java.util.List;
+
 @Schema(description = "내 컬렉션 목록 조회 응답")
-public class MyCollectionsResponse {
-    @Schema(description = "컬렉션 ID", example = "1")
-    private Long collectionId;
+public record MyCollectionsResponse(
+        List<Item> items
+) {
 
-    @Schema(description = "이미지 URL", example = "https://example.com/images/collection1.jpg")
-    private String imageUrl;
+    @Schema(name = "MyCollectionsResponse.Item")
+    public record Item(
+        @Schema(description = "컬렉션 ID", example = "1")
+        Long collectionId,
 
-    @Schema(description = "새 이름", example = "까치")
-    private String birdName;
+        @Schema(description = "이미지 URL", example = "https://example.com/images/collection1.jpg")
+        String imageUrl,
+
+        @Schema(description = "새 이름", example = "까치")
+        String birdName
+    ) { }
 }
