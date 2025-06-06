@@ -27,5 +27,17 @@ public class GetNearbyCollectionsResponse {
 
         @Schema(description = "한 줄 평", example = "광화문에서 까치가 날아다녔어요")
         private String note;
+
+        @Schema(description = "관찰 위치 위도", example = "37.987654")
+        private Double latitude;
+
+        @Schema(description = "관찰 위치 경도", example = "127.123456")
+        private Double longitude;
+
+        @Schema(description = "관찰 위치 별칭", example = "서울숲")
+        private String locationAlias;
+
+        @Schema(description = "관찰 지점의 주소", example = "서울시 성동구 성수동")
+        private String address;
     }
 }
