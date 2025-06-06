@@ -62,16 +62,16 @@ public interface CollectionWebMapper {
 
     @Named("getBirdId")
     default Long getBirdId(UserBirdCollection collection) {
-        return collection.getBirdIdOrNull();
+        return collection.getBird() == null ? null : collection.getBird().getId();
     }
 
     @Named("getBirdKoreanName")
     default String getBirdKoreanName(UserBirdCollection collection) {
-        return collection.getBirdKoreanName();
+        return collection.getBird() == null ? null : collection.getBird().getName().getKoreanName();
     }
 
     @Named("getBirdScientificName")
     default String getBirdScientificName(UserBirdCollection collection) {
-        return collection.getBirdScientificName();
+        return collection.getBird() == null ? null : collection.getBird().getName().getScientificName();
     }
 }

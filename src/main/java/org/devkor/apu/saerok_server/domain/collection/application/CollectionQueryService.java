@@ -68,7 +68,7 @@ public class CollectionQueryService {
                     return new MyCollectionsResponse.Item(
                             collection.getId(),
                             imageUrl,
-                            collection.getBird().getName().getKoreanName()
+                            collection.getBird() == null ? null : collection.getBird().getName().getKoreanName()
                     );
                 })
                 .toList();
