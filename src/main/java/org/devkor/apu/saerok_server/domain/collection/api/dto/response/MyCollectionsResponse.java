@@ -17,7 +17,7 @@ public record MyCollectionsResponse(
         @Schema(description = "이미지 URL", example = "https://example.com/images/collection1.jpg")
         String imageUrl,
 
-        @Schema(description = "새 이름", example = "까치")
-        String birdName
+        @Schema(description = "새의 한국 이름", example = "까치")
+        String koreanName
     ) { }
 }
