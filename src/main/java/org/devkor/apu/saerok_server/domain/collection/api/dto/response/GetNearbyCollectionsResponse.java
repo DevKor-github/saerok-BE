@@ -15,6 +15,7 @@ public class GetNearbyCollectionsResponse {
     private List<Item> items;
 
     @Data
+    @Schema(name = "GetNearbyCollectionsResponse.Item")
     public static class Item {
         @Schema(description = "컬렉션 ID", example = "1")
         private Long collectionId;

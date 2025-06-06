@@ -28,8 +28,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Tag(name = "Collections API", description = "컬렉션 기능 관련 API")
 @RestController
 @RequiredArgsConstructor
@@ -236,10 +234,10 @@ public class CollectionController {
             summary = "내 컬렉션 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-            ✅ 응답 예시 필드
+            ✅ 응답 필드
             - collectionId
             - imageUrl
-            - birdName (bird.koreanName 또는 tempBirdName)  
+            - koreanName
 
             """,
             responses = {
@@ -247,20 +245,18 @@ public class CollectionController {
                             responseCode = "200", description = "목록 조회 성공",
                             content = @Content(
                                     mediaType = "application/json",
-                                    array = @ArraySchema(
-                                            schema = @Schema(implementation = MyCollectionsResponse.class)
-                                    )
+                                    schema = @Schema(implementation = MyCollectionsResponse.class)
                             )
                     ),
                     @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
                     @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content),
             }
     )
-    public List<MyCollectionsResponse> listMyCollections(
+    public MyCollectionsResponse listMyCollections(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         Long userId = userPrincipal.getId();
-        return collectionQueryService.getMyCollectionsResponse(userId);
+        return collectionQueryService.getMyCollections(userId);
     }
 
     @GetMapping("/{collectionId}/edit")

@@ -23,7 +23,6 @@ import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -57,25 +56,25 @@ public class CollectionQueryService {
         return response;
     }
 
-    public List<MyCollectionsResponse> getMyCollectionsResponse(Long userId) {
+    public MyCollectionsResponse getMyCollections(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
-        List<UserBirdCollection> collections = collectionRepository.findByUserId(userId);
-        List<MyCollectionsResponse> result = new ArrayList<>();
 
-        for (UserBirdCollection collection : collections) {
-            List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collection.getId());
-            String imageUrl = objectKeys.isEmpty() ? null : cloudFrontUrlService.toImageUrl(objectKeys.getFirst());
+        List<MyCollectionsResponse.Item> items = collectionRepository.findByUserId(userId).stream()
+                .map(collection -> {
+                    String objectKey = collectionImageRepository.findObjectKeysByCollectionId(collection.getId()).stream()
+                            .findFirst().orElse(null);
+                    String imageUrl = objectKey != null ? cloudFrontUrlService.toImageUrl(objectKey) : null;
 
-            MyCollectionsResponse response = new MyCollectionsResponse();
-            response.setCollectionId(collection.getId());
-            response.setImageUrl(imageUrl);
-            response.setBirdName(collection.getBirdKoreanName());
-            result.add(response);
-        }
+                    return new MyCollectionsResponse.Item(
+                            collection.getId(),
+                            imageUrl,
+                            collection.getBird() == null ? null : collection.getBird().getName().getKoreanName()
+                    );
+                })
+                .toList();
         // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도
 
-
-        return result;
+        return new MyCollectionsResponse(items);
     }
 
     public GetCollectionDetailResponse getCollectionDetailResponse(Long userId, Long collectionId) {
