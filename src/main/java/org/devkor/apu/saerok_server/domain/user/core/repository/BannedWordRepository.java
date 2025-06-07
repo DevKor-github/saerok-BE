@@ -14,29 +14,15 @@ public class BannedWordRepository {
     private final EntityManager em;
 
     /**
-     * 활성화된 금칙어 중에서 특정 단어 존재 여부 확인
+     * 금칙어 중에서 특정 단어 존재 여부 확인
      */
-    public boolean existsByWordAndIsActiveTrue(String word) {
+    public boolean existsByWord(String word) {
         Long count = em.createQuery(
-                "SELECT COUNT(bw) FROM BannedWord bw WHERE bw.word = :word AND bw.isActive = true", 
+                "SELECT COUNT(bw) FROM BannedWord bw WHERE bw.word = :word", 
                 Long.class)
                 .setParameter("word", word)
                 .getSingleResult();
         return count > 0;
     }
 
-    /**
-     * 금칙어 저장
-     */
-    public BannedWord save(BannedWord bannedWord) {
-        em.persist(bannedWord);
-        return bannedWord;
-    }
-
-    /**
-     * ID로 금칙어 조회
-     */
-    public Optional<BannedWord> findById(Long id) {
-        return Optional.ofNullable(em.find(BannedWord.class, id));
-    }
 }

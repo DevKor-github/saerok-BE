@@ -30,20 +30,14 @@ public class BannedWordService {
      * @return 부적절한 표현 포함 여부
      */
     public boolean containsBannedWord(String text) {
-        String normalizedText = text.trim();
 
         // 1단계: 서비스 특화 금칙어 검사 (DB)
-        if (bannedWordRepository.existsByWordAndIsActiveTrue(normalizedText)) {
+        if (bannedWordRepository.existsByWord(text)) {
             return true;
         }
 
         // 2단계: 일반 욕설 검사 (라이브러리)
-        if (badWordFiltering.check(normalizedText)) {
-            return true;
-        }
-
-        // 3단계: 띄어쓰기로 우회한 욕설 검사 (라이브러리)
-        if (badWordFiltering.blankCheck(normalizedText)) {
+        if (badWordFiltering.check(text)) {
             return true;
         }
 

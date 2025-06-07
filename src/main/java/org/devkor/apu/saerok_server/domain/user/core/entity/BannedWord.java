@@ -14,32 +14,20 @@ import java.time.LocalDateTime;
 public class BannedWord {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "banned_words_seq")
+    @SequenceGenerator(name = "banned_words_seq", sequenceName = "banned_words_seq", allocationSize = 50)
     private Long id;
 
     @Column(name = "word", nullable = false, unique = true, length = 50)
     private String word;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "is_active")
-    private Boolean isActive = true;
 
     public static BannedWord createBannedWord(String word) {
         BannedWord bannedWord = new BannedWord();
         bannedWord.word = word.trim();
         bannedWord.createdAt = LocalDateTime.now();
-        bannedWord.updatedAt = LocalDateTime.now();
-        bannedWord.isActive = true;
         return bannedWord;
-    }
-
-    @PreUpdate
-    private void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }
