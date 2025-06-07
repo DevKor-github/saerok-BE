@@ -102,15 +102,31 @@ public class UserController {
     @GetMapping("/check-nickname")
     @PermitAll
     @Operation(
-            summary = "닉네임 중복 확인",
+            summary = "닉네임 사용 가능 여부 조회",
             description = """
-            해당 닉네임이 다른 사용자에 의해 사용되고 있는지 조회합니다.
+            닉네임이 사용 가능한지 종합적으로 검사합니다.
+            
+            검사 항목:
+            - 길이 제한 (2-9자)
+            - 형식 검사 (한글/영어/숫자, 공백 금지 등)
+            - 금칙어 포함 여부
+            - 다른 사용자 사용 여부
+            
+            응답 필드:
+            - isValidByPolicy: 닉네임 정책에 따라 전체적으로 사용 가능한지 여부
+            - isUsedByOtherUser: 다른 사용자가 사용 중인지 여부
+            - reason: 사용 불가능한 경우의 이유 (사용 가능한 경우 null)
             """,
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "성공",
+                            description = "조회 성공 - 사용 가능 여부는 응답 내용으로 판단",
                             content = @Content(schema = @Schema(implementation = CheckNicknameResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 - 닉네임 누락 또는 빈 문자열",
+                            content = @Content
                     ),
             }
     )
