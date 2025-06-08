@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoErrorResponse;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoTokenResponse;
+import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoUserInfoResponse;
 import org.devkor.apu.saerok_server.global.config.KakaoProperties;
 import org.devkor.apu.saerok_server.global.exception.OAuthException;
 import org.springframework.http.HttpStatusCode;
@@ -55,7 +56,7 @@ public class KakaoApiClient {
         try {
             response = responseMono.block();
         } catch (RuntimeException e) {
-            log.error("Kakao 인증 서버 통신 중 예외 발생 (code: {})", authorizationCode, e);
+            log.error("Kakao 인증 서버 통신 중 예외 발생 (code: {})", authorizationCode);
             throw e;
         }
 
@@ -65,5 +66,38 @@ public class KakaoApiClient {
         }
 
         return response.getIdToken();
+    }
+
+    public KakaoUserInfoResponse fetchUserInfo(String accessToken) {
+
+        Mono<KakaoUserInfoResponse> responseMono = webClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("https")
+                        .host("kapi.kakao.com")
+                        .path("/v2/user/me")
+                        .queryParam("secure_resource", "true")
+                        .build())
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response ->
+                        response.bodyToMono(KakaoErrorResponse.class).flatMap(error -> {
+                            log.error("카카오 사용자 정보 조회 실패: {}", error.getMsg());
+                            return Mono.error(new OAuthException("카카오 사용자 정보 조회 실패: " + error.getMsg(), 401));
+                        })
+                )
+                .bodyToMono(KakaoUserInfoResponse.class);
+
+        try {
+            KakaoUserInfoResponse response = responseMono.block();
+            if (response == null) {
+                log.error("카카오 사용자 정보 응답이 null임");
+                throw new IllegalStateException("카카오 사용자 정보 응답 오류");
+            }
+            return response;
+        } catch (RuntimeException e) {
+            log.error("카카오 사용자 정보 조회 중 예외 발생", e);
+            throw e;
+        }
     }
 }
