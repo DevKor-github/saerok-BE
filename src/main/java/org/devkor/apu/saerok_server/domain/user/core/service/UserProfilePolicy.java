@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 public class UserProfilePolicy {
 
     private final BannedWordService bannedWordService;
+    private final ReservedWordService reservedWordService;
 
     public boolean isNicknameValid(String nickname) {
         return validateNicknameWithReason(nickname).isValid();
@@ -49,7 +50,12 @@ public class UserProfilePolicy {
             }
         }
 
-        // 5. 금칙어 검사
+        // 5. 예약어 검사 (정확 검사)
+        if (reservedWordService.isReservedWord(nickname)) {
+            return new NicknameValidationResult(false, "사용할 수 없는 단어입니다.");
+        }
+
+        // 6. 금칙어 및 욕설 검사 (포함 검사)
         if (bannedWordService.containsBannedWord(nickname)) {
             return new NicknameValidationResult(false, "사용할 수 없는 단어가 포함되어 있습니다.");
         }
