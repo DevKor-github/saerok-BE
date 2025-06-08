@@ -2,10 +2,9 @@ package org.devkor.apu.saerok_server.domain.auth.application;
 
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
+import org.devkor.apu.saerok_server.domain.auth.core.service.UserProvisioningService;
 import org.devkor.apu.saerok_server.domain.auth.infra.AppleAuthClient;
-import org.devkor.apu.saerok_server.domain.auth.support.SocialAuthClient;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
+import org.devkor.apu.saerok_server.domain.auth.infra.SocialAuthClient;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,12 +14,11 @@ public class AppleAuthService extends AbstractSocialAuthService {
 
     public AppleAuthService(
             SocialAuthRepository socialAuthRepository,
-            UserRepository userRepository,
-            UserRoleRepository userRoleRepository,
             AuthTokenFacade authTokenFacade,
+            UserProvisioningService userProvisioningService,
             AppleAuthClient appleAuthClient
     ) {
-        super(socialAuthRepository, userRepository, userRoleRepository, authTokenFacade);
+        super(socialAuthRepository, authTokenFacade, userProvisioningService);
         this.appleAuthClient = appleAuthClient;
     }
 

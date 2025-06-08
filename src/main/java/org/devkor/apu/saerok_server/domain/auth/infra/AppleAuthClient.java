@@ -4,8 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
-import org.devkor.apu.saerok_server.domain.auth.support.SocialAuthClient;
-import org.devkor.apu.saerok_server.domain.auth.support.SocialUserInfo;
+import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
 import org.springframework.stereotype.Service;
 
 @Service
