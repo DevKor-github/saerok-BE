@@ -67,6 +67,9 @@ dependencies {
 
 	// WebClient를 쓰기 위해 WebFlux 의존성 추가
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// 금칙어 필터링 라이브러리 의존성 추가
+	implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
 }
 
 tasks.named('test') {
