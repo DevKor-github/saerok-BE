@@ -67,7 +67,7 @@ public class AuthController {
             HttpServletRequest httpServletRequest
     ) {
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        return appleAuthService.authenticate(request.authorizationCode(), clientInfo);
+        return appleAuthService.authenticate(request.authorizationCode(), null, clientInfo);
     }
 
     @GetMapping("/kakao/login") // 카카오 인증 절차상 GET 요청으로 설정해야 함 (302 Redirect)
