@@ -67,7 +67,7 @@ public class AuthController {
             HttpServletRequest httpServletRequest
     ) {
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        return appleAuthService.authenticate(request.authorizationCode(), clientInfo);
+        return appleAuthService.authenticate(request.authorizationCode(), null, clientInfo);
     }
 
     @GetMapping("/kakao/login") // 카카오 인증 절차상 GET 요청으로 설정해야 함 (302 Redirect)
@@ -75,7 +75,7 @@ public class AuthController {
     @Operation(
             summary = "Kakao 소셜 로그인",
             description = """
-                    카카오 로그인 인가 코드를 이용해 회원가입 및 로그인을 처리합니다.
+                    카카오 인증 서버로부터 받은 <u><strong>인가 코드 또는 액세스 토큰</strong></u>을 이용해 회원가입 및 로그인을 처리합니다.
                     
                     응답에는 accessToken, signupStatus가 들어 있습니다.<br>
                     accessToken으로 서버에게 사용자 신원을 인증할 수 있습니다. (유효 기간: 1시간)<br>
@@ -102,9 +102,9 @@ public class AuthController {
             @ParameterObject @ModelAttribute KakaoLoginRequest request,
             HttpServletRequest httpServletRequest
     ) {
-        if (request.getCode() != null) {
+        if (request.getError() == null) {
             ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-            return kakaoAuthService.authenticate(request.getCode(), clientInfo);
+            return kakaoAuthService.authenticate(request.getCode(), request.getAccessToken(), clientInfo);
         }
 
         String errorMessage = "카카오 로그인 인증에 실패했어요: " + request.getError() + ", " + request.getErrorDescription();
