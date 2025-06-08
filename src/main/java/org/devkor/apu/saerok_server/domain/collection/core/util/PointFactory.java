@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.collection.infra;
+package org.devkor.apu.saerok_server.domain.collection.core.util;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
