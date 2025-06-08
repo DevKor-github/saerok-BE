@@ -15,9 +15,9 @@ public class UserProfilePolicy {
     }
     
     public NicknameValidationResult validateNicknameWithReason(String nickname) {
-        // 1. 닉네임 비어있음 검사 - 요청 자체가 잘못된 경우 예외 발생
+        // 1. 닉네임 비어있음 검사
         if (nickname == null || nickname.trim().isEmpty()) {
-            throw new IllegalArgumentException("닉네임을 입력해주세요.");
+            return new NicknameValidationResult(false, "닉네임이 비어있습니다.");
         }
         
         // 2. 글자수 제한 [2, 9] (2글자 이상 9글자 이하)

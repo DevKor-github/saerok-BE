@@ -7,7 +7,6 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.dto.NicknameValidationResult;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfilePolicy;
-import org.devkor.apu.saerok_server.domain.user.mapper.NicknameMapper;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +18,6 @@ public class UserQueryService {
 
     private final UserRepository userRepository;
     private final UserProfilePolicy userProfilePolicy;
-    private final NicknameMapper nicknameMapper;
 
     public GetMyUserProfileResponse getMyUserProfile(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 id의 사용자가 존재하지 않아요"));
@@ -34,16 +32,16 @@ public class UserQueryService {
         // 1. 유효성 검사 (길이, 형식, 금칙어 등)
         NicknameValidationResult validationResult = userProfilePolicy.validateNicknameWithReason(nickname);
         if (!validationResult.isValid()) {
-            return nicknameMapper.toCheckNicknameResponse(false, false, validationResult.reason());
+            return new CheckNicknameResponse(false, validationResult.reason());
         }
         
         // 2. 중복 확인
         boolean isDuplicated = userRepository.findByNickname(nickname).isPresent();
         if (isDuplicated) {
-            return nicknameMapper.toCheckNicknameResponse(false, true, "이미 사용 중인 닉네임입니다.");
+            return new CheckNicknameResponse(false, "이미 사용 중인 닉네임입니다.");
         }
         
         // 3. 모든 검사 통과
-        return nicknameMapper.toCheckNicknameResponse(true, false, null);
+        return new CheckNicknameResponse(true, null);
     }
 }

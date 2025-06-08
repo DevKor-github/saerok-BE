@@ -113,21 +113,18 @@ public class UserController {
             - 다른 사용자 사용 여부
             
             응답 필드:
-            - isValidByPolicy: 닉네임 정책에 따라 전체적으로 사용 가능한지 여부
-            - isUsedByOtherUser: 다른 사용자가 사용 중인지 여부
+            - isAvailable: 닉네임 정책에 따라 전체적으로 사용 가능한지 여부
             - reason: 사용 불가능한 경우의 이유 (사용 가능한 경우 null)
             
             성공 시:
                     {
-                      "isValidByPolicy": true,
-                      "isUsedByOtherUser": false,
+                      "isAvailable": true,
                       "reason": null
                     }
             
             실패 예시:
                     {
-                      "isValidByPolicy": false,
-                      "isUsedByOtherUser": false,
+                      "isAvailable": false
                       "reason": "사용할 수 없는 단어가 포함되어 있습니다."
                     }
             """,
