@@ -40,7 +40,6 @@ class CollectionQueryServiceTest {
     @Mock CollectionWebMapper collectionWebMapper;
     @Mock UserRepository userRepository;
     @Mock CloudFrontUrlService cloudFrontUrlService;
-    @Mock PointFactory pointFactory;
 
     Field userIdField;
     Field collectionIdField;
@@ -53,8 +52,7 @@ class CollectionQueryServiceTest {
                 collectionImageRepository,
                 collectionWebMapper,
                 userRepository,
-                cloudFrontUrlService,
-                pointFactory
+                cloudFrontUrlService
         );
 
         userIdField = User.class.getDeclaredField("id");

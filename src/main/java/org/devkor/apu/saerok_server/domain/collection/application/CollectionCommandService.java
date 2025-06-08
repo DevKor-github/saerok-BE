@@ -42,7 +42,6 @@ public class CollectionCommandService {
     private final CollectionImageRepository collectionImageRepository;
     private final CloudFrontUrlService cloudFrontUrlService;
     private final CollectionWebMapper collectionWebMapper;
-    private final PointFactory pointFactory;
 
     @Value("${aws.s3.bucket}")
     private String bucket;
@@ -70,7 +69,7 @@ public class CollectionCommandService {
             throw new BadRequestException("한 줄 평 길이는 " + UserBirdCollection.NOTE_MAX_LENGTH + "자 이하여야 해요");
         }
 
-        Point location = pointFactory.create(command.latitude(), command.longitude());
+        Point location = PointFactory.create(command.latitude(), command.longitude());
 
         UserBirdCollection collection = UserBirdCollection.builder()
                 .user(user)
