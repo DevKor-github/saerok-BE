@@ -10,6 +10,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
+import org.devkor.apu.saerok_server.domain.collection.infra.S3CollectionImageRemover;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
@@ -23,10 +24,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
 
 import java.util.List;
 
@@ -38,13 +36,10 @@ public class CollectionCommandService {
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
     private final BirdRepository birdRepository;
-    private final S3Client s3Client;
+    private final S3CollectionImageRemover s3CollectionImageRemover;
     private final CollectionImageRepository collectionImageRepository;
     private final CloudFrontUrlService cloudFrontUrlService;
     private final CollectionWebMapper collectionWebMapper;
-
-    @Value("${aws.s3.bucket}")
-    private String bucket;
 
     public Long createCollection(CreateCollectionCommand command) {
         User user = userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
@@ -92,21 +87,7 @@ public class CollectionCommandService {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
         }
 
-        List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId());
-
-        if (!objectKeys.isEmpty()) {
-            List<ObjectIdentifier> objectsToDelete = objectKeys.stream()
-                    .map(key -> ObjectIdentifier.builder().key(key).build())
-                    .toList();
-            DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder()
-                    .bucket(bucket)
-                    .delete(Delete.builder().objects(objectsToDelete).build())
-                    .build();
-            s3Client.deleteObjects(deleteRequest);
-
-            // TODO: 추후 운영/고도화 단계에서 S3 이미지 삭제 실패 감지 및 후처리
-        }
-
+        s3CollectionImageRemover.removeFromS3(command.collectionId());
         collectionImageRepository.removeByCollectionId(command.collectionId());
         collectionRepository.remove(collection);
     }
