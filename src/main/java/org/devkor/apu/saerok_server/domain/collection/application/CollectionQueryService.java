@@ -12,7 +12,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.collection.infra.PointFactory;
+import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.exception.BadRequestException;
@@ -35,7 +35,6 @@ public class CollectionQueryService {
     private final CollectionWebMapper collectionWebMapper;
     private final UserRepository userRepository;
     private final CloudFrontUrlService cloudFrontUrlService;
-    private final PointFactory pointFactory;
 
     public GetCollectionEditDataResponse getCollectionEditDataResponse(GetCollectionEditDataCommand command) {
         userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
@@ -105,7 +104,7 @@ public class CollectionQueryService {
             throw new BadRequestException("비회원 사용자는 isMineOnly = false만 사용 가능해요.");
         }
 
-        Point refPoint = pointFactory.create(command.latitude(), command.longitude());
+        Point refPoint = PointFactory.create(command.latitude(), command.longitude());
         List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId(), command.isMineOnly());
 
         List<GetNearbyCollectionsResponse.Item> items = collections.stream()
