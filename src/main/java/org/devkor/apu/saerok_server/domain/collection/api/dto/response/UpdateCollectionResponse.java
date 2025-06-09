@@ -12,6 +12,6 @@ public record UpdateCollectionResponse (
         String address,
         String locationAlias,
         String note,
-        List<String> imageUrls
+        String imageUrl
 ) {
 }

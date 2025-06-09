@@ -26,8 +26,6 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -132,10 +130,11 @@ public class CollectionCommandService {
             collection.setNote(command.note());
         }
 
-        List<String> urls = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId()).stream()
+        String imageUrl = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId()).stream()
                 .map(cloudFrontUrlService::toImageUrl)
-                .toList();
+                .findFirst()
+                .orElse(null);
 
-        return collectionWebMapper.toUpdateCollectionResponse(collection, urls);
+        return collectionWebMapper.toUpdateCollectionResponse(collection, imageUrl);
     }
 }
