@@ -1,17 +1,20 @@
 package org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.util.List;
 
-@Data
-@Schema(description = "북마크 정보 응답")
-public class BookmarkResponse {
+@Schema(description = "북마크 목록 조회 응답")
+public record BookmarkResponse(
+        List<Item> items
+) {
 
-    @Schema(description = "북마크 ID")
-    private Long id;
-    
-    @Schema(description = "조류 ID")
-    private Long birdId;
+    @Schema(name = "BookmarkResponse.Item")
+    public record Item(
+        @Schema(description = "북마크 ID", example = "1")
+        Long id,
+        
+        @Schema(description = "조류 ID", example = "10")
+        Long birdId
+    ) { }
 }

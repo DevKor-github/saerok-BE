@@ -13,12 +13,17 @@ import java.util.List;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface BookmarkMapper {
 
-    // UserBirdBookmark -> BookmarkResponse
+    // UserBirdBookmark -> BookmarkResponse.Item
     @Mapping(source = "bird.id", target = "birdId")
-    BookmarkResponse toBookmarkResponse(UserBirdBookmark bookmark);
+    BookmarkResponse.Item toBookmarkItem(UserBirdBookmark bookmark);
 
-    // List<UserBirdBookmark> -> List<BookmarkResponse>
-    List<BookmarkResponse> toBookmarkResponseList(List<UserBirdBookmark> bookmarks);
+    // List<UserBirdBookmark> -> List<BookmarkResponse.Item> (MapStruct 자동 처리)
+    List<BookmarkResponse.Item> toBookmarkItems(List<UserBirdBookmark> bookmarks);
+
+    // List<UserBirdBookmark> -> BookmarkResponse (MapStruct 활용)
+    default BookmarkResponse toBookmarkResponse(List<UserBirdBookmark> bookmarks) {
+        return new BookmarkResponse(toBookmarkItems(bookmarks));
+    }
 
     // UserBirdBookmark -> BookmarkedBirdDetailResponse
     @Mapping(source = "bird.id", target = "birdId")
