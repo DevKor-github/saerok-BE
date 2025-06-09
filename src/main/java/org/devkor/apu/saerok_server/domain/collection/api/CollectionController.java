@@ -285,18 +285,15 @@ public class CollectionController {
     @PatchMapping("/{collectionId}/edit")
     @PreAuthorize("hasRole('USER')")
     @Operation(
-            summary = "컬렉션 메타데이터 수정",
+            summary = "컬렉션 수정",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-            기존에 생성한 컬렉션의 메타데이터를 수정합니다.
+            기존에 생성한 컬렉션을 수정합니다.
             수정하고 싶은 필드만 요청 json에 담아서 보낼 수 있습니다.
             
-            birdId를 수정하려면 반드시 isBirdIdUpdated = true도 포함해야 합니다.
-            
-            ⚠️ 수정 대상: 이미지 제외한 컬렉션의 모든 메타데이터
-            
-            ✅ 유효성 조건:
-            - `note`는 50자 이하
+            - birdId를 수정하려면 반드시 isBirdIdUpdated = true도 포함해야 합니다.
+            - accessLevel 허용 값: PUBLIC, PRIVATE (대소문자 구분. 허용되지 않는 값 보내면 400)
+            - note는 50자 이하여야 합니다.
             """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(schema = @Schema(implementation = UpdateCollectionResponse.class))),

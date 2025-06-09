@@ -130,6 +130,10 @@ public class CollectionCommandService {
             collection.setNote(command.note());
         }
 
+        if (command.accessLevel() != null) {
+            collection.setAccessLevel(command.accessLevel());
+        }
+
         String imageUrl = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId()).stream()
                 .map(cloudFrontUrlService::toImageUrl)
                 .findFirst()
