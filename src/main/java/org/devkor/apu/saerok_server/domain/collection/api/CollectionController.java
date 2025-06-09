@@ -268,7 +268,7 @@ public class CollectionController {
                     컬렉션 수정 시 필요한 정보를 조회합니다.
                     """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content),
+                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = GetCollectionEditDataResponse.class))),
                     @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
                     @ApiResponse(responseCode = "403", description = "권한 없음", content = @Content),
                     @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content),
