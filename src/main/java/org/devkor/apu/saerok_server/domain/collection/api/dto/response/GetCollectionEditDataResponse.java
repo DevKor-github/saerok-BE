@@ -1,13 +1,10 @@
 package org.devkor.apu.saerok_server.domain.collection.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
-import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @Schema(description = "컬렉션 수정용 상세 조회 응답 DTO")
