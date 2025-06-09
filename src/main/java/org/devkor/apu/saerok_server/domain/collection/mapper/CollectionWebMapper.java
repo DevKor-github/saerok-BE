@@ -14,8 +14,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.Named;
 
-import java.util.List;
-
 @Mapper(
         componentModel = MappingConstants.ComponentModel.SPRING
 )
@@ -38,16 +36,14 @@ public interface CollectionWebMapper {
     GetCollectionEditDataCommand toGetCollectionDataCommand(Long userId, Long collectionId);
 
     @Mapping(target = "birdId", source = "bird.id")
-    @Mapping(target = "images", ignore = true)
     GetCollectionEditDataResponse toGetCollectionEditDataResponse(UserBirdCollection collection);
 
     @Mapping(target = "userId", source = "userId")
     UpdateCollectionCommand toUpdateCollectionCommand(UpdateCollectionRequest request, Long userId, Long collectionId);
 
     @Mapping(target = "birdId", source = "collection.bird.id")
-    @Mapping(target = "imageUrls", source = "imageUrls")
     @Mapping(target = "collectionId", source = "collection.id")
-    UpdateCollectionResponse toUpdateCollectionResponse(UserBirdCollection collection, List<String> imageUrls);
+    UpdateCollectionResponse toUpdateCollectionResponse(UserBirdCollection collection, String imageUrl);
 
     @Mapping(target = "bird.birdId", source = "collection", qualifiedByName = "getBirdId")
     @Mapping(target = "bird.koreanName", source = "collection", qualifiedByName = "getBirdKoreanName")

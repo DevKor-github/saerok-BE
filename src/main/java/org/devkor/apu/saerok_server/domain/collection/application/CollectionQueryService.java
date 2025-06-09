@@ -9,7 +9,6 @@ import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollect
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
-import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
@@ -44,14 +43,20 @@ public class CollectionQueryService {
         }
 
         GetCollectionEditDataResponse response = collectionWebMapper.toGetCollectionEditDataResponse(collection);
-        List<UserBirdCollectionImage> images = collectionImageRepository.findByCollectionId(command.collectionId());
-        List<GetCollectionEditDataResponse.ImageInfo> imageInfos = images.stream()
-                .map(image -> new GetCollectionEditDataResponse.ImageInfo(
-                            image.getId(),
-                            cloudFrontUrlService.toImageUrl(image.getObjectKey())
-                    ))
-                .toList();
-        response.setImages(imageInfos);
+        collectionImageRepository.findByCollectionId(command.collectionId())
+                .stream()
+                .findFirst()
+                .ifPresentOrElse(
+                        image -> {
+                            response.setImageId(image.getId());
+                            response.setImageUrl(cloudFrontUrlService.toImageUrl(image.getObjectKey()));
+                        },
+                        () -> {
+                            response.setImageId(null);
+                            response.setImageUrl(null);
+                        }
+                );
+
         return response;
     }
 

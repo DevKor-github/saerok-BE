@@ -1,13 +1,10 @@
 package org.devkor.apu.saerok_server.domain.collection.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
-import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @Schema(description = "컬렉션 수정용 상세 조회 응답 DTO")
@@ -37,18 +34,9 @@ public class GetCollectionEditDataResponse {
     @Schema(description = "컬렉션 공개 범위 (공개/비공개)")
     private AccessLevelType accessLevel;
 
-    @Schema(description = "컬렉션에 첨부된 이미지 정보 목록")
-    private List<ImageInfo> images;
+    @Schema(description = "이미지 ID", example = "300")
+    private Long imageId;
 
-    @Data
-    @AllArgsConstructor
-    @Schema(description = "이미지 정보")
-    public static class ImageInfo {
-
-        @Schema(description = "이미지 ID", example = "300")
-        private Long id;
-
-        @Schema(description = "이미지 URL", example = "https://cdn.example.com/images/300.jpg")
-        private String url;
-    }
+    @Schema(description = "이미지 URL", example = "https://cdn.example.com/images/300.jpg")
+    private String imageUrl;
 }
