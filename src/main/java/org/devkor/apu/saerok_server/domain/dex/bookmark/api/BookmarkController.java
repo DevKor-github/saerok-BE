@@ -48,14 +48,14 @@ public class BookmarkController {
                     ),
             }
     )
-    public ResponseEntity<List<BookmarkResponse>> getBookmarks(
+    public ResponseEntity<BookmarkResponse> getBookmarks(
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         Long userId = userPrincipal.getId();
 
         System.out.println(userId);
         
-        List<BookmarkResponse> bookmarks = bookmarkService.getBookmarksResponse(userId);
-        return ResponseEntity.ok(bookmarks);
+        BookmarkResponse response = bookmarkService.getBookmarksResponse(userId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/items")

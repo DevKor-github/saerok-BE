@@ -28,9 +28,9 @@ public class BookmarkService {
      * @param userId 사용자 ID
      * @return 북마크 목록
      */
-    public List<BookmarkResponse> getBookmarksResponse(Long userId) {
+    public BookmarkResponse getBookmarksResponse(Long userId) {
         List<UserBirdBookmark> bookmarks = bookmarkRepository.findAllByUserId(userId);
-        return bookmarkMapper.toBookmarkResponseList(bookmarks);
+        return bookmarkMapper.toBookmarkResponse(bookmarks);
     }
     
     /**

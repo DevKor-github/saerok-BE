@@ -27,7 +27,9 @@ public class BookmarkRepository {
     public List<UserBirdBookmark> findAllByUserId(Long userId) {
         return em.createQuery(
                 "SELECT b FROM UserBirdBookmark b " +
+                "JOIN FETCH b.bird bird " +
                 "WHERE b.user.id = :userId " +
+                "AND bird.deletedAt IS NULL " +
                 "ORDER BY b.createdAt DESC", UserBirdBookmark.class)
                 .setParameter("userId", userId)
                 .getResultList();
