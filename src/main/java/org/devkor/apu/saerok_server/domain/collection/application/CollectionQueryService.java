@@ -44,14 +44,20 @@ public class CollectionQueryService {
         }
 
         GetCollectionEditDataResponse response = collectionWebMapper.toGetCollectionEditDataResponse(collection);
-        List<UserBirdCollectionImage> images = collectionImageRepository.findByCollectionId(command.collectionId());
-        List<GetCollectionEditDataResponse.ImageInfo> imageInfos = images.stream()
-                .map(image -> new GetCollectionEditDataResponse.ImageInfo(
-                            image.getId(),
-                            cloudFrontUrlService.toImageUrl(image.getObjectKey())
-                    ))
-                .toList();
-        response.setImages(imageInfos);
+        collectionImageRepository.findByCollectionId(command.collectionId())
+                .stream()
+                .findFirst()
+                .ifPresentOrElse(
+                        image -> {
+                            response.setImageId(image.getId());
+                            response.setImageUrl(cloudFrontUrlService.toImageUrl(image.getObjectKey()));
+                        },
+                        () -> {
+                            response.setImageId(null);
+                            response.setImageUrl(null);
+                        }
+                );
+
         return response;
     }
 

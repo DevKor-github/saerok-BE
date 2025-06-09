@@ -38,7 +38,6 @@ public interface CollectionWebMapper {
     GetCollectionEditDataCommand toGetCollectionDataCommand(Long userId, Long collectionId);
 
     @Mapping(target = "birdId", source = "bird.id")
-    @Mapping(target = "images", ignore = true)
     GetCollectionEditDataResponse toGetCollectionEditDataResponse(UserBirdCollection collection);
 
     @Mapping(target = "userId", source = "userId")
