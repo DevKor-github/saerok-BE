@@ -19,7 +19,6 @@ import org.devkor.apu.saerok_server.domain.auth.application.TokenRefreshService;
 import org.devkor.apu.saerok_server.global.exception.UnauthorizedException;
 import org.devkor.apu.saerok_server.global.util.ClientInfoExtractor;
 import org.devkor.apu.saerok_server.global.util.dto.ClientInfo;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,7 +69,7 @@ public class AuthController {
         return appleAuthService.authenticate(request.authorizationCode(), null, clientInfo);
     }
 
-    @GetMapping("/kakao/login") // 카카오 인증 절차상 GET 요청으로 설정해야 함 (302 Redirect)
+    @PostMapping("/kakao/login")
     @PermitAll
     @Operation(
             summary = "Kakao 소셜 로그인",
@@ -99,16 +98,11 @@ public class AuthController {
             }
     )
     public ResponseEntity<AccessTokenResponse> kakaoLogin(
-            @ParameterObject @ModelAttribute KakaoLoginRequest request,
+            @RequestBody KakaoLoginRequest request,
             HttpServletRequest httpServletRequest
     ) {
-        if (request.getError() == null) {
-            ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-            return kakaoAuthService.authenticate(request.getCode(), request.getAccessToken(), clientInfo);
-        }
-
-        String errorMessage = "카카오 로그인 인증에 실패했어요: " + request.getError() + ", " + request.getErrorDescription();
-        throw new UnauthorizedException(errorMessage);
+        ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
+        return kakaoAuthService.authenticate(request.getAuthorizationCode(), request.getAccessToken(), clientInfo);
     }
 
     @PostMapping("/refresh")
