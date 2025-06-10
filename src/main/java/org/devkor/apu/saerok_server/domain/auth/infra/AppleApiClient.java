@@ -67,6 +67,8 @@ public class AppleApiClient {
             throw new IllegalStateException("Apple 인증 서버 응답 오류");
         }
 
+        log.info("Apple Id token 전체 정보: {}", response.getIdToken());
+
         return response.getIdToken();
     }
 
