@@ -47,3 +47,6 @@ kakao:
 app:
   cookie:
     secure: false
+
+cors:
+  allowed-origins: []
