@@ -73,6 +73,7 @@ public class CollectionCommandService {
                 .locationAlias(command.locationAlias())
                 .address(command.address())
                 .note(command.note())
+                .accessLevel(command.accessLevel())
                 .build();
 
         return collectionRepository.save(collection);

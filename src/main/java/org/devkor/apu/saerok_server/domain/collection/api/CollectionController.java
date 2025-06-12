@@ -46,8 +46,9 @@ public class CollectionController {
             description = """
         새 컬렉션(관찰 기록)을 생성합니다. 이 단계에서는 **이미지를 제외한 메타데이터만 전송**합니다.
 
-        ⚠️ 유효성 제약:
+        ⚠️ 유효성 제약 (위반 시 400 Bad Request):
         - note는 50자 이하
+        - accessLevel은 "PUBLIC", "PRIVATE" 중 하나 (대소문자 구별)
 
         📌 이 API를 먼저 호출하여 컬렉션을 생성한 후,
         응답으로 받은 `collectionId`를 기준으로 이미지를 업로드해야 합니다.
