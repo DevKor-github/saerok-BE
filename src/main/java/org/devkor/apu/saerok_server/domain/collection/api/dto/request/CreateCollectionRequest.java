@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.collection.api.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 
 import java.time.LocalDate;
 
@@ -31,4 +32,7 @@ public class CreateCollectionRequest {
 
     @Schema(description = "관찰 기록에 대한 간단한 메모", example = "까치가 엄청 날아다녔다", nullable = true)
     private String note;
+
+    @Schema(description = "공개/비공개 여부", example = "PUBLIC", nullable = true)
+    private AccessLevelType accessLevel;
 }

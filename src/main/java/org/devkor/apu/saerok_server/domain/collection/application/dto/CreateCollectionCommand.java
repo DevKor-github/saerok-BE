@@ -1,5 +1,7 @@
 package org.devkor.apu.saerok_server.domain.collection.application.dto;
 
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
+
 import java.time.LocalDate;
 
 public record CreateCollectionCommand (
@@ -10,6 +12,7 @@ public record CreateCollectionCommand (
         Double longitude,
         String locationAlias,
         String address,
-        String note
+        String note,
+        AccessLevelType accessLevel
 ){
 }
