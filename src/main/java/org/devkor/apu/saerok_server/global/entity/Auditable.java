@@ -20,7 +20,11 @@ public abstract class Auditable {
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
         updatedAt = createdAt;
+        postOnCreate();
     }
+
+    // 각 엔티티별로 INSERT 시점에 추가 로직을 실행하고 싶을 때 override해서 쓸 수 있는 hook
+    protected void postOnCreate() {}
 
     @PreUpdate
     protected void onUpdate() {

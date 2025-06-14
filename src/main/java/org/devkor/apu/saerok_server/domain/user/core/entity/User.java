@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.devkor.apu.saerok_server.global.entity.SoftDeletableAuditable;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "users")
@@ -38,10 +39,19 @@ public class User extends SoftDeletableAuditable {
     @Setter
     private SignupStatusType signupStatus;
 
+    @Column(name = "joined_at")
+    private OffsetDateTime joinedAt;
+
     public static User createUser(String email) {
         User user = new User();
         user.email = email;
         user.signupStatus = SignupStatusType.PROFILE_REQUIRED;
         return user;
+    }
+
+    @Override
+    protected void postOnCreate() {
+        joinedAt = createdAt;
+        // 최초 가입 시 joinedAt 세팅. 탈퇴 후 재가입 시 joinedAt 세팅은 이와 별도로 처리해야 함
     }
 }

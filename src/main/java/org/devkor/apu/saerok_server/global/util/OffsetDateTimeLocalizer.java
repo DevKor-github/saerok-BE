@@ -1,0 +1,14 @@
+package org.devkor.apu.saerok_server.global.util;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+
+public class OffsetDateTimeLocalizer {
+
+    private static final ZoneId seoulZoneId = ZoneId.of("Asia/Seoul");
+
+    public static LocalDate toSeoulLocalDate(OffsetDateTime odt) {
+        return odt.atZoneSameInstant(seoulZoneId).toLocalDate();
+    }
+}
