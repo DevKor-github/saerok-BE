@@ -1,0 +1,1 @@
+ALTER TABLE social_auth ADD COLUMN refresh_token_enc BYTEA;
