@@ -38,9 +38,9 @@ apple:
   private-key: ${APPLE_PRIVATE_KEY}
 
 kakao:
-  client-id: ${DEV_KAKAO_CLIENT_ID}
-  redirect-uri: ${DEV_KAKAO_REDIRECT_URI}
-  client-secret: ${DEV_KAKAO_CLIENT_SECRET}
+  client-id: ${KAKAO_CLIENT_ID}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
+  client-secret: ${KAKAO_CLIENT_SECRET}
 
 app:
   cookie:
