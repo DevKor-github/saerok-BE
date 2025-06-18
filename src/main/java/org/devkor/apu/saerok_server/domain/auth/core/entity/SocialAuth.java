@@ -4,11 +4,9 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.entity.CreatedAtOnly;
-
-import java.time.OffsetDateTime;
+import org.devkor.apu.saerok_server.global.security.crypto.EncryptedPayload;
 
 @Entity
 @Table(
@@ -34,7 +32,6 @@ public class SocialAuth extends CreatedAtOnly {
     private String providerUserId;
 
     @Embedded
-    @Getter
     private SocialAuthRefreshToken refreshToken;
 
     public static SocialAuth createSocialAuth(User user, SocialProviderType provider, String providerUserId) {
@@ -43,5 +40,12 @@ public class SocialAuth extends CreatedAtOnly {
         socialAuth.provider = provider;
         socialAuth.providerUserId = providerUserId;
         return socialAuth;
+    }
+
+    public void setRefreshToken(EncryptedPayload p) {
+        refreshToken.setCiphertext(p.ciphertext());
+        refreshToken.setKey(p.encryptedDataKey());
+        refreshToken.setIv(p.iv());
+        refreshToken.setTag(p.authTag());
     }
 }

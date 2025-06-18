@@ -28,7 +28,7 @@ public class AppleApiClient {
     private final AppleProperties appleProperties;
     private final WebClient webClient;
 
-    public String requestIdToken(String authorizationCode) {
+    public AppleTokenResponse requestToken(String authorizationCode) {
         String clientSecret = createClientSecret();
 
         Mono<AppleTokenResponse> responseMono = webClient.post()
@@ -69,7 +69,7 @@ public class AppleApiClient {
 
         log.info("Apple response 전체 정보: {}", response);
 
-        return response.getIdToken();
+        return response;
     }
 
     private String createClientSecret() {
