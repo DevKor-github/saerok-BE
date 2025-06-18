@@ -33,10 +33,9 @@ public class SocialAuth extends CreatedAtOnly {
     @Column(name = "provider_user_id", nullable = false)
     private String providerUserId;
 
-    @Lob
-    @Basic(fetch = FetchType.LAZY)
-    @Column(name = "refresh_token_enc", columnDefinition = "BYTEA")
-    private byte[] refreshTokenEnc;
+    @Embedded
+    @Getter
+    private SocialAuthRefreshToken refreshToken;
 
     public static SocialAuth createSocialAuth(User user, SocialProviderType provider, String providerUserId) {
         SocialAuth socialAuth = new SocialAuth();
