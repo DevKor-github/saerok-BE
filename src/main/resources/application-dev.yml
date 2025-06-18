@@ -44,6 +44,8 @@ aws:
     bucket: ${BUCKET_NAME}
   cloudfront:
     image-domain: ${CLOUDFRONT_IMAGE_DOMAIN}
+  kms:
+    key-id: ${KMS_KEY_ID}
 
 apple:
   client-id: ${APPLE_CLIENT_ID}
