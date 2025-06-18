@@ -1,15 +1,15 @@
-name: Deploy to Dev EC2
+name: Deploy to Prod EC2
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   deploy:
     name: Build and Deploy to EC2
     runs-on: ubuntu-latest
-    environment: dev
+    environment: prod
 
     steps:
       - name: Checkout source code
@@ -76,7 +76,7 @@ jobs:
             KAKAO_CLIENT_ID="${{ secrets.KAKAO_CLIENT_ID }}" \
             KAKAO_REDIRECT_URI="${{ secrets.KAKAO_REDIRECT_URI }}" \
             KAKAO_CLIENT_SECRET="${{ secrets.KAKAO_CLIENT_SECRET }}" \
-            nohup java -jar $JAR_NAME --spring.profiles.active=dev > app.log 2>&1 &
+            nohup java -jar $JAR_NAME --spring.profiles.active=prod > app.log 2>&1 &
             
             echo "✅ 배포 완료"
             

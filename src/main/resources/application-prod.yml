@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: local
+      on-profile: prod
 
   datasource:
     url: ${DB_URL}
@@ -13,15 +13,13 @@ spring:
       ddl-auto: validate
 
   flyway:
-    locations: classpath:db/migration,classpath:db/migration-local
+    locations: classpath:db/migration
 
 server:
   port: 8080
 
-logging.level.org.hibernate.sql: debug
-
 swagger:
-  server-url: http://localhost:8080
+  server-url: https://api.saerok.app
 
 aws:
   credentials:
@@ -46,7 +44,7 @@ kakao:
 
 app:
   cookie:
-    secure: false
+    secure: true
 
 cors:
   allowed-origins: []
