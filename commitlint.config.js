@@ -23,16 +23,7 @@ module.exports = {
             "db"
         ]],
         "footer-empty": [2, "always"],
-        "subject-case": [2, "always", [
-            "lower-case", // lower case
-            "upper-case", // UPPERCASE
-            "camel-case", // camelCase
-            "kebab-case", // kebab-case
-            "pascal-case", // PascalCase
-            "sentence-case", // Sentence case
-            "snake-case", // snake_case
-            "start-case", // Start Case
-        ]]
+        "subject-case": [0]
     },
     prompt: {
         settings: {},

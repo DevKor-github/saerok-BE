@@ -32,7 +32,7 @@ public class SocialAuth extends CreatedAtOnly {
     private String providerUserId;
 
     @Embedded
-    private SocialAuthRefreshToken refreshToken;
+    private SocialAuthRefreshToken refreshToken = new SocialAuthRefreshToken();
 
     public static SocialAuth createSocialAuth(User user, SocialProviderType provider, String providerUserId) {
         SocialAuth socialAuth = new SocialAuth();
@@ -43,6 +43,9 @@ public class SocialAuth extends CreatedAtOnly {
     }
 
     public void setRefreshToken(EncryptedPayload p) {
+
+        if (refreshToken == null) refreshToken = new SocialAuthRefreshToken();
+
         refreshToken.setCiphertext(p.ciphertext());
         refreshToken.setKey(p.encryptedDataKey());
         refreshToken.setIv(p.iv());
