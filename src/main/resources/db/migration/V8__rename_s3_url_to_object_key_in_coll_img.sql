@@ -1,0 +1,1 @@
+ALTER TABLE user_bird_collection_image RENAME COLUMN s3_url TO object_key;

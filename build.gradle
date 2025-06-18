@@ -33,8 +33,52 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-spatial
+	implementation("org.hibernate.orm:hibernate-spatial:6.6.11.Final")
+
+	implementation 'org.flywaydb:flyway-core:11.7.1'
+	implementation 'org.flywaydb:flyway-database-postgresql:11.7.1'
+
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+
+	testImplementation 'org.testcontainers:testcontainers'
+	testImplementation 'org.testcontainers:postgresql'
+
+	implementation 'org.mapstruct:mapstruct:1.6.3'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+	testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+	// QueryDSL 의존성 설정
+	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// AWS SDK BOM, S3 SDK + Presigner
+	implementation platform('software.amazon.awssdk:bom:2.27.21')
+	implementation 'software.amazon.awssdk:s3'
+
+	// JWT 발급 및 검증
+	implementation 'com.auth0:java-jwt:4.5.0'
+
+	// WebClient를 쓰기 위해 WebFlux 의존성 추가
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// 금칙어 필터링 라이브러리 의존성 추가
+	implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs += [
+			'-Amapstruct.incrementalProcessing=true',
+			'-Amapstruct.suppressGeneratorTimestamp=true'
+	]
 }

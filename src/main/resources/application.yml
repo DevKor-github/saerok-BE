@@ -13,3 +13,22 @@ spring:
 
   profiles:
     active: local
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+
+  config:
+    import:
+      - "classpath:config/size-category-rules.yml"
+      - "classpath:config/reserved-nicknames.yml"
+
+api_prefix: /api/v1
+
+jwt:
+  secret: ${JWT_SECRET}
+
+app:
+  cookie:
+    secure: false

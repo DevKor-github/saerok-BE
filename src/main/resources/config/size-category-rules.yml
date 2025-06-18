@@ -1,0 +1,17 @@
+size-category-rules:
+  version: 0
+  boundaries:
+    - category: xsmall
+      max_cm: 16
+    - category: small
+      max_cm: 25
+    - category: medium
+      max_cm: 45
+    - category: large
+      max_cm: null
+
+  labels:
+    xsmall: "참새 크기"
+    small: "제비 크기"
+    medium: "비둘기 크기"
+    large: "독수리 크기"

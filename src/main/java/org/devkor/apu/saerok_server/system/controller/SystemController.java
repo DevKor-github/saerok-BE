@@ -1,25 +1,30 @@
 package org.devkor.apu.saerok_server.system.controller;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.PermitAll;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Hidden
+@Tag(name = "System API", description = "시스템 상태 점검 관련 API")
 @RestController
-@RequestMapping("/api/v1/system")
+@RequestMapping
 public class SystemController {
 
-    @Value("${spring.profiles.active}")
-    private String activeProfile;
-
-    @GetMapping("/ping")
+    @GetMapping("/health")
+    @PermitAll
+    @Operation(
+            summary = "시스템 헬스 체크",
+            description = "시스템이 살아있는지 확인합니다. (ELB 헬스 체크 대응)",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "정상 응답")
+            }
+    )
     public String ping() {
-        return "pong from saerok-server";
-    }
-
-    @GetMapping("/profile")
-    public String getActiveProfile() {
-        return "현재 활성화된 프로필은: " + activeProfile + "입니다!";
+        return "I am healthy";
     }
 }

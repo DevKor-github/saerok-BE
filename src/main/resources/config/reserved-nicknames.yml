@@ -1,0 +1,6 @@
+# 서비스 닉네임 예약어 목록
+
+reserved-nicknames:
+  items:
+    - "새록"
+    - "saerok"
