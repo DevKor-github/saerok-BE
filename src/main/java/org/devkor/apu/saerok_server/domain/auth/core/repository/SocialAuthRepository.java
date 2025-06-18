@@ -6,6 +6,7 @@ import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialAuth;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,5 +27,12 @@ public class SocialAuthRepository {
     public SocialAuth save(SocialAuth socialAuth) {
         em.persist(socialAuth);
         return socialAuth;
+    }
+
+    public List<SocialAuth> findByUserId(Long userId) {
+        return em.createQuery(
+                "SELECT s FROM SocialAuth s WHERE s.user.id = :userId", SocialAuth.class)
+                .setParameter("userId", userId)
+                .getResultList();
     }
 }

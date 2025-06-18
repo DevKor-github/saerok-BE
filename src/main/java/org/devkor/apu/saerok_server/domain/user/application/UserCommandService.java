@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.user.application;
 
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
+import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -27,6 +28,7 @@ public class UserCommandService {
     private final UserSignupStatusService userSignupStatusService;
     private final ImageService imageService;
     private final UserProfileImageUrlService userProfileImageUrlService;
+    private final SocialAuthRepository socialAuthRepository;
 
     public UpdateUserProfileResponse updateUserProfile(UpdateUserProfileCommand command) {
 
@@ -34,14 +36,9 @@ public class UserCommandService {
 
         try {
             if (command.nickname() != null) userProfileUpdateService.changeNickname(user, command.nickname());
+
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("사용자 정보 수정이 거부되었습니다: " + e.getMessage());
-        }
-
-        if (command.profileImageContentType() != null && command.profileImageObjectKey() != null) {
-            userProfileUpdateService.changeProfileImage(user, command.profileImageObjectKey(), command.profileImageContentType());
-        } else if (!(command.profileImageContentType() == null && command.profileImageObjectKey() == null)) {
-            throw new BadRequestException("프로필 사진 변경 시, profileImageContentType과 profileImageObjectKey 둘 다 있어야 합니다");
         }
 
         userSignupStatusService.tryCompleteSignup(user);
@@ -73,5 +70,24 @@ public class UserCommandService {
     public void deleteProfileImage(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         userProfileUpdateService.deleteProfileImage(user);
+    }
+
+    public void deleteUserAccount(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("이미 탈퇴했거나 존재하지 않는 사용자 id예요"));
+
+        socialAuthRepository.findByUserId(userId)
+                .forEach(socialAuth -> {
+                    /*
+                    socialAuth.getProvider()로 적절한 SocialRevoker를 만들어서, revoke 요청
+                    그럴려면 먼저 socialAuth에 accessToken, refreshToken 칼럼을 만들어야 함
+                     */
+                });
+        // 이 시점에서 각 소셜 공급자 쪽에서 사용자 연결 해제 완료. -> 덕분에 나중에 재가입할 때 다시 각 소셜 공급자별로 동의 다시 해야 함
+        // 이렇게 해야 애플 쪽에서도 이메일 주소를 다시 주는 게 보장됨
+
+        // 그 다음에는 user 테이블에서 이메일 주소를 지우고 deleted_at을 기록.
+        // 그 다음에는 user_bird_bookmark 테이블에서 해당 유저의 모든 북마크 내역을 삭제
+        // user_refresh_token 테이블에서 해당 유저의 모든 리프레시 토큰을 revoke
+
     }
 }

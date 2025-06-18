@@ -212,4 +212,22 @@ public class UserController {
     ) {
         return userQueryService.checkNickname(nickname);
     }
+
+    @DeleteMapping("/me")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(
+            summary = "회원 탈퇴",
+            description = """
+            회원을 탈퇴 처리합니다.
+            
+            실제로 서버에서 삭제되는 정보: 개인정보(이메일 주소), 도감 북마크 내역
+            서버에서 삭제되지 않는 정보: 과거 가입 내역, 소셜 계정 연동 내역, 회원이 올린 새록(컬렉션)
+            
+            """
+    )
+    public void deleteUserAccount(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        userCommandService.deleteUserAccount(userPrincipal.getId());
+    }
 }
