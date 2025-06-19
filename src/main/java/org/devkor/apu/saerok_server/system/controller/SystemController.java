@@ -27,4 +27,23 @@ public class SystemController {
     public String ping() {
         return "I am healthy";
     }
+
+    // TODO: 이 로직 활용해서 회원 탈퇴 구현에 써먹기
+//    public void 리프레시토큰 복구 로직() {
+//        SocialAuthRefreshToken refreshToken = socialAuthRepository.findByProviderAndProviderUserId(SocialProviderType.APPLE, 어쩌고저쩌고)
+//                .get()
+//                .getRefreshToken();
+//
+//        EncryptedPayload encryptedPayload = new EncryptedPayload(
+//                refreshToken.getCiphertext(),
+//                refreshToken.getKey(),
+//                refreshToken.getIv(),
+//                refreshToken.getTag()
+//        );
+//
+//        System.out.println(encryptedPayload);
+//
+//        byte[] decrypted = dataCryptoService.decrypt(encryptedPayload);
+//        String decryptedRefreshToken = new String(decrypted, StandardCharsets.UTF_8); <- 이렇게 UTF-8로 인코딩하면 원본 데이터 복원 완료
+//    }
 }

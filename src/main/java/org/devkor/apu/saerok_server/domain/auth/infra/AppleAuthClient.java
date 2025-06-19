@@ -5,6 +5,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
+import org.devkor.apu.saerok_server.domain.auth.infra.dto.AppleTokenResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,11 +21,13 @@ public class AppleAuthClient implements SocialAuthClient {
 
     @Override
     public SocialUserInfo fetch(String authorizationCode, String accessToken) {
-        String idToken = appleApiClient.requestIdToken(authorizationCode);
+        AppleTokenResponse response = appleApiClient.requestToken(authorizationCode);
+        String idToken = response.getIdToken();
         DecodedJWT jwt = JWT.decode(idToken);
         return new SocialUserInfo(
                 jwt.getClaim("sub").asString(),
-                jwt.getClaim("email").asString()
+                jwt.getClaim("email").asString(),
+                response.getRefreshToken()
         );
     }
 }

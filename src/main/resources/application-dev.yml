@@ -22,7 +22,7 @@ server:
     accesslog:
       enabled: true
       directory: /home/ubuntu/saerok/accesslogs
-      prefix: access_log_
+      prefix: access_log
       suffix: .log
       rotate: true
       pattern: '%h %t "%m %U%q" %s %b %D'
@@ -44,6 +44,8 @@ aws:
     bucket: ${BUCKET_NAME}
   cloudfront:
     image-domain: ${CLOUDFRONT_IMAGE_DOMAIN}
+  kms:
+    key-id: ${KMS_KEY_ID}
 
 apple:
   client-id: ${APPLE_CLIENT_ID}
