@@ -28,7 +28,8 @@ public class KakaoAuthClient implements SocialAuthClient {
             DecodedJWT jwt = JWT.decode(idToken);
             return new SocialUserInfo(
                     jwt.getClaim("sub").asString(),
-                    jwt.getClaim("email").asString()
+                    jwt.getClaim("email").asString(),
+                    null
             );
         }
 
@@ -37,7 +38,8 @@ public class KakaoAuthClient implements SocialAuthClient {
             if (userInfo.getKakaoAccount().getIsEmailValid() && userInfo.getKakaoAccount().getIsEmailVerified()) {
                 return new SocialUserInfo(
                         userInfo.getId().toString(),
-                        userInfo.getKakaoAccount().getEmail()
+                        userInfo.getKakaoAccount().getEmail(),
+                        null
                 );
             }
             throw new UnauthorizedException("해당 카카오 계정의 이메일이 유효하지 않거나 인증되지 않아 사용할 수 없어요");
