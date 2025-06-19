@@ -10,23 +10,21 @@ import lombok.Data;
 @Data
 public class SocialAuthRefreshToken {
 
-    @Lob
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "refresh_token_ciphertext", columnDefinition = "BYTEA")
     private byte[] ciphertext;
 
-    @Lob
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "refresh_token_key", columnDefinition = "BYTEA")
     private byte[] key;
 
-    @Lob
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "refresh_token_iv", columnDefinition = "BYTEA")
     private byte[] iv;
 
-    @Lob
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "refresh_token_tag", columnDefinition = "BYTEA")
     private byte[] tag;
+
+
 }
