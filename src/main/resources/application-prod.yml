@@ -11,12 +11,26 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    show-sql: false
 
   flyway:
     locations: classpath:db/migration
 
 server:
   port: 8080
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: /home/ubuntu/saerok/accesslogs
+      prefix: access_log_
+      suffix: .log
+      rotate: true
+      pattern: '%h %t "%m %U%q" %s %b %D'
+
+logging:
+  level:
+    org.hibernate.SQL: off
+    org.hibernate.type.descriptor.sql.BasicBinder: off
 
 springdoc:
   swagger-ui:
