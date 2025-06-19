@@ -22,7 +22,7 @@ server:
     accesslog:
       enabled: true
       directory: /home/ubuntu/saerok/accesslogs
-      prefix: access_log_
+      prefix: access_log
       suffix: .log
       rotate: true
       pattern: '%h %t "%m %U%q" %s %b %D'
