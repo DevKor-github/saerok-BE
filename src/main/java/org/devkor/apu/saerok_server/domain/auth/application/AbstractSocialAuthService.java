@@ -43,6 +43,7 @@ public abstract class AbstractSocialAuthService {
                 .orElseGet(() -> userProvisioningService.provisionNewUser(provider, userInfo));
 
         if (userInfo.refreshToken() != null) {
+            log.info("소셜 공급자로부터 받은 리프레시 토큰: {}", userInfo.refreshToken());
             EncryptedPayload payload = dataCryptoService.encrypt(userInfo.refreshToken().getBytes(StandardCharsets.UTF_8));
             socialAuth.setRefreshToken(payload);
         }

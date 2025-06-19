@@ -18,7 +18,7 @@ import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
-@Profile({"local", "dev"})
+@Profile({"dev", "prod"})
 public class KmsDataCryptoService implements DataCryptoService{
 
     private final KmsClient kms;

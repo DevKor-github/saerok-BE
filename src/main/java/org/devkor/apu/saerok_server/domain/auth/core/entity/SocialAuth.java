@@ -32,7 +32,7 @@ public class SocialAuth extends CreatedAtOnly {
     private String providerUserId;
 
     @Embedded
-    private SocialAuthRefreshToken refreshToken = new SocialAuthRefreshToken();
+    private SocialAuthRefreshToken refreshToken;
 
     public static SocialAuth createSocialAuth(User user, SocialProviderType provider, String providerUserId) {
         SocialAuth socialAuth = new SocialAuth();

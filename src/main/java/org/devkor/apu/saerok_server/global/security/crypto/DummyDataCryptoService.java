@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 
 @Component
-@Profile("test")
+@Profile({"local", "test"})
 public class DummyDataCryptoService implements DataCryptoService {
 
     private static final byte[] FIXED_KEY = "0123456789abcdef".getBytes(StandardCharsets.UTF_8);
