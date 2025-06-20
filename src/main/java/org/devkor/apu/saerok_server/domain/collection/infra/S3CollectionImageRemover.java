@@ -18,7 +18,7 @@ public class S3CollectionImageRemover {
     private final CollectionImageRepository collectionImageRepository;
     private final S3Client s3Client;
 
-    @Value("${aws.s3.bucket}")
+    @Value("${aws.s3.upload-image-bucket}")
     private String bucket;
 
     public void removeFromS3(Long collectionId) {

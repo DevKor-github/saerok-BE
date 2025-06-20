@@ -17,7 +17,7 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.util.CloudFrontUrlService;
+import org.devkor.apu.saerok_server.global.util.ImageDomainService;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +33,7 @@ public class CollectionQueryService {
     private final CollectionImageRepository collectionImageRepository;
     private final CollectionWebMapper collectionWebMapper;
     private final UserRepository userRepository;
-    private final CloudFrontUrlService cloudFrontUrlService;
+    private final ImageDomainService imageDomainService;
 
     public GetCollectionEditDataResponse getCollectionEditDataResponse(GetCollectionEditDataCommand command) {
         userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
@@ -49,7 +49,7 @@ public class CollectionQueryService {
                 .ifPresentOrElse(
                         image -> {
                             response.setImageId(image.getId());
-                            response.setImageUrl(cloudFrontUrlService.toImageUrl(image.getObjectKey()));
+                            response.setImageUrl(imageDomainService.toUploadImageUrl(image.getObjectKey()));
                         },
                         () -> {
                             response.setImageId(null);
@@ -67,7 +67,7 @@ public class CollectionQueryService {
                 .map(collection -> {
                     String objectKey = collectionImageRepository.findObjectKeysByCollectionId(collection.getId()).stream()
                             .findFirst().orElse(null);
-                    String imageUrl = objectKey != null ? cloudFrontUrlService.toImageUrl(objectKey) : null;
+                    String imageUrl = objectKey != null ? imageDomainService.toUploadImageUrl(objectKey) : null;
 
                     return new MyCollectionsResponse.Item(
                             collection.getId(),
@@ -95,7 +95,7 @@ public class CollectionQueryService {
         }
 
         List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collectionId);
-        String imageUrl = objectKeys.isEmpty() ? null : cloudFrontUrlService.toImageUrl(objectKeys.getFirst());
+        String imageUrl = objectKeys.isEmpty() ? null : imageDomainService.toUploadImageUrl(objectKeys.getFirst());
 
         return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl);
     }
@@ -115,7 +115,7 @@ public class CollectionQueryService {
         List<GetNearbyCollectionsResponse.Item> items = collections.stream()
                 .map(collection -> {
                     List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collection.getId());
-                    String imageUrl = objectKeys.isEmpty() ? null : cloudFrontUrlService.toImageUrl(objectKeys.getFirst());
+                    String imageUrl = objectKeys.isEmpty() ? null : imageDomainService.toUploadImageUrl(objectKeys.getFirst());
                     return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl);
                 })
                 .toList();

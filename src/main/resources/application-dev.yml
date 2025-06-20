@@ -41,9 +41,9 @@ aws:
     secret-key: ${IAM_SECRET_KEY}
   region: ap-northeast-2
   s3:
-    bucket: ${BUCKET_NAME}
+    upload-image-bucket: ${UPLOAD_IMAGE_BUCKET_NAME}
   cloudfront:
-    image-domain: ${CLOUDFRONT_IMAGE_DOMAIN}
+    upload-image-domain: ${UPLOAD_IMAGE_DOMAIN}
   kms:
     key-id: ${KMS_KEY_ID}
 
