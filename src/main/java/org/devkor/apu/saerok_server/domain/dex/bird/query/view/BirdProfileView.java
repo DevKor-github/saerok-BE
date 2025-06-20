@@ -77,8 +77,8 @@ public class BirdProfileView implements HasBodyLength {
     @Data
     public static class Image {
 
-        @JsonProperty("s3_url")
-        private String s3Url;
+        @JsonProperty("object_key")
+        private String objectKey;
 
         @JsonProperty("original_url")
         private String originalUrl;
@@ -92,10 +92,10 @@ public class BirdProfileView implements HasBodyLength {
 
     public String toSummaryString() {
         // 대표 이미지 URL (없으면 "N/A")
-        String thumbUrl = images != null
+        String objectKey = images != null
                 ? images.stream()
                 .filter(Image::getIsThumb)
-                .map(Image::getS3Url)
+                .map(Image::getObjectKey)
                 .findFirst()
                 .orElse("N/A")
                 : "N/A";
@@ -115,7 +115,7 @@ public class BirdProfileView implements HasBodyLength {
                 String.format("Body Length    : %.1f cm\n", bodyLengthCm) +
                 String.format("Habitats       : %s\n", habitats) +
                 String.format("Updated At     : %s\n", updatedAt) +
-                String.format("Thumbnail URL  : %s\n", thumbUrl);
+                String.format("Object Key  : %s\n", objectKey);
     }
 
     @Override

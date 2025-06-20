@@ -17,7 +17,12 @@ public class BirdImage extends Auditable {
     private Bird bird;
 
     @Column(name = "s3_url", nullable = false)
+    @Deprecated
     private String s3Url;
+    // s3Url 대신 objectKey + ImageDomainService를 쓰는 방향으로 개선.
+
+    @Column(name = "object_key", nullable = false)
+    private String objectKey;
 
     @Column(name = "original_url", nullable = false)
     private String originalUrl;
