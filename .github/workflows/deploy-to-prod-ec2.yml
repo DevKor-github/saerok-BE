@@ -66,8 +66,10 @@ jobs:
             DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
             IAM_ACCESS_KEY="${{ secrets.IAM_ACCESS_KEY }}" \
             IAM_SECRET_KEY="${{ secrets.IAM_SECRET_KEY }}" \
-            BUCKET_NAME="${{ vars.BUCKET_NAME }}" \
-            CLOUDFRONT_IMAGE_DOMAIN="${{ vars.CLOUDFRONT_IMAGE_DOMAIN }}" \
+            UPLOAD_IMAGE_BUCKET_NAME="${{ vars.UPLOAD_IMAGE_BUCKET_NAME }}" \
+            UPLOAD_IMAGE_DOMAIN="${{ vars.UPLOAD_IMAGE_DOMAIN }}" \
+            DEX_IMAGE_BUCKET_NAME="${{ vars.DEX_IMAGE_BUCKET_NAME }}" \
+            DEX_IMAGE_DOMAIN="${{ vars.DEX_IMAGE_DOMAIN }}" \
             APPLE_CLIENT_ID="${{ secrets.APPLE_CLIENT_ID }}" \
             APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}" \
             APPLE_KEY_ID="${{ secrets.APPLE_KEY_ID }}" \
