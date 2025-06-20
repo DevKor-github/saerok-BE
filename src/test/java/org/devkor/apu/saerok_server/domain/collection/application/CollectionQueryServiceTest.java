@@ -5,13 +5,12 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelTyp
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.util.CloudFrontUrlService;
+import org.devkor.apu.saerok_server.global.util.ImageDomainService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,8 @@ class CollectionQueryServiceTest {
     @Mock CollectionImageRepository collectionImageRepository;
     @Mock CollectionWebMapper collectionWebMapper;
     @Mock UserRepository userRepository;
-    @Mock CloudFrontUrlService cloudFrontUrlService;
+    @Mock
+    ImageDomainService imageDomainService;
 
     Field userIdField;
     Field collectionIdField;
@@ -52,7 +52,7 @@ class CollectionQueryServiceTest {
                 collectionImageRepository,
                 collectionWebMapper,
                 userRepository,
-                cloudFrontUrlService
+                imageDomainService
         );
 
         userIdField = User.class.getDeclaredField("id");
@@ -85,7 +85,7 @@ class CollectionQueryServiceTest {
 
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
         given(collectionImageRepository.findObjectKeysByCollectionId(collectionId)).willReturn(List.of(objectKey));
-        given(cloudFrontUrlService.toImageUrl(objectKey)).willReturn(imageUrl);
+        given(imageDomainService.toUploadImageUrl(objectKey)).willReturn(imageUrl);
         given(collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl)).willReturn(expected);
 
         // when

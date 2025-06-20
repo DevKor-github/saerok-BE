@@ -12,7 +12,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.exception.S3DeleteException;
-import org.devkor.apu.saerok_server.global.util.CloudFrontUrlService;
+import org.devkor.apu.saerok_server.global.util.ImageDomainService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +38,7 @@ public class CollectionImageCommandService {
     private final S3Presigner s3Presigner;
     private final CollectionRepository collectionRepository;
     private final CollectionImageRepository collectionImageRepository;
-    private final CloudFrontUrlService cloudFrontUrlService;
+    private final ImageDomainService imageDomainService;
     private final S3Client s3Client;
 
     @Value("${aws.s3.bucket}")
@@ -87,7 +87,7 @@ public class CollectionImageCommandService {
 
         return new CreateCollectionImageResponse(
                 collectionImageRepository.save(image),
-                cloudFrontUrlService.toImageUrl(image.getObjectKey())
+                imageDomainService.toUploadImageUrl(image.getObjectKey())
         );
     }
 

@@ -19,7 +19,7 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.util.CloudFrontUrlService;
+import org.devkor.apu.saerok_server.global.util.ImageDomainService;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
@@ -36,7 +36,7 @@ public class CollectionCommandService {
     private final BirdRepository birdRepository;
     private final S3CollectionImageRemover s3CollectionImageRemover;
     private final CollectionImageRepository collectionImageRepository;
-    private final CloudFrontUrlService cloudFrontUrlService;
+    private final ImageDomainService imageDomainService;
     private final CollectionWebMapper collectionWebMapper;
 
     public Long createCollection(CreateCollectionCommand command) {
@@ -136,7 +136,7 @@ public class CollectionCommandService {
         }
 
         String imageUrl = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId()).stream()
-                .map(cloudFrontUrlService::toImageUrl)
+                .map(imageDomainService::toUploadImageUrl)
                 .findFirst()
                 .orElse(null);
 
