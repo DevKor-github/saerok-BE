@@ -45,8 +45,10 @@ aws:
   region: ap-northeast-2
   s3:
     upload-image-bucket: ${UPLOAD_IMAGE_BUCKET_NAME}
+    dex-image-bucket: ${DEX_IMAGE_BUCKET_NAME}
   cloudfront:
     upload-image-domain: ${UPLOAD_IMAGE_DOMAIN}
+    dex-image-domain: ${DEX_IMAGE_DOMAIN}
   kms:
     key-id: ${KMS_KEY_ID}
 

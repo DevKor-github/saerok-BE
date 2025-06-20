@@ -16,8 +16,8 @@ public class BirdImage extends Auditable {
     @JoinColumn(name = "bird_id", nullable = false)
     private Bird bird;
 
-    @Column(name = "s3_url", nullable = false)
-    private String s3Url;
+    @Column(name = "object_key", nullable = false)
+    private String objectKey;
 
     @Column(name = "original_url", nullable = false)
     private String originalUrl;
