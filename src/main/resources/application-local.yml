@@ -31,7 +31,7 @@ aws:
   s3:
     bucket: ${BUCKET_NAME}
   cloudfront:
-    image-domain: ${CLOUDFRONT_IMAGE_DOMAIN}
+    upload-image-domain: ${UPLOAD_IMAGE_DOMAIN}
 #  kms:
 #    key-id:
 
