@@ -41,7 +41,7 @@ public class CollectionImageCommandService {
     private final ImageDomainService imageDomainService;
     private final S3Client s3Client;
 
-    @Value("${aws.s3.bucket}")
+    @Value("${aws.s3.upload-image-bucket}")
     private String bucket;
 
     public PresignResponse generatePresignedUploadUrl(Long userId, Long collectionId, String contentType) {
