@@ -3,38 +3,59 @@ package org.devkor.apu.saerok_server.domain.dex.bird.query.mapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
+import org.devkor.apu.saerok_server.global.util.ImageDomainService;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 @Mapper(
         componentModel = MappingConstants.ComponentModel.SPRING
 )
-public interface BirdProfileViewMapper {
+public abstract class BirdProfileViewMapper {
 
-    BirdFullSyncResponse.BirdProfileItem toDto(BirdProfileView birdProfileView);
+    @Autowired
+    private ImageDomainService imageDomainService;
 
-    List<BirdFullSyncResponse.BirdProfileItem> toDtoList(List<BirdProfileView> birdProfileViews);
+    @Mapping(target = "images.s3Url", ignore = true)
+    public abstract BirdFullSyncResponse.BirdProfileItem toDto(BirdProfileView birdProfileView);
+
+    @AfterMapping
+    protected void fillS3Urls(
+            BirdProfileView source,
+            @MappingTarget BirdFullSyncResponse.BirdProfileItem target
+    ) {
+
+        for (int i = 0; i < target.getImages().size(); i++) {
+            target.getImages().get(i).setS3Url(
+                    imageDomainService.toDexImageUrl(source.getImages().get(i).getObjectKey())
+            );
+        }
+    }
+
+    public abstract List<BirdFullSyncResponse.BirdProfileItem> toDtoList(List<BirdProfileView> birdProfileViews);
 
     @Mapping(source = "name.koreanName", target = "koreanName")
     @Mapping(source = "name.scientificName", target = "scientificName")
     @Mapping(source = "description.description", target = "description")
-    @Mapping(source = "images", target = "imageUrls", qualifiedByName = "extractImageUrls")
+    @Mapping(target = "imageUrls", ignore = true)
     @Mapping(target = "sizeCategory", ignore = true)
-    BirdDetailResponse toBirdDetailResponse(BirdProfileView view);
+    public abstract BirdDetailResponse toBirdDetailResponse(BirdProfileView view);
 
-    @Named("extractImageUrls")
-    default List<String> extractImageUrls(List<BirdProfileView.Image> images) {
-        if (images == null) return List.of();
-        return images.stream()
-                .map(BirdProfileView.Image::getS3Url)
+    @AfterMapping
+    protected void fillImageUrls(
+            BirdProfileView source,
+            @MappingTarget BirdDetailResponse target
+    ) {
+        target.imageUrls = source.getImages().stream()
+                .map(img -> imageDomainService.toDexImageUrl(img.getObjectKey()))
                 .toList();
     }
 
-    default Long toId(BirdProfileView birdProfileView) {
+    protected Long toId(BirdProfileView birdProfileView) {
         return birdProfileView == null ? null : birdProfileView.getId();
     }
 
-    List<Long> toIdList(List<BirdProfileView> birdProfileViews);
+    public abstract List<Long> toIdList(List<BirdProfileView> birdProfileViews);
 
 }
