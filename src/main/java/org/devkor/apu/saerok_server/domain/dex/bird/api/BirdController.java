@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.BirdQueryService;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.dto.BirdSearchCommand;
-import org.devkor.apu.saerok_server.global.exception.BadRequestException;
-import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
+import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
+import org.devkor.apu.saerok_server.global.shared.exception.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

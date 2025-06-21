@@ -11,7 +11,7 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
-import org.devkor.apu.saerok_server.global.exception.SocialAuthAlreadyExistsException;
+import org.devkor.apu.saerok_server.global.shared.exception.SocialAuthAlreadyExistsException;
 import org.springframework.stereotype.Service;
 
 /**

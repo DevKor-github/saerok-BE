@@ -3,7 +3,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.query.mapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdFullSyncResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
-import org.devkor.apu.saerok_server.global.util.ImageDomainService;
+import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 

@@ -2,7 +2,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.core.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.devkor.apu.saerok_server.global.entity.Auditable;
+import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
 @Entity
 @Getter

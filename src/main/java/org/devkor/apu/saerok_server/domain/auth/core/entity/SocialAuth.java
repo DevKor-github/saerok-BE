@@ -5,7 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
-import org.devkor.apu.saerok_server.global.entity.CreatedAtOnly;
+import org.devkor.apu.saerok_server.global.shared.entity.CreatedAtOnly;
 import org.devkor.apu.saerok_server.global.security.crypto.EncryptedPayload;
 
 @Entity
