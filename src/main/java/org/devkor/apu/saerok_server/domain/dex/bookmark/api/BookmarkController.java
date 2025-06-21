@@ -12,8 +12,8 @@ import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.Bookmar
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkToggleResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkedBirdDetailResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.application.BookmarkService;
-import org.devkor.apu.saerok_server.global.exception.ErrorResponse;
-import org.devkor.apu.saerok_server.global.security.UserPrincipal;
+import org.devkor.apu.saerok_server.global.shared.exception.ErrorResponse;
+import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

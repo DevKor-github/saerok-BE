@@ -8,9 +8,9 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
-import org.devkor.apu.saerok_server.global.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.util.ImageDomainService;
+import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
+import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

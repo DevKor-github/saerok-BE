@@ -21,7 +21,7 @@ import org.devkor.apu.saerok_server.domain.collection.application.CollectionImag
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
-import org.devkor.apu.saerok_server.global.security.UserPrincipal;
+import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

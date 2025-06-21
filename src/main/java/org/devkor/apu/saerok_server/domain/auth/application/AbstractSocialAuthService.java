@@ -14,7 +14,7 @@ import org.devkor.apu.saerok_server.domain.auth.infra.SocialAuthClient;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
 import org.devkor.apu.saerok_server.global.security.crypto.DataCryptoService;
 import org.devkor.apu.saerok_server.global.security.crypto.EncryptedPayload;
-import org.devkor.apu.saerok_server.global.util.dto.ClientInfo;
+import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 

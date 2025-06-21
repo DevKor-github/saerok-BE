@@ -1,7 +1,7 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.query.mapper;
 
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdSizeCategoryRulesResponse;
-import org.devkor.apu.saerok_server.global.config.SizeCategoryRulesConfig;
+import org.devkor.apu.saerok_server.global.core.config.feature.SizeCategoryRulesConfig;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 

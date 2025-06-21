@@ -8,9 +8,9 @@ import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFaca
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade.AuthBundle;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.UserRefreshToken;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
-import org.devkor.apu.saerok_server.global.exception.UnauthorizedException;
+import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
-import org.devkor.apu.saerok_server.global.util.dto.ClientInfo;
+import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

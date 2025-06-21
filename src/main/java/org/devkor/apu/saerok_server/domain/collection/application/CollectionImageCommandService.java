@@ -9,10 +9,10 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.global.exception.ForbiddenException;
-import org.devkor.apu.saerok_server.global.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.exception.S3DeleteException;
-import org.devkor.apu.saerok_server.global.util.ImageDomainService;
+import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
+import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.exception.S3DeleteException;
+import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

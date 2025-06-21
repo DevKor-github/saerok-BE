@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.devkor.apu.saerok_server.global.entity.Auditable;
+import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
 @Entity
 @Getter

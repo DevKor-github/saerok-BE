@@ -15,7 +15,7 @@ import org.devkor.apu.saerok_server.domain.user.api.response.GetMyUserProfileRes
 import org.devkor.apu.saerok_server.domain.user.application.UserCommandService;
 import org.devkor.apu.saerok_server.domain.user.application.UserQueryService;
 import org.devkor.apu.saerok_server.domain.user.mapper.UserWebMapper;
-import org.devkor.apu.saerok_server.global.security.UserPrincipal;
+import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;

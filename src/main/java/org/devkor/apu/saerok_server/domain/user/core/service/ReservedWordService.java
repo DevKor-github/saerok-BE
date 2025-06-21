@@ -2,7 +2,7 @@ package org.devkor.apu.saerok_server.domain.user.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.devkor.apu.saerok_server.global.config.ReservedNicknamesConfig;
+import org.devkor.apu.saerok_server.global.core.config.feature.ReservedNicknamesConfig;
 import org.springframework.stereotype.Service;
 
 /**

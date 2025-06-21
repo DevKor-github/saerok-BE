@@ -3,7 +3,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.core.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.contract.HasBodyLength;
-import org.devkor.apu.saerok_server.global.entity.SoftDeletableAuditable;
+import org.devkor.apu.saerok_server.global.shared.entity.SoftDeletableAuditable;
 
 import java.util.List;
 

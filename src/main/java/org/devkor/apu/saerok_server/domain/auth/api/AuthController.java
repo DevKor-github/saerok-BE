@@ -16,9 +16,9 @@ import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResp
 import org.devkor.apu.saerok_server.domain.auth.application.AppleAuthService;
 import org.devkor.apu.saerok_server.domain.auth.application.KakaoAuthService;
 import org.devkor.apu.saerok_server.domain.auth.application.TokenRefreshService;
-import org.devkor.apu.saerok_server.global.exception.UnauthorizedException;
-import org.devkor.apu.saerok_server.global.util.ClientInfoExtractor;
-import org.devkor.apu.saerok_server.global.util.dto.ClientInfo;
+import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
+import org.devkor.apu.saerok_server.global.shared.util.ClientInfoExtractor;
+import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
