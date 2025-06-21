@@ -55,33 +55,63 @@ DB_PASSWORD=your_password
 
 ---
 
-## 🌐 배포 환경 (예정)
+## 🌐 배포 환경, 인프라
 
-- EC2 서버에 `application-dev.yml` 설정을 기반으로 배포 예정
-- GitHub Actions를 통해 브랜치 푸시 시 자동 배포 예정
+- 개발 서버와 운영 서버에 자동으로 배포하고 있습니다.
+  - GitHub Actions를 통해 브랜치 푸시 시 자동 배포
+    - develop push -> 개발 서버 배포
+    - main push -> 운영 서버 배포
+- 사용 중인 AWS 서비스
+  - EC2: 서버를 돌리는 컴퓨터
+  - RDS: DB를 제공하는 컴퓨터
+  - S3: 클라우드 스토리지 서비스 (이미지, 파일 등 저장 및 관리)
+  - CloudFront: CDN
+    - S3 리소스 조회 시 CloudFront 도메인을 통해 접근하도록 운영하고 있습니다
+  - KMS: 양방향 암호화에 쓰이는 키를 제공해주는 서비스
+  - Route 53: DNS
 
 ---
 
-## 🚀 브랜치 전략 (GitHub Flow)
+## 🚀 브랜치 전략
 
 - `main`: 운영 브랜치 (운영용 EC2에 배포)
 - `develop`: 개발 브랜치 (개발용 EC2에 배포)
-- `feat/*`, `fix/*`: 기능 추가 및 버그 수정 브랜치
-  → 완료 후 `develop` 브랜치로 Pull Request 생성 및 병합
+
+### 새로 기능을 개발할 때
+- develop에서 새로 브랜치 파서 기능 개발합니다. `feat/***` `chore/***`
+- 기능 개발해서 develop에 배포했는데 문제가 생기면 고칩니다. `fix/***`
+- develop으로 PR merge하는 방식은 `squash` 방식을 사용하고, 원래 작업하던 브랜치는 삭제합니다.
+
+### 개발 서버 내용을 운영 서버로 배포할 때
+- develop을 main으로 PR merge하는 경우인데, 이때는 일반 `merge commit` 방식을 사용합니다.
+- 운영 서버에 배포했는데 뭔가 문제가 생겼을 경우, main 브랜치에서 `hotfix/***` 브랜치를 파서 고쳐서 main으로 `merge commit`하고 원래 작업하던 브랜치는 삭제합니다.
+- develop이 아닌 브랜치에서 main으로 PR merge했을 경우, 자동으로 main -> develop으로 병합하는 PR이 생성되고 merge 처리됩니다. (GitHub Actions 설정)
+  - 예를 들어 hotfix 브랜치를 main에 병합했을 경우에 해당합니다
+  - 이렇게 함으로써 develop -> main 병합할 때 충돌 생길 일을 최대한 미연에 방지할 수 있을 걸로 기대
+  - 뭐 충돌 생기면 develop에서 main merge한 다음 병합하면 되긴 하는데 하여튼 그렇습니다
 
 ---
 
-## 🧪 테스트 구성 (예정)
+## 🧪 테스트 구성
 
-- JUnit 기반 단위 테스트 및 통합 테스트 구성 예정
+- JUnit 기반 단위 테스트 및 통합 테스트를 구성하고 싶은데, 지금 테스트가 현저히 부족한 상황
+- Jacoco를 도입해 코드 커버리지를 측정하고 테스트를 추가해 소프트웨어 품질을 높여 봅시다
+- 테스트가 잘 돼 있어야 미리 소프트웨어 결함을 발견할 수 있고, 나중에 배포하고 나서 "어 서비스가 안 열리는데요?" 이런 사태를 최대한 예방할 수 있어요
 
 ---
 
-## 📂 프로젝트 디렉터리 구조 (예정)
+## 📂 프로젝트 디렉터리 구조
 
-```
-추가 예정
-```
+DDD라는 걸 잘 이용해보려고 노력하고 있습니다.
+
+- domain: 이 아래에서 서비스의 큼직한 도메인들을 정의하고, 각 도메인 안에서
+  - api 계층: presentation 계층이라고도 하는데, 애플리케이션 가장 바깥쪽에서 HTTP 요청을 응대하는 쪽 (Controller)
+  - application 계층: 각각의 use case를 트랜잭션 단위로 처리하는 쪽 (Application Service)
+  - domain 계층: 도메인 비즈니스 로직 (실제 폴더명은 core를 쓰고 있고, 이 안에서 해당 도메인의 Entity, Domain Service 등이 존재)
+  - infra 계층: 외부 API와의 통신, DB 등 일처리를 위해 외부 요소와 연락하는 쪽 (Repository, 외부 API Client)
+  - 이런 DDD에서 제안하는 layered structure를 잘 녹여서 유지보수하기 좋은 구조를 만드려고 노력하고 있습니다
+  - 완벽하진 않지만 점진적으로 개선하기
+- global: 전역적으로 쓰이는 설정, 유틸, 기타 객체들
 
 ---
 
