@@ -96,7 +96,41 @@ DB_PASSWORD=your_password
 
 - JUnit 기반 단위 테스트 및 통합 테스트를 구성하고 싶은데, 지금 테스트가 현저히 부족한 상황
 - Jacoco를 도입해 코드 커버리지를 측정하고 테스트를 추가해 소프트웨어 품질을 높여 봅시다
-- 테스트가 잘 돼 있어야 미리 소프트웨어 결함을 발견할 수 있고, 나중에 배포하고 나서 "어 서비스가 안 열리는데요?" 이런 사태를 최대한 예방할 수 있어요
+- 테스트가 잘 돼 있어야 미리 소프트웨어 결함을 발견할 수 있고, 리팩터링도 안전하게 할 수 있고, 나중에 배포하고 나서 "어 서비스가 안 열리는데요?" 이런 사태를 최대한 예방할 수 있어요
+
+### 테스트를 돌리고 코드 커버리지 확인하기
+터미널에서 다음 명령어를 실행:
+```bash
+./gradlew test
+```
+또는 이전 빌드 결과를 삭제하고(`clean`) 테스트를 실행:
+```bash
+./gradlew clean test
+```
+모든 테스트가 통과하면 마지막에 이런 식으로 출력됩니다:
+```
+────────────────────────────────────────────
+ JaCoCo Total Instruction Coverage: 7.08%
+   covered = 682, missed = 8945
+────────────────────────────────────────────
+
+
+[Incubating] Problems report is available at: .../problems-report.html
+
+BUILD SUCCESSFUL in 34s
+7 actionable tasks: 7 executed
+```
+여기서 JaCoCo Total Instruction Coverage가 현재 측정된 우리 프로젝트의 코드 커버리지(우리가 짠 코드가 얼마나 테스트되었는지)를 나타냅니다
+
+만약 테스트가 실패한다면 BUILD FAILED라고 뜰 것입니다. 원인을 찾아 해결하면 됩니다. 원인은 그때그때 다를 수 있어요:
+- Docker Desktop을 안 켰거나 (테스트 중 Docker 컨테이너를 돌리는 게 있어서 테스트하기 전 Docker Desktop을 한번 켜주세요)
+- 코드에 결함이 발견되어서 고쳐야 하거나
+- 때로는 테스트 자체의 결함 때문으로, 테스트를 수정해야 할 수도 있음
+
+### 코드 커버리지 자세히 확인하기
+- `./gradle test`를 돌린 뒤 `./build/reports/jacoco/html/index.html`을 열어 자세한 리포트를 볼 수 있습니다
+- 우리가 짠 코드에서 테스트가 된 부분, 안 된 부분을 라인 단위까지 확인 가능합니다. 이걸 토대로 다음에 어디에 테스트를 추가할지도 볼 수 있겠죠
+- 참고: https://techblog.woowahan.com/2661/
 
 ---
 
