@@ -7,8 +7,8 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileUpdateService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserSignupStatusService;
-import org.devkor.apu.saerok_server.global.exception.BadRequestException;
-import org.devkor.apu.saerok_server.global.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
+import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

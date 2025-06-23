@@ -3,7 +3,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.core.service;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.contract.HasBodyLength;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.dto.SizeCategoryDto;
-import org.devkor.apu.saerok_server.global.config.SizeCategoryRulesConfig;
+import org.devkor.apu.saerok_server.global.core.config.feature.SizeCategoryRulesConfig;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.4'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'org.devkor.apu'
@@ -77,6 +78,15 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		html.required = true
+		xml.required = true
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -84,4 +94,39 @@ tasks.withType(JavaCompile).configureEach {
 			'-Amapstruct.incrementalProcessing=true',
 			'-Amapstruct.suppressGeneratorTimestamp=true'
 	]
+}
+
+tasks.withType(Test).configureEach {
+	systemProperty 'file.encoding', 'UTF-8'
+}
+
+tasks.named('jacocoTestReport') {
+	doLast {
+		def xmlFile = reports.xml.outputLocation.get().asFile
+		if (!xmlFile.exists()) {
+			logger.lifecycle("⛔ JaCoCo XML not found: $xmlFile")
+			return
+		}
+
+		// DOCTYPE 제거 후 문자열 파싱
+		def cleaned = xmlFile.getText('UTF-8')
+				.replaceFirst(/<!DOCTYPE[^>]*>\R?/, '')
+		def report  = new XmlSlurper().parseText(cleaned)
+
+		def instr   = report.counter.find { it.@type == 'INSTRUCTION' }
+
+		// ➡ 문자열로 바꾼 뒤 숫자로 변환
+		def covered = instr.@covered.text().toInteger()
+		def missed  = instr.@missed.text().toInteger()
+		def pct     = (covered + missed)
+				? (covered / (covered + missed) * 100).round(2)
+				: 0
+
+		println """
+        ────────────────────────────────────────────
+         JaCoCo Total Instruction Coverage: ${pct}% 
+           covered = $covered, missed = $missed
+        ────────────────────────────────────────────
+        """.stripIndent()
+	}
 }

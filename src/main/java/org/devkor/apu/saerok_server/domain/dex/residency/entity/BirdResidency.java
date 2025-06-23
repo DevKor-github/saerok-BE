@@ -2,7 +2,7 @@ package org.devkor.apu.saerok_server.domain.dex.residency.entity;
 
 import jakarta.persistence.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
-import org.devkor.apu.saerok_server.global.entity.Auditable;
+import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
 @Entity
 public class BirdResidency extends Auditable {

@@ -10,7 +10,7 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleReposito
 import org.devkor.apu.saerok_server.global.security.token.AccessTokenProvider;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenPair;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
-import org.devkor.apu.saerok_server.global.util.dto.ClientInfo;
+import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;

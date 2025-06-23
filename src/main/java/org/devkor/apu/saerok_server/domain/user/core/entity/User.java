@@ -3,7 +3,7 @@ package org.devkor.apu.saerok_server.domain.user.core.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.devkor.apu.saerok_server.global.entity.SoftDeletableAuditable;
+import org.devkor.apu.saerok_server.global.shared.entity.SoftDeletableAuditable;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;

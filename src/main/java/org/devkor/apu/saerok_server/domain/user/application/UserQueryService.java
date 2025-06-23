@@ -7,8 +7,8 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.dto.NicknameValidationResult;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfilePolicy;
-import org.devkor.apu.saerok_server.global.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.util.OffsetDateTimeLocalizer;
+import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoUserInfoResponse;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
-import org.devkor.apu.saerok_server.global.exception.UnauthorizedException;
+import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
 import org.springframework.stereotype.Service;
 
 @Service
