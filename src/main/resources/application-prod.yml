@@ -68,4 +68,6 @@ app:
     secure: true
 
 cors:
-  allowed-origins: []
+  allowed-origins:
+    - https://saerok.app
+    - https://www.saerok.app
