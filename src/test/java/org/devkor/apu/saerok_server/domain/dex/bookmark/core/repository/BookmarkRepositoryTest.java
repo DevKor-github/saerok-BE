@@ -103,14 +103,18 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
         Bird bird1 = newBird();
         Bird bird2 = newBird();
         Bird bird3 = newBird();
+        Bird deletedBird = newBird();
         
         UserBirdBookmark bookmark1 = newBookmark(me, bird1);
-        em.flush(); // DB에 반영하여 createdAt 설정
+        em.flush();
         
-        Thread.sleep(10); // 생성 시간 차이 보장
+        Thread.sleep(10);
         
         UserBirdBookmark bookmark2 = newBookmark(me, bird2);
+        newBookmark(me, deletedBird);    // 삭제될 새의 북마크
         newBookmark(other, bird3);       // 다른 사용자의 북마크
+        
+        deletedBird.softDelete();        // 새를 삭제 처리
         
         em.flush();
         em.clear();
@@ -119,13 +123,13 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
         List<UserBirdBookmark> result = bookmarkRepository.findAllByUserId(me.getId());
 
         // then
-        assertEquals(2, result.size(), "내 북마크만 조회");
+        assertEquals(2, result.size(), "삭제되지 않은 새의 북마크만 조회");
         assertEquals(bookmark2.getId(), result.get(0).getId(), "최신 북마크가 먼저 조회");
         assertEquals(bookmark1.getId(), result.get(1).getId(), "이전 북마크가 나중에 조회");
     }
 
     @Test
-    @DisplayName("존재하지 않는 사용자 ID로 조회하면 빈 리스트를 반환한다")
+    @DisplayName("존재하지 않는 사용자로 조회하면 빈 리스트 반환")
     void findAllByUserId_nonExistentUser_returnsEmptyList() {
         // given
         Long nonExistentUserId = 999L;
@@ -134,11 +138,11 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
         List<UserBirdBookmark> result = bookmarkRepository.findAllByUserId(nonExistentUserId);
 
         // then
-        assertTrue(result.isEmpty(), "존재하지 않는 사용자의 북마크 조회 시 빈 리스트 반환");
+        assertTrue(result.isEmpty(), "빈 리스트 반환");
     }
 
     @Test
-    @DisplayName("사용자와 새 ID로 북마크 존재 여부를 정확히 확인한다")
+    @DisplayName("북마크 존재 여부를 정확히 확인한다")
     void existsByUserIdAndBirdId_returnsCorrectExistence() throws Exception {
         // given
         User me = newUser();
@@ -163,6 +167,24 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
+    @DisplayName("삭제된 새의 북마크는 존재하지 않는 것으로 확인")
+    void existsByUserIdAndBirdId_deletedBirds_returnsFalse() throws Exception {
+        // given
+        User me = newUser();
+        Bird bird = newBird();
+        
+        newBookmark(me, bird);
+        bird.softDelete(); // 새를 삭제 처리
+        
+        em.flush();
+        em.clear();
+
+        // when & then
+        assertFalse(bookmarkRepository.existsByUserIdAndBirdId(me.getId(), bird.getId()),
+                "삭제된 새의 북마크는 존재하지 않음");
+    }
+
+    @Test
     @DisplayName("북마크를 정상적으로 저장한다")
     void save_persistsBookmarkSuccessfully() throws Exception {
         // given
@@ -183,8 +205,8 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
-    @DisplayName("동일한 사용자와 새에 대한 중복 북마크 저장 시 제약 조건 위반 예외가 발생한다")
-    void save_duplicateBookmark_throwsConstraintViolationException() throws Exception {
+    @DisplayName("중복 북마크 저장 시 예외 발생")
+    void save_duplicateBookmark_throwsException() throws Exception {
         // given
         User me = newUser();
         Bird bird = newBird();
@@ -203,7 +225,7 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
-    @DisplayName("사용자와 새 ID로 북마크를 정상적으로 삭제한다")
+    @DisplayName("북마크를 정상적으로 삭제한다")
     void deleteByUserIdAndBirdId_removesBookmarkSuccessfully() throws Exception {
         // given
         User me = newUser();
@@ -236,7 +258,7 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 북마크 삭제 시도해도 예외가 발생하지 않는다")
+    @DisplayName("존재하지 않는 북마크 삭제해도 예외 없음")
     void deleteByUserIdAndBirdId_nonExistentBookmark_noException() throws Exception {
         // given
         User me = newUser();
@@ -249,16 +271,17 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
         assertDoesNotThrow(() -> {
             bookmarkRepository.deleteByUserIdAndBirdId(me.getId(), bird.getId());
             em.flush();
-        }, "존재하지 않는 북마크 삭제 시도 시 예외 발생하지 않음");
+        }, "예외 발생하지 않음");
     }
 
     @Test
-    @DisplayName("새 상세 정보와 함께 사용자의 모든 북마크를 최신순으로 조회한다")
-    void findAllWithBirdDetailsByUserId_returnsBookmarksWithBirdDetailsOrderedByCreatedAtDesc() throws Exception {
+    @DisplayName("새 상세 정보와 함께 북마크를 조회한다")
+    void findAllWithBirdDetailsByUserId_returnsBookmarksWithBirdDetails() throws Exception {
         // given
         User me = newUser();
         Bird bird1 = newBird();
         Bird bird2 = newBird();
+        Bird deletedBird = newBird();
         
         UserBirdBookmark bookmark1 = newBookmark(me, bird1);
         em.flush();
@@ -266,6 +289,8 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
         Thread.sleep(10);
         
         UserBirdBookmark bookmark2 = newBookmark(me, bird2);
+        newBookmark(me, deletedBird);
+        deletedBird.softDelete(); // 새를 삭제 처리
         
         em.flush();
         em.clear();
@@ -274,7 +299,7 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
         List<UserBirdBookmark> result = bookmarkRepository.findAllWithBirdDetailsByUserId(me.getId());
 
         // then
-        assertEquals(2, result.size(), "모든 북마크가 조회");
+        assertEquals(2, result.size(), "삭제되지 않은 새의 북마크만 조회");
         assertEquals(bookmark2.getId(), result.get(0).getId(), "최신 북마크가 먼저 조회");
         assertEquals(bookmark1.getId(), result.get(1).getId(), "이전 북마크가 나중에 조회");
         
