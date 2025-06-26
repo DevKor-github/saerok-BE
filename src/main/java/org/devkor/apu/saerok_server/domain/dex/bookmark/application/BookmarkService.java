@@ -30,7 +30,8 @@ public class BookmarkService {
      */
     public BookmarkResponse getBookmarksResponse(Long userId) {
         List<UserBirdBookmark> bookmarks = bookmarkRepository.findAllByUserId(userId);
-        return bookmarkMapper.toBookmarkResponse(bookmarks);
+        List<BookmarkResponse.Item> items = bookmarkMapper.toBookmarkItems(bookmarks);
+        return new BookmarkResponse(items);
     }
     
     /**
@@ -51,7 +52,11 @@ public class BookmarkService {
      */
     public BookmarkStatusResponse getBookmarkStatusResponse(Long userId, Long birdId) {
         boolean bookmarked = bookmarkRepository.existsByUserIdAndBirdId(userId, birdId);
-        return bookmarkMapper.toBookmarkStatusResponse(birdId, bookmarked);
+        
+        BookmarkStatusResponse response = new BookmarkStatusResponse();
+        response.setBirdId(birdId);
+        response.setBookmarked(bookmarked);
+        return response;
     }
     
     /**
@@ -64,10 +69,13 @@ public class BookmarkService {
     public BookmarkToggleResponse toggleBookmarkResponse(Long userId, Long birdId) {
         boolean exists = bookmarkRepository.existsByUserIdAndBirdId(userId, birdId);
         
+        BookmarkToggleResponse response = new BookmarkToggleResponse();
+        response.setBirdId(birdId);
+        
         if (exists) {
             // 북마크가 이미 존재하면 제거
             bookmarkRepository.deleteByUserIdAndBirdId(userId, birdId);
-            return bookmarkMapper.toBookmarkToggleResponse(birdId, false);
+            response.setBookmarked(false);
         } else {
             // 북마크가 없으면 추가
             User user = bookmarkRepository.findUserById(userId)
@@ -77,8 +85,9 @@ public class BookmarkService {
             
             UserBirdBookmark bookmark = new UserBirdBookmark(user, bird);
             bookmarkRepository.save(bookmark);
-            
-            return bookmarkMapper.toBookmarkToggleResponse(birdId, true);
+            response.setBookmarked(true);
         }
+        
+        return response;
     }
 }
