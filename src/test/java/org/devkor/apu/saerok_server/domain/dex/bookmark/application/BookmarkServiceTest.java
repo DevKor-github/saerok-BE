@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,19 +21,19 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BookmarkServiceTest {
 
-    @Mock
-    private BookmarkRepository bookmarkRepository;
+    BookmarkService bookmarkService;
 
     @Mock
-    private BookmarkMapper bookmarkMapper;
+    BookmarkRepository bookmarkRepository;
 
-    @InjectMocks
-    private BookmarkService bookmarkService;
+    @Mock
+    BookmarkMapper bookmarkMapper;
 
     private User testUser;
     private Bird testBird;
@@ -42,6 +41,7 @@ class BookmarkServiceTest {
 
     @BeforeEach
     void setUp() {
+        bookmarkService = new BookmarkService(bookmarkRepository, bookmarkMapper);
         testUser = new User();
         testBird = new Bird();
         testBookmark = new UserBirdBookmark(testUser, testBird);
@@ -57,18 +57,19 @@ class BookmarkServiceTest {
         // given
         Long userId = 1L;
         List<UserBirdBookmark> bookmarks = List.of(testBookmark);
-        BookmarkResponse expectedResponse = new BookmarkResponse(List.of());
+        BookmarkResponse.Item expectedItem = new BookmarkResponse.Item(1L, 2L);
+        List<BookmarkResponse.Item> expectedItems = List.of(expectedItem);
 
-        when(bookmarkRepository.findAllByUserId(userId)).thenReturn(bookmarks);
-        when(bookmarkMapper.toBookmarkResponse(bookmarks)).thenReturn(expectedResponse);
+        given(bookmarkRepository.findAllByUserId(userId)).willReturn(bookmarks);
+        given(bookmarkMapper.toBookmarkItems(bookmarks)).willReturn(expectedItems);
 
         // when
         BookmarkResponse result = bookmarkService.getBookmarksResponse(userId);
 
         // then
-        assertEquals(expectedResponse, result);
+        assertEquals(expectedItems, result.items());
         verify(bookmarkRepository).findAllByUserId(userId);
-        verify(bookmarkMapper).toBookmarkResponse(bookmarks);
+        verify(bookmarkMapper).toBookmarkItems(bookmarks);
     }
 
     @Test
@@ -77,18 +78,18 @@ class BookmarkServiceTest {
         // given
         Long userId = 1L;
         List<UserBirdBookmark> emptyBookmarks = List.of();
-        BookmarkResponse expectedResponse = new BookmarkResponse(List.of());
+        List<BookmarkResponse.Item> emptyItems = List.of();
 
-        when(bookmarkRepository.findAllByUserId(userId)).thenReturn(emptyBookmarks);
-        when(bookmarkMapper.toBookmarkResponse(emptyBookmarks)).thenReturn(expectedResponse);
+        given(bookmarkRepository.findAllByUserId(userId)).willReturn(emptyBookmarks);
+        given(bookmarkMapper.toBookmarkItems(emptyBookmarks)).willReturn(emptyItems);
 
         // when
         BookmarkResponse result = bookmarkService.getBookmarksResponse(userId);
 
         // then
-        assertEquals(expectedResponse, result);
+        assertTrue(result.items().isEmpty());
         verify(bookmarkRepository).findAllByUserId(userId);
-        verify(bookmarkMapper).toBookmarkResponse(emptyBookmarks);
+        verify(bookmarkMapper).toBookmarkItems(emptyBookmarks);
     }
 
     /* ------------------------------------------------------------------
@@ -103,8 +104,8 @@ class BookmarkServiceTest {
         List<UserBirdBookmark> bookmarks = List.of(testBookmark);
         List<BookmarkedBirdDetailResponse> expectedResponse = List.of(new BookmarkedBirdDetailResponse());
 
-        when(bookmarkRepository.findAllWithBirdDetailsByUserId(userId)).thenReturn(bookmarks);
-        when(bookmarkMapper.toBookmarkedBirdDetailResponseList(bookmarks)).thenReturn(expectedResponse);
+        given(bookmarkRepository.findAllWithBirdDetailsByUserId(userId)).willReturn(bookmarks);
+        given(bookmarkMapper.toBookmarkedBirdDetailResponseList(bookmarks)).willReturn(expectedResponse);
 
         // when
         List<BookmarkedBirdDetailResponse> result = bookmarkService.getBookmarkedBirdDetailsResponse(userId);
@@ -123,8 +124,8 @@ class BookmarkServiceTest {
         List<UserBirdBookmark> emptyBookmarks = List.of();
         List<BookmarkedBirdDetailResponse> expectedResponse = List.of();
 
-        when(bookmarkRepository.findAllWithBirdDetailsByUserId(userId)).thenReturn(emptyBookmarks);
-        when(bookmarkMapper.toBookmarkedBirdDetailResponseList(emptyBookmarks)).thenReturn(expectedResponse);
+        given(bookmarkRepository.findAllWithBirdDetailsByUserId(userId)).willReturn(emptyBookmarks);
+        given(bookmarkMapper.toBookmarkedBirdDetailResponseList(emptyBookmarks)).willReturn(expectedResponse);
 
         // when
         List<BookmarkedBirdDetailResponse> result = bookmarkService.getBookmarkedBirdDetailsResponse(userId);
@@ -145,20 +146,16 @@ class BookmarkServiceTest {
         // given
         Long userId = 1L;
         Long birdId = 2L;
-        BookmarkStatusResponse expectedResponse = new BookmarkStatusResponse();
-        expectedResponse.setBirdId(birdId);
-        expectedResponse.setBookmarked(true);
 
-        when(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).thenReturn(true);
-        when(bookmarkMapper.toBookmarkStatusResponse(birdId, true)).thenReturn(expectedResponse);
+        given(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).willReturn(true);
 
         // when
         BookmarkStatusResponse result = bookmarkService.getBookmarkStatusResponse(userId, birdId);
 
         // then
-        assertEquals(expectedResponse, result);
+        assertEquals(birdId, result.getBirdId());
+        assertTrue(result.isBookmarked());
         verify(bookmarkRepository).existsByUserIdAndBirdId(userId, birdId);
-        verify(bookmarkMapper).toBookmarkStatusResponse(birdId, true);
     }
 
     @Test
@@ -167,20 +164,16 @@ class BookmarkServiceTest {
         // given
         Long userId = 1L;
         Long birdId = 2L;
-        BookmarkStatusResponse expectedResponse = new BookmarkStatusResponse();
-        expectedResponse.setBirdId(birdId);
-        expectedResponse.setBookmarked(false);
 
-        when(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).thenReturn(false);
-        when(bookmarkMapper.toBookmarkStatusResponse(birdId, false)).thenReturn(expectedResponse);
+        given(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).willReturn(false);
 
         // when
         BookmarkStatusResponse result = bookmarkService.getBookmarkStatusResponse(userId, birdId);
 
         // then
-        assertEquals(expectedResponse, result);
+        assertEquals(birdId, result.getBirdId());
+        assertFalse(result.isBookmarked());
         verify(bookmarkRepository).existsByUserIdAndBirdId(userId, birdId);
-        verify(bookmarkMapper).toBookmarkStatusResponse(birdId, false);
     }
 
     /* ------------------------------------------------------------------
@@ -193,25 +186,21 @@ class BookmarkServiceTest {
         // given
         Long userId = 1L;
         Long birdId = 2L;
-        BookmarkToggleResponse expectedResponse = new BookmarkToggleResponse();
-        expectedResponse.setBirdId(birdId);
-        expectedResponse.setBookmarked(true);
 
-        when(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).thenReturn(false);
-        when(bookmarkRepository.findUserById(userId)).thenReturn(Optional.of(testUser));
-        when(bookmarkRepository.findBirdById(birdId)).thenReturn(Optional.of(testBird));
-        when(bookmarkMapper.toBookmarkToggleResponse(birdId, true)).thenReturn(expectedResponse);
+        given(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).willReturn(false);
+        given(bookmarkRepository.findUserById(userId)).willReturn(Optional.of(testUser));
+        given(bookmarkRepository.findBirdById(birdId)).willReturn(Optional.of(testBird));
 
         // when
         BookmarkToggleResponse result = bookmarkService.toggleBookmarkResponse(userId, birdId);
 
         // then
-        assertEquals(expectedResponse, result);
+        assertEquals(birdId, result.getBirdId());
+        assertTrue(result.isBookmarked());
         verify(bookmarkRepository).existsByUserIdAndBirdId(userId, birdId);
         verify(bookmarkRepository).findUserById(userId);
         verify(bookmarkRepository).findBirdById(birdId);
         verify(bookmarkRepository).save(any(UserBirdBookmark.class));
-        verify(bookmarkMapper).toBookmarkToggleResponse(birdId, true);
     }
 
     @Test
@@ -220,21 +209,17 @@ class BookmarkServiceTest {
         // given
         Long userId = 1L;
         Long birdId = 2L;
-        BookmarkToggleResponse expectedResponse = new BookmarkToggleResponse();
-        expectedResponse.setBirdId(birdId);
-        expectedResponse.setBookmarked(false);
 
-        when(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).thenReturn(true);
-        when(bookmarkMapper.toBookmarkToggleResponse(birdId, false)).thenReturn(expectedResponse);
+        given(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).willReturn(true);
 
         // when
         BookmarkToggleResponse result = bookmarkService.toggleBookmarkResponse(userId, birdId);
 
         // then
-        assertEquals(expectedResponse, result);
+        assertEquals(birdId, result.getBirdId());
+        assertFalse(result.isBookmarked());
         verify(bookmarkRepository).existsByUserIdAndBirdId(userId, birdId);
         verify(bookmarkRepository).deleteByUserIdAndBirdId(userId, birdId);
-        verify(bookmarkMapper).toBookmarkToggleResponse(birdId, false);
         
         // 추가하는 로직은 호출되지 않아야 함
         verify(bookmarkRepository, never()).findUserById(any());
@@ -249,18 +234,18 @@ class BookmarkServiceTest {
         Long userId = 1L;
         Long birdId = 2L;
 
-        when(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).thenReturn(false);
-        when(bookmarkRepository.findUserById(userId)).thenReturn(Optional.empty());
+        given(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).willReturn(false);
+        given(bookmarkRepository.findUserById(userId)).willReturn(Optional.empty());
 
-        // when & then
+        // when / then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             bookmarkService.toggleBookmarkResponse(userId, birdId);
         });
 
         assertTrue(exception.getMessage().contains("사용자"));
         verify(bookmarkRepository).existsByUserIdAndBirdId(userId, birdId);
-        verify(bookmarkRepository).findUserById(userId);    // 여기까진 호출됨
-        verify(bookmarkRepository, never()).findBirdById(any());    // 여기부턴 호출 안 돼야 함
+        verify(bookmarkRepository).findUserById(userId);
+        verify(bookmarkRepository, never()).findBirdById(any());
         verify(bookmarkRepository, never()).save(any(UserBirdBookmark.class));
     }
 
@@ -271,11 +256,11 @@ class BookmarkServiceTest {
         Long userId = 1L;
         Long birdId = 2L;
 
-        when(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).thenReturn(false);
-        when(bookmarkRepository.findUserById(userId)).thenReturn(Optional.of(testUser));
-        when(bookmarkRepository.findBirdById(birdId)).thenReturn(Optional.empty());
+        given(bookmarkRepository.existsByUserIdAndBirdId(userId, birdId)).willReturn(false);
+        given(bookmarkRepository.findUserById(userId)).willReturn(Optional.of(testUser));
+        given(bookmarkRepository.findBirdById(birdId)).willReturn(Optional.empty());
 
-        // when & then
+        // when / then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             bookmarkService.toggleBookmarkResponse(userId, birdId);
         });
