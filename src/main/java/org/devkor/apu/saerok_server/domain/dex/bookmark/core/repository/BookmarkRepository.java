@@ -44,8 +44,10 @@ public class BookmarkRepository {
     public boolean existsByUserIdAndBirdId(Long userId, Long birdId) {
         Long count = em.createQuery(
                 "SELECT COUNT(b) FROM UserBirdBookmark b " +
+                "JOIN b.bird bird " +
                 "WHERE b.user.id = :userId " +
-                "AND b.bird.id = :birdId", Long.class)
+                "AND b.bird.id = :birdId " +
+                "AND bird.deletedAt IS NULL", Long.class)
                 .setParameter("userId", userId)
                 .setParameter("birdId", birdId)
                 .setMaxResults(1)
@@ -59,8 +61,9 @@ public class BookmarkRepository {
     public List<UserBirdBookmark> findAllWithBirdDetailsByUserId(Long userId) {
         return em.createQuery(
                 "SELECT b FROM UserBirdBookmark b " +
-                "JOIN FETCH b.bird " +
+                "JOIN FETCH b.bird bird " +
                 "WHERE b.user.id = :userId " +
+                "AND bird.deletedAt IS NULL " +
                 "ORDER BY b.createdAt DESC", UserBirdBookmark.class)
                 .setParameter("userId", userId)
                 .getResultList();
