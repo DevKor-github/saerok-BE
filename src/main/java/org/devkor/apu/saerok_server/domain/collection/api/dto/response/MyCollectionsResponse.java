@@ -18,6 +18,9 @@ public record MyCollectionsResponse(
         String imageUrl,
 
         @Schema(description = "새의 한국 이름", example = "까치")
-        String koreanName
+        String koreanName,
+
+        @Schema(description = "좋아요 수", example = "15")
+        Integer likeCount
     ) { }
 }

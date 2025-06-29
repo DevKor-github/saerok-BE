@@ -238,6 +238,7 @@ public class CollectionController {
             - collectionId
             - imageUrl
             - koreanName
+            - likeCount
 
             """,
             responses = {
