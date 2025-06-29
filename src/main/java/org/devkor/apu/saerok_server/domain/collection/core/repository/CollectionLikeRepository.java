@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -18,6 +19,22 @@ public class CollectionLikeRepository {
     public void save(UserBirdCollectionLike like) { em.persist(like); }
 
     public void remove(UserBirdCollectionLike like) { em.remove(like); }
+
+    /**
+     * 특정 사용자의 특정 컬렉션 좋아요 조회
+     */
+    public Optional<UserBirdCollectionLike> findByUserIdAndCollectionId(Long userId, Long collectionId) {
+        List<UserBirdCollectionLike> results = em.createQuery(
+                "SELECT l FROM UserBirdCollectionLike l " +
+                "WHERE l.user.id = :userId AND l.collection.id = :collectionId", 
+                UserBirdCollectionLike.class)
+                .setParameter("userId", userId)
+                .setParameter("collectionId", collectionId)
+                .setMaxResults(1)
+                .getResultList();
+        
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
+    }
 
     /**
      * 특정 사용자의 특정 컬렉션 좋아요 존재 여부 확인 (단건 조회)
@@ -61,7 +78,7 @@ public class CollectionLikeRepository {
     }
 
     /**
-     * 특정 컬렉션의 실제 좋아요 수 조회 (캐싱 검증용)
+     * 특정 컬렉션의 좋아요 수 조회
      */
     public long countByCollectionId(Long collectionId) {
         return em.createQuery(
