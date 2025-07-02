@@ -34,10 +34,10 @@ public class CollectionLikeService {
     @Transactional
     public LikeStatusResponse toggleLikeResponse(Long userId, Long collectionId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
         
         UserBirdCollection collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new IllegalArgumentException("컬렉션을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("컬렉션을 찾을 수 없습니다."));
 
         boolean exists = collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
 
@@ -61,15 +61,13 @@ public class CollectionLikeService {
      * 좋아요 상태 조회
      */
     public LikeStatusResponse getLikeStatusResponse(Long userId, Long collectionId) {
-        if (userId != null) {
-            userRepository.findById(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new IllegalArgumentException("컬렉션을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("컬렉션을 찾을 수 없습니다."));
 
-        boolean isLiked = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
+        boolean isLiked = collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
         return new LikeStatusResponse(isLiked);
     }
 
@@ -78,7 +76,7 @@ public class CollectionLikeService {
      */
     public GetLikedCollectionsResponse getLikedCollectionIdsResponse(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         List<UserBirdCollection> collections = collectionLikeRepository.findLikedCollectionsByUserId(userId);
         return collectionLikeWebMapper.toGetLikedCollectionsResponse(collections);

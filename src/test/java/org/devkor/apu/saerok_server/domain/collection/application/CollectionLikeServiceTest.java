@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
+import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -98,7 +99,7 @@ class CollectionLikeServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.empty());
 
         // when & then
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(NotFoundException.class,
                 () -> collectionLikeService.toggleLikeResponse(userId, collectionId));
     }
 
@@ -114,24 +115,7 @@ class CollectionLikeServiceTest {
         given(collectionRepository.findById(collectionId)).willReturn(Optional.empty());
 
         // when & then
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(NotFoundException.class,
                 () -> collectionLikeService.toggleLikeResponse(userId, collectionId));
-    }
-
-    @Test
-    @DisplayName("좋아요 상태 조회 - 익명 사용자는 항상 false")
-    void getLikeStatus_anonymousUser_notLiked() {
-        // given
-        Long collectionId = 2L;
-        
-        UserBirdCollection collection = new UserBirdCollection();
-        given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
-
-        // when
-        LikeStatusResponse response = collectionLikeService.getLikeStatusResponse(null, collectionId);
-
-        // then
-        assertFalse(response.isLiked()); // 익명 사용자는 항상 false
-        verifyNoInteractions(collectionLikeRepository); // 좋아요 조회를 하지 않음
     }
 }

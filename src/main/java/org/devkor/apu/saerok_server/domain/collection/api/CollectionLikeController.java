@@ -48,15 +48,16 @@ public class CollectionLikeController {
     }
 
     @GetMapping("/{collectionId}/like/status")
-    @PermitAll
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "컬렉션 좋아요 상태 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
-            description = "사용자의 특정 컬렉션 좋아요 상태를 조회합니다. 비로그인 사용자의 경우 항상 false를 반환합니다.",
+            description = "로그인한 사용자의 특정 컬렉션 좋아요 상태를 조회합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "좋아요 상태 조회 성공",
                             content = @Content(schema = @Schema(implementation = LikeStatusResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "컬렉션이 존재하지 않음", content = @Content)
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "사용자 또는 컬렉션이 존재하지 않음", content = @Content)
             }
     )
     public LikeStatusResponse getLikeStatus(
@@ -64,8 +65,7 @@ public class CollectionLikeController {
             @Parameter(description = "컬렉션 ID", example = "1")
             @PathVariable Long collectionId
     ) {
-        Long userId = userPrincipal != null ? userPrincipal.getId() : null;
-        return collectionLikeService.getLikeStatusResponse(userId, collectionId);
+        return collectionLikeService.getLikeStatusResponse(userPrincipal.getId(), collectionId);
     }
 
     @GetMapping("/liked")
