@@ -91,7 +91,6 @@ public class CollectionLikeController {
     @PermitAll
     @Operation(
             summary = "컬렉션을 좋아요한 사용자 목록",
-            security = @SecurityRequirement(name = "bearerAuth"),
             description = "특정 컬렉션을 좋아요한 사용자들의 목록을 조회합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "좋아요한 사용자 목록 조회 성공",
