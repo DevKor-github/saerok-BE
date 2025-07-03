@@ -37,6 +37,12 @@ public class GetCollectionDetailResponse {
     @Schema(description = "컬렉션 공개 범위 (공개/비공개)")
     private AccessLevelType accessLevel;
 
+    @Schema(description = "좋아요 수", example = "15")
+    private Integer likeCount;
+
+    @Schema(description = "내가 좋아요 눌렀는지 여부", example = "true")
+    private Boolean isLiked;
+
     @Schema(description = "새 정보")
     private BirdInfo bird;
 
