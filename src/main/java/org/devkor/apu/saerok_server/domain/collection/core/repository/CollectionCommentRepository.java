@@ -6,12 +6,17 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
 public class CollectionCommentRepository {
 
     private final EntityManager em;
+
+    public Optional<UserBirdCollectionComment> findById(Long id) {
+        return Optional.ofNullable(em.find(UserBirdCollectionComment.class, id));
+    }
 
     public void save(UserBirdCollectionComment comment) {
         em.persist(comment);
