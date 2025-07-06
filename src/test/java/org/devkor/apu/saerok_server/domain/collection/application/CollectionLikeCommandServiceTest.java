@@ -7,7 +7,6 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,9 +22,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class CollectionLikeServiceTest {
+class CollectionLikeCommandServiceTest {
 
-    CollectionLikeService collectionLikeService;
+    CollectionLikeCommandService collectionLikeCommandService;
 
     @Mock CollectionLikeRepository collectionLikeRepository;
     @Mock CollectionRepository collectionRepository;
@@ -33,11 +32,10 @@ class CollectionLikeServiceTest {
 
     @BeforeEach
     void setUp() {
-        collectionLikeService = new CollectionLikeService(
+        collectionLikeCommandService = new CollectionLikeCommandService(
                 collectionLikeRepository,
                 collectionRepository,
-                userRepository,
-                null // WebMapper 사용 안 함
+                userRepository
         );
     }
 
@@ -56,7 +54,7 @@ class CollectionLikeServiceTest {
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(false);
 
         // when
-        LikeStatusResponse response = collectionLikeService.toggleLikeResponse(userId, collectionId);
+        LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 
         // then
         assertTrue(response.isLiked()); // 비즈니스 로직 결과 검증
@@ -81,7 +79,7 @@ class CollectionLikeServiceTest {
                 .willReturn(Optional.of(existingLike));
 
         // when
-        LikeStatusResponse response = collectionLikeService.toggleLikeResponse(userId, collectionId);
+        LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 
         // then
         assertFalse(response.isLiked()); // 비즈니스 로직 결과 검증
@@ -100,7 +98,7 @@ class CollectionLikeServiceTest {
 
         // when & then
         assertThrows(NotFoundException.class,
-                () -> collectionLikeService.toggleLikeResponse(userId, collectionId));
+                () -> collectionLikeCommandService.toggleLikeResponse(userId, collectionId));
     }
 
     @Test
@@ -116,6 +114,6 @@ class CollectionLikeServiceTest {
 
         // when & then
         assertThrows(NotFoundException.class,
-                () -> collectionLikeService.toggleLikeResponse(userId, collectionId));
+                () -> collectionLikeCommandService.toggleLikeResponse(userId, collectionId));
     }
 }
