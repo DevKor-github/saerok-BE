@@ -12,7 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionLikersResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetLikedCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.LikeStatusResponse;
-import org.devkor.apu.saerok_server.domain.collection.application.CollectionLikeService;
+import org.devkor.apu.saerok_server.domain.collection.application.CollectionLikeCommandService;
+import org.devkor.apu.saerok_server.domain.collection.application.CollectionLikeQueryService;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,7 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${api_prefix}/collections")
 public class CollectionLikeController {
 
-    private final CollectionLikeService collectionLikeService;
+    private final CollectionLikeCommandService collectionLikeCommandService;
+    private final CollectionLikeQueryService collectionLikeQueryService;
 
     @PostMapping("/{collectionId}/like")
     @PreAuthorize("hasRole('USER')")
@@ -44,7 +46,7 @@ public class CollectionLikeController {
             @Parameter(description = "컬렉션 ID", example = "1")
             @PathVariable Long collectionId
     ) {
-        return collectionLikeService.toggleLikeResponse(userPrincipal.getId(), collectionId);
+        return collectionLikeCommandService.toggleLikeResponse(userPrincipal.getId(), collectionId);
     }
 
     @GetMapping("/{collectionId}/like/status")
@@ -65,7 +67,7 @@ public class CollectionLikeController {
             @Parameter(description = "컬렉션 ID", example = "1")
             @PathVariable Long collectionId
     ) {
-        return collectionLikeService.getLikeStatusResponse(userPrincipal.getId(), collectionId);
+        return collectionLikeQueryService.getLikeStatusResponse(userPrincipal.getId(), collectionId);
     }
 
     @GetMapping("/liked")
@@ -84,7 +86,7 @@ public class CollectionLikeController {
     public GetLikedCollectionsResponse getLikedCollections(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        return collectionLikeService.getLikedCollectionIdsResponse(userPrincipal.getId());
+        return collectionLikeQueryService.getLikedCollectionIdsResponse(userPrincipal.getId());
     }
 
     @GetMapping("/{collectionId}/like/users")
@@ -102,6 +104,6 @@ public class CollectionLikeController {
             @Parameter(description = "컬렉션 ID", example = "1")
             @PathVariable Long collectionId
     ) {
-        return collectionLikeService.getCollectionLikersResponse(collectionId);
+        return collectionLikeQueryService.getCollectionLikersResponse(collectionId);
     }
 }
