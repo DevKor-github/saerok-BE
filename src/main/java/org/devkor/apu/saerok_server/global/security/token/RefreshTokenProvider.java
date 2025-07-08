@@ -1,12 +1,12 @@
 package org.devkor.apu.saerok_server.global.security.token;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.global.security.util.SecureRandomBytesGenerator;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Base64;
 
@@ -16,8 +16,8 @@ public class RefreshTokenProvider {
 
     public static final Duration validDuration = Duration.ofDays(30);
 
-    private final SecureRandom secureRandom = new SecureRandom();
     private final Base64.Encoder base64UrlEncoder = Base64.getUrlEncoder().withoutPadding();
+    private final SecureRandomBytesGenerator secureRandomBytesGenerator;
 
     public RefreshTokenPair generateRefreshTokenPair() {
         String raw = generateRawRefreshToken();
@@ -30,8 +30,7 @@ public class RefreshTokenProvider {
      * 256비트(32바이트) 랜덤 값을 그대로 Base64 URL-safe 문자열로 인코딩해서 리턴
      */
     private String generateRawRefreshToken() {
-        byte[] randomBytes = new byte[32];
-        secureRandom.nextBytes(randomBytes);
+        byte[] randomBytes = secureRandomBytesGenerator.generate(32);
         return base64UrlEncoder.encodeToString(randomBytes);
     }
 
