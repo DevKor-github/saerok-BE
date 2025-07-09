@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -142,6 +143,69 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
+    @DisplayName("특정 사용자와 조류의 북마크를 조회한다")
+    void findByUserIdAndBirdId_returnsCorrectBookmark() throws Exception {
+        // given
+        User me = newUser();
+        User other = newUser();
+        Bird bird1 = newBird();
+        Bird bird2 = newBird();
+        
+        UserBirdBookmark myBookmark = newBookmark(me, bird1);
+        newBookmark(other, bird1); // 다른 사용자의 북마크
+        newBookmark(me, bird2);    // 다른 새의 북마크
+        
+        em.flush();
+        em.clear();
+
+        // when
+        Optional<UserBirdBookmark> result = bookmarkRepository.findByUserIdAndBirdId(me.getId(), bird1.getId());
+
+        // then
+        assertTrue(result.isPresent(), "북마크가 존재해야 함");
+        assertEquals(myBookmark.getId(), result.get().getId());
+        assertEquals(me.getId(), result.get().getUser().getId());
+        assertEquals(bird1.getId(), result.get().getBird().getId());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 북마크 조회 시 빈 Optional 반환")
+    void findByUserIdAndBirdId_nonExistentBookmark_returnsEmpty() throws Exception {
+        // given
+        User me = newUser();
+        Bird bird = newBird();
+        
+        em.flush();
+        em.clear();
+
+        // when
+        Optional<UserBirdBookmark> result = bookmarkRepository.findByUserIdAndBirdId(me.getId(), bird.getId());
+
+        // then
+        assertTrue(result.isEmpty(), "존재하지 않는 북마크는 빈 Optional 반환");
+    }
+
+    @Test
+    @DisplayName("삭제된 새의 북마크는 조회되지 않음")
+    void findByUserIdAndBirdId_deletedBird_returnsEmpty() throws Exception {
+        // given
+        User me = newUser();
+        Bird bird = newBird();
+        
+        newBookmark(me, bird);
+        bird.softDelete(); // 새를 삭제 처리
+        
+        em.flush();
+        em.clear();
+
+        // when
+        Optional<UserBirdBookmark> result = bookmarkRepository.findByUserIdAndBirdId(me.getId(), bird.getId());
+
+        // then
+        assertTrue(result.isEmpty(), "삭제된 새의 북마크는 조회되지 않음");
+    }
+
+    @Test
     @DisplayName("북마크 존재 여부를 정확히 확인한다")
     void existsByUserIdAndBirdId_returnsCorrectExistence() throws Exception {
         // given
@@ -226,22 +290,24 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
 
     @Test
     @DisplayName("북마크를 정상적으로 삭제한다")
-    void deleteByUserIdAndBirdId_removesBookmarkSuccessfully() throws Exception {
+    void remove_removesBookmarkSuccessfully() throws Exception {
         // given
         User me = newUser();
         User other = newUser();
         Bird bird1 = newBird();
         Bird bird2 = newBird();
         
-        newBookmark(me, bird1);
+        UserBirdBookmark targetBookmark = newBookmark(me, bird1);
         newBookmark(me, bird2);
         newBookmark(other, bird1);
         
         em.flush();
         em.clear();
 
+        UserBirdBookmark managedBookmark = em.find(UserBirdBookmark.class, targetBookmark.getId());
+
         // when
-        bookmarkRepository.deleteByUserIdAndBirdId(me.getId(), bird1.getId());
+        bookmarkRepository.remove(managedBookmark);
         em.flush();
         em.clear();
 
@@ -255,23 +321,6 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
         
         assertFalse(bookmarkRepository.existsByUserIdAndBirdId(me.getId(), bird1.getId()),
                 "삭제된 북마크는 존재하지 않음");
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 북마크 삭제해도 예외 없음")
-    void deleteByUserIdAndBirdId_nonExistentBookmark_noException() throws Exception {
-        // given
-        User me = newUser();
-        Bird bird = newBird();
-        
-        em.flush();
-        em.clear();
-
-        // when & then
-        assertDoesNotThrow(() -> {
-            bookmarkRepository.deleteByUserIdAndBirdId(me.getId(), bird.getId());
-            em.flush();
-        }, "예외 발생하지 않음");
     }
 
     @Test
