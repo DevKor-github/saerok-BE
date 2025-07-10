@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.dex.bookmark.query.mapper;
+package org.devkor.apu.saerok_server.domain.dex.bookmark.mapper;
 
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
@@ -16,9 +16,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class BookmarkMapperTest {
+class BookmarkWebMapperTest {
 
-    BookmarkMapper bookmarkMapper;
+    BookmarkWebMapper bookmarkWebMapper;
 
     private User testUser;
     private Bird testBird;
@@ -27,7 +27,7 @@ class BookmarkMapperTest {
 
     @BeforeEach
     void setUp() {
-        bookmarkMapper = Mappers.getMapper(BookmarkMapper.class);
+        bookmarkWebMapper = Mappers.getMapper(BookmarkWebMapper.class);
 
         // 테스트 데이터 초기화
         testUser = new User();
@@ -46,28 +46,49 @@ class BookmarkMapperTest {
     }
 
     /* ------------------------------------------------------------------
-     * toBookmarkItem tests
+     * toBookmarkResponse tests
      * ------------------------------------------------------------------ */
 
     @Test
-    @DisplayName("UserBirdBookmark를 BookmarkResponse.Item으로 매핑한다")
-    void toBookmarkItem_success() {
+    @DisplayName("UserBirdBookmark 리스트를 BookmarkResponse로 매핑한다")
+    void toBookmarkResponse_success() {
+        // given
+        UserBirdBookmark secondBookmark = new UserBirdBookmark(testUser, testBird);
+        ReflectionTestUtils.setField(secondBookmark, "id", 4L);
+        List<UserBirdBookmark> bookmarks = List.of(testBookmark, secondBookmark);
+
         // when
-        BookmarkResponse.Item result = bookmarkMapper.toBookmarkItem(testBookmark);
+        BookmarkResponse result = bookmarkWebMapper.toBookmarkResponse(bookmarks);
 
         // then
-        assertEquals(3L, result.id());
-        assertEquals(2L, result.birdId());
+        assertEquals(2, result.items().size());
+        assertEquals(3L, result.items().get(0).id());
+        assertEquals(2L, result.items().get(0).birdId());
+        assertEquals(4L, result.items().get(1).id());
+        assertEquals(2L, result.items().get(1).birdId());
     }
 
     @Test
-    @DisplayName("null UserBirdBookmark는 null을 반환한다")
-    void toBookmarkItem_null() {
+    @DisplayName("빈 리스트는 빈 BookmarkResponse를 반환한다")
+    void toBookmarkResponse_empty() {
+        // given
+        List<UserBirdBookmark> emptyBookmarks = List.of();
+
         // when
-        BookmarkResponse.Item result = bookmarkMapper.toBookmarkItem(null);
+        BookmarkResponse result = bookmarkWebMapper.toBookmarkResponse(emptyBookmarks);
 
         // then
-        assertNull(result);
+        assertTrue(result.items().isEmpty());
+    }
+
+    @Test
+    @DisplayName("null 리스트는 빈 BookmarkResponse를 반환한다")
+    void toBookmarkResponse_null() {
+        // when
+        BookmarkResponse result = bookmarkWebMapper.toBookmarkResponse(null);
+
+        // then
+        assertTrue(result.items().isEmpty());
     }
 
     /* ------------------------------------------------------------------
@@ -83,7 +104,7 @@ class BookmarkMapperTest {
         List<UserBirdBookmark> bookmarks = List.of(testBookmark, secondBookmark);
 
         // when
-        List<BookmarkResponse.Item> result = bookmarkMapper.toBookmarkItems(bookmarks);
+        List<BookmarkResponse.Item> result = bookmarkWebMapper.toBookmarkItems(bookmarks);
 
         // then
         assertEquals(2, result.size());
@@ -100,7 +121,7 @@ class BookmarkMapperTest {
         List<UserBirdBookmark> emptyBookmarks = List.of();
 
         // when
-        List<BookmarkResponse.Item> result = bookmarkMapper.toBookmarkItems(emptyBookmarks);
+        List<BookmarkResponse.Item> result = bookmarkWebMapper.toBookmarkItems(emptyBookmarks);
 
         // then
         assertTrue(result.isEmpty());
@@ -110,50 +131,32 @@ class BookmarkMapperTest {
     @DisplayName("null 리스트는 null을 반환한다")
     void toBookmarkItems_null() {
         // when
-        List<BookmarkResponse.Item> result = bookmarkMapper.toBookmarkItems(null);
+        List<BookmarkResponse.Item> result = bookmarkWebMapper.toBookmarkItems(null);
 
         // then
         assertNull(result);
     }
 
     /* ------------------------------------------------------------------
-     * toBookmarkedBirdDetailResponse tests
+     * toBookmarkItem tests
      * ------------------------------------------------------------------ */
 
     @Test
-    @DisplayName("UserBirdBookmark를 BookmarkedBirdDetailResponse로 매핑한다")
-    void toBirdDetailResponse_success() {
+    @DisplayName("UserBirdBookmark를 BookmarkResponse.Item으로 매핑한다")
+    void toBookmarkItem_success() {
         // when
-        BookmarkedBirdDetailResponse result = bookmarkMapper.toBookmarkedBirdDetailResponse(testBookmark);
+        BookmarkResponse.Item result = bookmarkWebMapper.toBookmarkItem(testBookmark);
 
         // then
-        assertEquals(3L, result.getId());
-        assertEquals(2L, result.getBirdId());
-        assertEquals("참새", result.getKoreanName());
-        assertEquals("Passer montanus", result.getScientificName());
-    }
-
-    @Test
-    @DisplayName("새 이름이 null인 경우 null 값을 올바르게 매핑한다")
-    void toBirdDetailResponse_nullBirdName() {
-        // given
-        ReflectionTestUtils.setField(testBird, "name", null);
-
-        // when
-        BookmarkedBirdDetailResponse result = bookmarkMapper.toBookmarkedBirdDetailResponse(testBookmark);
-
-        // then
-        assertEquals(3L, result.getId());
-        assertEquals(2L, result.getBirdId());
-        assertNull(result.getKoreanName());
-        assertNull(result.getScientificName());
+        assertEquals(3L, result.id());
+        assertEquals(2L, result.birdId());
     }
 
     @Test
     @DisplayName("null UserBirdBookmark는 null을 반환한다")
-    void toBirdDetailResponse_null() {
+    void toBookmarkItem_null() {
         // when
-        BookmarkedBirdDetailResponse result = bookmarkMapper.toBookmarkedBirdDetailResponse(null);
+        BookmarkResponse.Item result = bookmarkWebMapper.toBookmarkItem(null);
 
         // then
         assertNull(result);
@@ -165,7 +168,7 @@ class BookmarkMapperTest {
 
     @Test
     @DisplayName("UserBirdBookmark 리스트를 BookmarkedBirdDetailResponse 리스트로 매핑한다")
-    void toBirdDetailResponseList_success() {
+    void toBookmarkedBirdDetailResponseList_success() {
         // given
         BirdName secondBirdName = new BirdName();
         secondBirdName.setKoreanName("까치");
@@ -181,32 +184,32 @@ class BookmarkMapperTest {
         List<UserBirdBookmark> bookmarks = List.of(testBookmark, secondBookmark);
 
         // when
-        List<BookmarkedBirdDetailResponse> result = bookmarkMapper.toBookmarkedBirdDetailResponseList(bookmarks);
+        List<BookmarkedBirdDetailResponse> result = bookmarkWebMapper.toBookmarkedBirdDetailResponseList(bookmarks);
 
         // then
         assertEquals(2, result.size());
         
         // 첫 번째 북마크
-        assertEquals(3L, result.get(0).getId());
-        assertEquals(2L, result.get(0).getBirdId());
-        assertEquals("참새", result.get(0).getKoreanName());
-        assertEquals("Passer montanus", result.get(0).getScientificName());
+        assertEquals(3L, result.get(0).id());
+        assertEquals(2L, result.get(0).birdId());
+        assertEquals("참새", result.get(0).koreanName());
+        assertEquals("Passer montanus", result.get(0).scientificName());
         
         // 두 번째 북마크
-        assertEquals(4L, result.get(1).getId());
-        assertEquals(5L, result.get(1).getBirdId());
-        assertEquals("까치", result.get(1).getKoreanName());
-        assertEquals("Pica pica", result.get(1).getScientificName());
+        assertEquals(4L, result.get(1).id());
+        assertEquals(5L, result.get(1).birdId());
+        assertEquals("까치", result.get(1).koreanName());
+        assertEquals("Pica pica", result.get(1).scientificName());
     }
 
     @Test
     @DisplayName("빈 리스트는 빈 리스트를 반환한다")
-    void toBirdDetailResponseList_empty() {
+    void toBookmarkedBirdDetailResponseList_empty() {
         // given
         List<UserBirdBookmark> emptyBookmarks = List.of();
 
         // when
-        List<BookmarkedBirdDetailResponse> result = bookmarkMapper.toBookmarkedBirdDetailResponseList(emptyBookmarks);
+        List<BookmarkedBirdDetailResponse> result = bookmarkWebMapper.toBookmarkedBirdDetailResponseList(emptyBookmarks);
 
         // then
         assertTrue(result.isEmpty());
@@ -214,9 +217,52 @@ class BookmarkMapperTest {
 
     @Test
     @DisplayName("null 리스트는 null을 반환한다")
-    void toBirdDetailResponseList_null() {
+    void toBookmarkedBirdDetailResponseList_null() {
         // when
-        List<BookmarkedBirdDetailResponse> result = bookmarkMapper.toBookmarkedBirdDetailResponseList(null);
+        List<BookmarkedBirdDetailResponse> result = bookmarkWebMapper.toBookmarkedBirdDetailResponseList(null);
+
+        // then
+        assertNull(result);
+    }
+
+    /* ------------------------------------------------------------------
+     * toBookmarkedBirdDetailResponse tests
+     * ------------------------------------------------------------------ */
+
+    @Test
+    @DisplayName("UserBirdBookmark를 BookmarkedBirdDetailResponse로 매핑한다")
+    void toBookmarkedBirdDetailResponse_success() {
+        // when
+        BookmarkedBirdDetailResponse result = bookmarkWebMapper.toBookmarkedBirdDetailResponse(testBookmark);
+
+        // then
+        assertEquals(3L, result.id());
+        assertEquals(2L, result.birdId());
+        assertEquals("참새", result.koreanName());
+        assertEquals("Passer montanus", result.scientificName());
+    }
+
+    @Test
+    @DisplayName("새 이름이 null인 경우 null 값을 올바르게 매핑한다")
+    void toBookmarkedBirdDetailResponse_nullBirdName() {
+        // given
+        ReflectionTestUtils.setField(testBird, "name", null);
+
+        // when
+        BookmarkedBirdDetailResponse result = bookmarkWebMapper.toBookmarkedBirdDetailResponse(testBookmark);
+
+        // then
+        assertEquals(3L, result.id());
+        assertEquals(2L, result.birdId());
+        assertNull(result.koreanName());
+        assertNull(result.scientificName());
+    }
+
+    @Test
+    @DisplayName("null UserBirdBookmark는 null을 반환한다")
+    void toBookmarkedBirdDetailResponse_null() {
+        // when
+        BookmarkedBirdDetailResponse result = bookmarkWebMapper.toBookmarkedBirdDetailResponse(null);
 
         // then
         assertNull(result);
@@ -241,21 +287,24 @@ class BookmarkMapperTest {
         UserBirdBookmark complexBookmark = new UserBirdBookmark(testUser, complexBird);
         ReflectionTestUtils.setField(complexBookmark, "id", 456L);
 
-        // when - Item 매핑
-        BookmarkResponse.Item itemResult = bookmarkMapper.toBookmarkItem(complexBookmark);
+        List<UserBirdBookmark> bookmarks = List.of(complexBookmark);
+
+        // when - Response 매핑
+        BookmarkResponse responseResult = bookmarkWebMapper.toBookmarkResponse(bookmarks);
         
         // when - Detail 매핑
-        BookmarkedBirdDetailResponse detailResult = bookmarkMapper.toBookmarkedBirdDetailResponse(complexBookmark);
+        BookmarkedBirdDetailResponse detailResult = bookmarkWebMapper.toBookmarkedBirdDetailResponse(complexBookmark);
 
-        // then - Item 검증
-        assertEquals(456L, itemResult.id());
-        assertEquals(123L, itemResult.birdId());
+        // then - Response 검증
+        assertEquals(1, responseResult.items().size());
+        assertEquals(456L, responseResult.items().get(0).id());
+        assertEquals(123L, responseResult.items().get(0).birdId());
 
         // then - Detail 검증
-        assertEquals(456L, detailResult.getId());
-        assertEquals(123L, detailResult.getBirdId());
-        assertEquals("검은머리물떼새", detailResult.getKoreanName());
-        assertEquals("Haematopus bachmani", detailResult.getScientificName());
+        assertEquals(456L, detailResult.id());
+        assertEquals(123L, detailResult.birdId());
+        assertEquals("검은머리물떼새", detailResult.koreanName());
+        assertEquals("Haematopus bachmani", detailResult.scientificName());
     }
 
     @Test
@@ -269,18 +318,21 @@ class BookmarkMapperTest {
         UserBirdBookmark bookmarkWithoutBirdName = new UserBirdBookmark(testUser, birdWithoutName);
         ReflectionTestUtils.setField(bookmarkWithoutBirdName, "id", 888L);
 
-        // when
-        BookmarkResponse.Item itemResult = bookmarkMapper.toBookmarkItem(bookmarkWithoutBirdName);
-        BookmarkedBirdDetailResponse detailResult = bookmarkMapper.toBookmarkedBirdDetailResponse(bookmarkWithoutBirdName);
+        List<UserBirdBookmark> bookmarks = List.of(bookmarkWithoutBirdName);
 
-        // then - Item은 기본 정보만 가지므로 정상 매핑
-        assertEquals(888L, itemResult.id());
-        assertEquals(999L, itemResult.birdId());
+        // when
+        BookmarkResponse responseResult = bookmarkWebMapper.toBookmarkResponse(bookmarks);
+        BookmarkedBirdDetailResponse detailResult = bookmarkWebMapper.toBookmarkedBirdDetailResponse(bookmarkWithoutBirdName);
+
+        // then - Response는 기본 정보만 가지므로 정상 매핑
+        assertEquals(1, responseResult.items().size());
+        assertEquals(888L, responseResult.items().get(0).id());
+        assertEquals(999L, responseResult.items().get(0).birdId());
 
         // then - Detail은 이름 정보가 null
-        assertEquals(888L, detailResult.getId());
-        assertEquals(999L, detailResult.getBirdId());
-        assertNull(detailResult.getKoreanName());
-        assertNull(detailResult.getScientificName());
+        assertEquals(888L, detailResult.id());
+        assertEquals(999L, detailResult.birdId());
+        assertNull(detailResult.koreanName());
+        assertNull(detailResult.scientificName());
     }
 }

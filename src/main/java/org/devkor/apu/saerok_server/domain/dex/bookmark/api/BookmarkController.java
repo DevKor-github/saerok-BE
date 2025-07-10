@@ -9,9 +9,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkStatusResponse;
-import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkToggleResponse;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.api.dto.response.BookmarkedBirdDetailResponse;
-import org.devkor.apu.saerok_server.domain.dex.bookmark.application.BookmarkService;
+import org.devkor.apu.saerok_server.domain.dex.bookmark.application.BookmarkCommandService;
+import org.devkor.apu.saerok_server.domain.dex.bookmark.application.BookmarkQueryService;
 import org.devkor.apu.saerok_server.global.shared.exception.ErrorResponse;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,8 @@ import java.util.List;
 @RequestMapping("/api/v1/birds/bookmarks")
 public class BookmarkController {
 
-    private final BookmarkService bookmarkService;
+    private final BookmarkCommandService bookmarkCommandService;
+    private final BookmarkQueryService bookmarkQueryService;
 
     @GetMapping("/")
     @PreAuthorize("hasRole('USER')")
@@ -54,7 +55,7 @@ public class BookmarkController {
 
         System.out.println(userId);
         
-        BookmarkResponse response = bookmarkService.getBookmarksResponse(userId);
+        BookmarkResponse response = bookmarkQueryService.getBookmarksResponse(userId);
         return ResponseEntity.ok(response);
     }
 
@@ -81,7 +82,7 @@ public class BookmarkController {
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         Long userId = userPrincipal.getId();
         
-        List<BookmarkedBirdDetailResponse> birdDetails = bookmarkService.getBookmarkedBirdDetailsResponse(userId);
+        List<BookmarkedBirdDetailResponse> birdDetails = bookmarkQueryService.getBookmarkedBirdDetailsResponse(userId);
         return ResponseEntity.ok(birdDetails);
     }
 
@@ -95,7 +96,7 @@ public class BookmarkController {
                     @ApiResponse(
                         responseCode = "200",
                         description = "토글 성공",
-                        content = @Content(schema = @Schema(implementation = BookmarkToggleResponse.class))
+                        content = @Content(schema = @Schema(implementation = BookmarkStatusResponse.class))
                     ),
                     @ApiResponse(
                             responseCode = "401",
@@ -109,12 +110,12 @@ public class BookmarkController {
                     )
             }
     )
-    public ResponseEntity<BookmarkToggleResponse> toggleBookmark(
+    public ResponseEntity<BookmarkStatusResponse> toggleBookmark(
             @PathVariable Long birdId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         Long userId = userPrincipal.getId();
         
-        BookmarkToggleResponse response = bookmarkService.toggleBookmarkResponse(userId, birdId);
+        BookmarkStatusResponse response = bookmarkCommandService.toggleBookmarkResponse(userId, birdId);
         return ResponseEntity.ok(response);
     }
 
@@ -142,7 +143,7 @@ public class BookmarkController {
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         Long userId = userPrincipal.getId();
         
-        BookmarkStatusResponse statusResponse = bookmarkService.getBookmarkStatusResponse(userId, birdId);
+        BookmarkStatusResponse statusResponse = bookmarkQueryService.getBookmarkStatusResponse(userId, birdId);
         return ResponseEntity.ok(statusResponse);
     }
 }
