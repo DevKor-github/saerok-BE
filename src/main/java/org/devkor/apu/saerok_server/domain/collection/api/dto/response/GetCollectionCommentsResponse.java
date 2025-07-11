@@ -16,6 +16,10 @@ public record GetCollectionCommentsResponse(
             Long userId,
             @Schema(description = "댓글 내용", example = "멋진 관찰 기록이네요!", requiredMode = Schema.RequiredMode.REQUIRED)
             String content,
+            @Schema(description = "좋아요 수", example = "5", requiredMode = Schema.RequiredMode.REQUIRED)
+            int likeCount,
+            @Schema(description = "좋아요 눌렀는지 여부", example = "true")
+            Boolean isLiked,
             @Schema(description = "작성 시각", example = "2025-07-05 03:10:00", requiredMode = Schema.RequiredMode.REQUIRED)
             LocalDateTime createdAt,
             @Schema(description = "수정 시각", example = "2025-07-05 04:21:00", requiredMode = Schema.RequiredMode.REQUIRED)

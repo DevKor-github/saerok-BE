@@ -4,6 +4,7 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollec
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -29,6 +31,7 @@ class CollectionCommentQueryServiceTest {
 
     @Mock CollectionCommentRepository commentRepo;
     @Mock CollectionRepository       collectionRepo;
+    @Mock CollectionCommentLikeRepository commentLikeRepo;
     @Mock CollectionCommentWebMapper mapper;
 
     private static UserBirdCollection collection(long id) {
@@ -38,33 +41,60 @@ class CollectionCommentQueryServiceTest {
     }
 
     @BeforeEach
-    void init() { sut = new CollectionCommentQueryService(commentRepo, collectionRepo, mapper); }
+    void init() { sut = new CollectionCommentQueryService(commentRepo, collectionRepo, commentLikeRepo, mapper); }
 
     /* ------------------------------------------------------------------ */
     @Nested @DisplayName("댓글 목록 조회")
     class ReadList {
 
-        @Test @DisplayName("성공")
-        void success() {
+        @Test @DisplayName("성공 - 비회원")
+        void success_guest() {
             UserBirdCollection coll = collection(COLL_ID);
             when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
 
-            List<UserBirdCollectionComment> empty = List.of();
-            when(commentRepo.findByCollectionId(COLL_ID)).thenReturn(empty);
+            List<UserBirdCollectionComment> comments = List.of();
+            when(commentRepo.findByCollectionId(COLL_ID)).thenReturn(comments);
+
+            Map<Long, Long> likeCounts = Map.of();
+            when(commentLikeRepo.countLikesByCommentIds(List.of())).thenReturn(likeCounts);
 
             GetCollectionCommentsResponse expected = new GetCollectionCommentsResponse(List.of());
-            when(mapper.toGetCollectionCommentsResponse(empty)).thenReturn(expected);
+            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, Map.of())).thenReturn(expected);
 
-            var res = sut.getComments(COLL_ID);
+            var res = sut.getComments(COLL_ID, null); // userId = null (비회원)
 
             assertThat(res).isSameAs(expected);
-            verify(mapper).toGetCollectionCommentsResponse(empty);
+            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, Map.of());
+        }
+        
+        @Test @DisplayName("성공 - 회원")
+        void success_loggedInUser() {
+            Long userId = 123L;
+            UserBirdCollection coll = collection(COLL_ID);
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
+
+            List<UserBirdCollectionComment> comments = List.of();
+            when(commentRepo.findByCollectionId(COLL_ID)).thenReturn(comments);
+
+            Map<Long, Long> likeCounts = Map.of();
+            when(commentLikeRepo.countLikesByCommentIds(List.of())).thenReturn(likeCounts);
+            
+            Map<Long, Boolean> likeStatuses = Map.of();
+            when(commentLikeRepo.findLikeStatusByUserIdAndCommentIds(userId, List.of())).thenReturn(likeStatuses);
+
+            GetCollectionCommentsResponse expected = new GetCollectionCommentsResponse(List.of());
+            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses)).thenReturn(expected);
+
+            var res = sut.getComments(COLL_ID, userId);
+
+            assertThat(res).isSameAs(expected);
+            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses);
         }
 
         @Test @DisplayName("컬렉션 없음 → NotFoundException")
         void notFound() {
             when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> sut.getComments(COLL_ID))
+            assertThatThrownBy(() -> sut.getComments(COLL_ID, null))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
     }
