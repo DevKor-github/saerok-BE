@@ -21,6 +21,9 @@ public record MyCollectionsResponse(
         String koreanName,
 
         @Schema(description = "좋아요 수", example = "15")
-        Integer likeCount
+        Long likeCount,
+
+        @Schema(description = "댓글 수", example = "7")
+        Long commentCount
     ) { }
 }

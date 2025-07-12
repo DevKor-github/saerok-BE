@@ -4,6 +4,7 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollec
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
@@ -40,6 +41,7 @@ class CollectionQueryServiceTest {
     @Mock CollectionRepository collectionRepository;
     @Mock CollectionImageRepository collectionImageRepository;
     @Mock CollectionLikeRepository collectionLikeRepository;
+    @Mock CollectionCommentRepository collectionCommentRepository;
     @Mock CollectionWebMapper collectionWebMapper;
     @Mock UserRepository userRepository;
     @Mock
@@ -55,6 +57,7 @@ class CollectionQueryServiceTest {
                 collectionRepository,
                 collectionImageRepository,
                 collectionLikeRepository,
+                collectionCommentRepository,
                 collectionWebMapper,
                 userRepository,
                 imageDomainService
@@ -91,8 +94,9 @@ class CollectionQueryServiceTest {
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
         given(collectionImageRepository.findObjectKeysByCollectionId(collectionId)).willReturn(List.of(objectKey));
         given(collectionLikeRepository.countByCollectionId(collectionId)).willReturn(5L);
+        given(collectionCommentRepository.countByCollectionId(collectionId)).willReturn(3L);
         given(imageDomainService.toUploadImageUrl(objectKey)).willReturn(imageUrl);
-        given(collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, 5, false)).willReturn(expected);
+        given(collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, 5L, 3L, false)).willReturn(expected);
 
         // when
         GetCollectionDetailResponse actual = collectionQueryService.getCollectionDetailResponse(null, collectionId);
@@ -121,9 +125,10 @@ class CollectionQueryServiceTest {
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
         given(collectionImageRepository.findObjectKeysByCollectionId(collectionId)).willReturn(List.of());
         given(collectionLikeRepository.countByCollectionId(collectionId)).willReturn(3L);
+        given(collectionCommentRepository.countByCollectionId(collectionId)).willReturn(2L);
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(true);
         GetCollectionDetailResponse expected = new GetCollectionDetailResponse();
-        given(collectionWebMapper.toGetCollectionDetailResponse(collection, null, 3, true)).willReturn(expected);
+        given(collectionWebMapper.toGetCollectionDetailResponse(collection, null, 3L, 2L, true)).willReturn(expected);
 
         // when
         GetCollectionDetailResponse actual =
