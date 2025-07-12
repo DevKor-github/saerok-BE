@@ -131,7 +131,7 @@ class CollectionCommentCommandServiceTest {
     class Delete {
 
         @Test @DisplayName("본인 댓글 삭제 성공")
-        void success() {
+        void successByCommentOwner() {
             User owner = user(OWNER_ID);
             UserBirdCollection coll = collection(COLL_ID, owner);
             UserBirdCollectionComment cm = comment(COMMENT_ID, owner, coll, "bye");
@@ -142,17 +142,33 @@ class CollectionCommentCommandServiceTest {
 
             verify(commentRepo).remove(cm);
         }
+        
+        @Test @DisplayName("컬렉션 소유자가 남의 댓글 삭제 성공")
+        void successByCollectionOwner() {
+            User collectionOwner = user(OWNER_ID);
+            User commenter = user(OTHER_ID);
+            UserBirdCollection coll = collection(COLL_ID, collectionOwner);
+            UserBirdCollectionComment cm = comment(COMMENT_ID, commenter, coll, "comment by other");
 
-        @Test @DisplayName("남의 댓글 삭제 → ForbiddenException")
+            when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
+
+            sut.deleteComment(OWNER_ID, COLL_ID, COMMENT_ID);
+
+            verify(commentRepo).remove(cm);
+        }
+
+        @Test @DisplayName("권한 없는 사용자가 댓글 삭제 → ForbiddenException")
         void forbidden() {
-            User other = user(OTHER_ID);
-            UserBirdCollection coll = collection(COLL_ID, other);
-            UserBirdCollectionComment cm = comment(COMMENT_ID, other, coll, "bye");
+            User collectionOwner = user(OWNER_ID);
+            User commenter = user(OTHER_ID);
+            User unauthorizedUser = user(3L);  // 다른 사용자
+            UserBirdCollection coll = collection(COLL_ID, collectionOwner);
+            UserBirdCollectionComment cm = comment(COMMENT_ID, commenter, coll, "bye");
 
             when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
 
             assertThatThrownBy(() ->
-                    sut.deleteComment(OWNER_ID, COLL_ID, COMMENT_ID))
+                    sut.deleteComment(unauthorizedUser.getId(), COLL_ID, COMMENT_ID))
                     .isExactlyInstanceOf(ForbiddenException.class);
         }
     }

@@ -75,7 +75,12 @@ public class CollectionCommentCommandService {
         if (!comment.getCollection().getId().equals(collectionId)) {
             throw new NotFoundException("해당 컬렉션에 속한 댓글이 아니에요");
         }
-        if (!comment.getUser().getId().equals(userId)) {
+        
+        // 댓글 작성자이거나 컬렉션 소유자인 경우에만 삭제 가능
+        boolean isCommentOwner = comment.getUser().getId().equals(userId);
+        boolean isCollectionOwner = comment.getCollection().getUser().getId().equals(userId);
+        
+        if (!isCommentOwner && !isCollectionOwner) {
             throw new ForbiddenException("해당 댓글에 대한 삭제 권한이 없어요");
         }
 
