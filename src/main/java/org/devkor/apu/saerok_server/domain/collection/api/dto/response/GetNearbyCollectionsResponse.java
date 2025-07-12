@@ -42,7 +42,10 @@ public class GetNearbyCollectionsResponse {
         private String address;
 
         @Schema(description = "좋아요 수", example = "15")
-        private Integer likeCount;
+        private Long likeCount;
+
+        @Schema(description = "댓글 수", example = "7")
+        private Long commentCount;
 
         @Schema(description = "내가 좋아요 눌렀는지 여부", example = "true")
         private Boolean isLiked;
