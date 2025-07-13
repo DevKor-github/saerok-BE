@@ -49,8 +49,15 @@ public class CollectionCommentQueryService {
             ? commentLikeRepository.findLikeStatusByUserIdAndCommentIds(userId, commentIds)
             : commentIds.stream().collect(Collectors.toMap(id -> id, id -> false));
         
-        // 5. 응답 생성
-        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses);
+        // 5. 내 댓글 여부 판단 (비회원인 경우 모두 false)
+        Map<Long, Boolean> mineStatuses = comments.stream()
+                .collect(Collectors.toMap(
+                    UserBirdCollectionComment::getId,
+                    comment -> userId != null && userId.equals(comment.getUser().getId())
+                ));
+        
+        // 6. 응답 생성
+        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses);
     }
 
     /* 댓글 개수 */

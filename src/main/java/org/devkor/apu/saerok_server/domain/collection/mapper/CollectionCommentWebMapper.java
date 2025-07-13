@@ -16,7 +16,8 @@ public interface CollectionCommentWebMapper {
     default GetCollectionCommentsResponse toGetCollectionCommentsResponse(
             List<UserBirdCollectionComment> entities, 
             Map<Long, Long> likeCounts,
-            Map<Long, Boolean> likeStatuses) {
+            Map<Long, Boolean> likeStatuses,
+            Map<Long, Boolean> mineStatuses) {
         if (entities == null || entities.isEmpty()) {
             return new GetCollectionCommentsResponse(List.of());
         }
@@ -32,26 +33,33 @@ public interface CollectionCommentWebMapper {
             if (!likeStatuses.containsKey(commentId)) {
                 throw new IllegalStateException("likeStatuses에 댓글 ID " + commentId + "가 없습니다.");
             }
+            if (!mineStatuses.containsKey(commentId)) {
+                throw new IllegalStateException("mineStatuses에 댓글 ID " + commentId + "가 없습니다.");
+            }
         }
         
         List<GetCollectionCommentsResponse.Item> items = entities.stream()
                 .map(comment -> {
-                    int likeCount = likeCounts.get(comment.getId()).intValue();
-                    Boolean isLiked = likeStatuses.get(comment.getId());
-                    return toCommentItem(comment, likeCount, isLiked);
+                    Long commentId = comment.getId();
+                    int likeCount = likeCounts.get(commentId).intValue();
+                    Boolean isLiked = likeStatuses.get(commentId);
+                    Boolean isMine = mineStatuses.get(commentId);
+                    return toCommentItem(comment, likeCount, isLiked, isMine);
                 })
                 .toList();
         return new GetCollectionCommentsResponse(items);
     }
 
     /* 단일 엔티티 → Item DTO */
-    default GetCollectionCommentsResponse.Item toCommentItem(UserBirdCollectionComment c, int likeCount, Boolean isLiked) {
+    default GetCollectionCommentsResponse.Item toCommentItem(UserBirdCollectionComment c, int likeCount, Boolean isLiked, Boolean isMine) {
         return new GetCollectionCommentsResponse.Item(
                 c.getId(),
                 c.getUser().getId(),
+                c.getUser().getNickname(),
                 c.getContent(),
                 likeCount,
                 isLiked,
+                isMine,
                 OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getCreatedAt()),
                 OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getUpdatedAt())
         );
