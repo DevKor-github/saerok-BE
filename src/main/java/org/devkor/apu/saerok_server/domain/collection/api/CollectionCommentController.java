@@ -101,7 +101,8 @@ public class CollectionCommentController {
     @GetMapping("/{collectionId}/comments")
     @PermitAll
     @Operation(
-            summary = "컬렉션 댓글 목록 조회",
+            summary = "컬렉션 댓글 목록 조회 (인증: optional)",
+            security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공",
                             content = @Content(schema = @Schema(implementation = GetCollectionCommentsResponse.class))),
@@ -109,9 +110,11 @@ public class CollectionCommentController {
             }
     )
     public GetCollectionCommentsResponse listComments(
-            @PathVariable Long collectionId
+            @PathVariable Long collectionId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        return commentQueryService.getComments(collectionId);
+        Long userId = userPrincipal == null ? null : userPrincipal.getId();
+        return commentQueryService.getComments(collectionId, userId);
     }
 
     /* 댓글 개수 */
