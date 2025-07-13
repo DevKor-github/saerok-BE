@@ -22,6 +22,8 @@ public record GetCollectionCommentsResponse(
             int likeCount,
             @Schema(description = "좋아요 눌렀는지 여부", example = "true")
             Boolean isLiked,
+            @Schema(description = "내 댓글인지 여부", example = "false")
+            Boolean isMine,
             @Schema(description = "작성 시각", example = "2025-07-05 03:10:00", requiredMode = Schema.RequiredMode.REQUIRED)
             LocalDateTime createdAt,
             @Schema(description = "수정 시각", example = "2025-07-05 04:21:00", requiredMode = Schema.RequiredMode.REQUIRED)

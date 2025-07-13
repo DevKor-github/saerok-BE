@@ -59,12 +59,12 @@ class CollectionCommentQueryServiceTest {
             when(commentLikeRepo.countLikesByCommentIds(List.of())).thenReturn(likeCounts);
 
             GetCollectionCommentsResponse expected = new GetCollectionCommentsResponse(List.of());
-            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, Map.of())).thenReturn(expected);
+            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, Map.of(), Map.of())).thenReturn(expected);
 
             var res = sut.getComments(COLL_ID, null); // userId = null (비회원)
 
             assertThat(res).isSameAs(expected);
-            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, Map.of());
+            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, Map.of(), Map.of());
         }
         
         @Test @DisplayName("성공 - 회원")
@@ -83,12 +83,12 @@ class CollectionCommentQueryServiceTest {
             when(commentLikeRepo.findLikeStatusByUserIdAndCommentIds(userId, List.of())).thenReturn(likeStatuses);
 
             GetCollectionCommentsResponse expected = new GetCollectionCommentsResponse(List.of());
-            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses)).thenReturn(expected);
+            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of())).thenReturn(expected);
 
             var res = sut.getComments(COLL_ID, userId);
 
             assertThat(res).isSameAs(expected);
-            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses);
+            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of());
         }
 
         @Test @DisplayName("컬렉션 없음 → NotFoundException")
