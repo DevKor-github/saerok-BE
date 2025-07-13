@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Repository
@@ -75,6 +76,10 @@ public class CollectionCommentLikeRepository {
             return Map.of();
         }
 
+        // 초기값을 0으로 설정
+        Map<Long, Long> likeCountMap = commentIds.stream()
+                .collect(Collectors.toMap(Function.identity(), id -> 0L));
+
         List<Object[]> results = em.createQuery(
                 "SELECT cl.comment.id, COUNT(cl) FROM UserBirdCollectionCommentLike cl " +
                 "WHERE cl.comment.id IN :commentIds " +
@@ -83,11 +88,14 @@ public class CollectionCommentLikeRepository {
                 .setParameter("commentIds", commentIds)
                 .getResultList();
 
-        return results.stream()
-                .collect(Collectors.toMap(
-                    arr -> (Long) arr[0],  // commentId
-                    arr -> (Long) arr[1]   // likeCount
-                ));
+        // 결과 반영
+        for (Object[] result : results) {
+            Long commentId = (Long) result[0];
+            Long count = (Long) result[1];
+            likeCountMap.put(commentId, count);
+        }
+
+        return likeCountMap;
     }
 
     /**
