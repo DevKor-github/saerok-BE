@@ -32,20 +32,18 @@ public class CollectionCommentLikeCommandService {
         UserBirdCollectionComment comment = collectionCommentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("댓글을 찾을 수 없습니다."));
 
-        boolean exists = collectionCommentLikeRepository.existsByUserIdAndCommentId(userId, commentId);
+        UserBirdCollectionCommentLike existingLike = collectionCommentLikeRepository
+                .findByUserIdAndCommentId(userId, commentId)
+                .orElse(null);
 
-        if (exists) {
+        if (existingLike != null) {
             // 좋아요가 이미 존재하면 제거
-            UserBirdCollectionCommentLike commentLike = collectionCommentLikeRepository.findByUserIdAndCommentId(userId, commentId)
-                    .orElseThrow(() -> new BadRequestException("좋아요 데이터를 찾을 수 없습니다."));
-            collectionCommentLikeRepository.remove(commentLike);
-            
+            collectionCommentLikeRepository.remove(existingLike);
             return new LikeStatusResponse(false);
         } else {
             // 좋아요가 없으면 추가
             UserBirdCollectionCommentLike commentLike = new UserBirdCollectionCommentLike(user, comment);
             collectionCommentLikeRepository.save(commentLike);
-            
             return new LikeStatusResponse(true);
         }
     }

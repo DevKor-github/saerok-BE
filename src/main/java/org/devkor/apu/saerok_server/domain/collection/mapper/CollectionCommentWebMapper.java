@@ -20,10 +20,24 @@ public interface CollectionCommentWebMapper {
         if (entities == null || entities.isEmpty()) {
             return new GetCollectionCommentsResponse(List.of());
         }
+
+        for (UserBirdCollectionComment entity : entities) {
+            Long commentId = entity.getId();
+            if (commentId == null) {
+                throw new IllegalStateException("댓글 ID가 null입니다.");
+            }
+            if (!likeCounts.containsKey(commentId)) {
+                throw new IllegalStateException("likeCounts에 댓글 ID " + commentId + "가 없습니다.");
+            }
+            if (!likeStatuses.containsKey(commentId)) {
+                throw new IllegalStateException("likeStatuses에 댓글 ID " + commentId + "가 없습니다.");
+            }
+        }
+        
         List<GetCollectionCommentsResponse.Item> items = entities.stream()
                 .map(comment -> {
-                    int likeCount = likeCounts.getOrDefault(comment.getId(), 0L).intValue();
-                    Boolean isLiked = likeStatuses.getOrDefault(comment.getId(), false);
+                    int likeCount = likeCounts.get(comment.getId()).intValue();
+                    Boolean isLiked = likeStatuses.get(comment.getId());
                     return toCommentItem(comment, likeCount, isLiked);
                 })
                 .toList();
