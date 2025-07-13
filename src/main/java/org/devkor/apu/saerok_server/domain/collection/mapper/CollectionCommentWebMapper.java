@@ -49,6 +49,7 @@ public interface CollectionCommentWebMapper {
         return new GetCollectionCommentsResponse.Item(
                 c.getId(),
                 c.getUser().getId(),
+                c.getUser().getNickname(),
                 c.getContent(),
                 likeCount,
                 isLiked,

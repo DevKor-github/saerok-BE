@@ -35,7 +35,12 @@ class CollectionCommentRepositoryTest extends AbstractPostgresContainerTest {
         collUserField.setAccessible(true);
     }
 
-    private User user() { User u = new User(); em.persist(u); return u; }
+    private User user() {
+        User u = User.createUser("test@example.com");
+        u.setNickname("testUser");
+        em.persist(u);
+        return u;
+    }
 
     private UserBirdCollection collection(User owner) {
         try {
