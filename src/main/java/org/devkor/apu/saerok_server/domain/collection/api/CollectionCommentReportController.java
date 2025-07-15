@@ -33,8 +33,7 @@ public class CollectionCommentReportController {
                             content = @Content(schema = @Schema(implementation = ReportCollectionCommentResponse.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
                     @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "댓글 또는 컬렉션이 존재하지 않음", content = @Content),
-                    @ApiResponse(responseCode = "409", description = "이미 신고한 댓글", content = @Content)
+                    @ApiResponse(responseCode = "404", description = "댓글 또는 컬렉션이 존재하지 않음 (또는 이미 신고한 댓글)", content = @Content)
             }
     )
     @ResponseStatus(HttpStatus.CREATED)
