@@ -40,5 +40,14 @@ public class GetNearbyCollectionsResponse {
 
         @Schema(description = "관찰 지점의 주소", example = "서울시 성동구 성수동")
         private String address;
+
+        @Schema(description = "좋아요 수", example = "15")
+        private Long likeCount;
+
+        @Schema(description = "댓글 수", example = "7")
+        private Long commentCount;
+
+        @Schema(description = "내가 좋아요 눌렀는지 여부", example = "true")
+        private Boolean isLiked;
     }
 }

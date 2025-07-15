@@ -238,6 +238,8 @@ public class CollectionController {
             - collectionId
             - imageUrl
             - koreanName
+            - likeCount
+            - commentCount
 
             """,
             responses = {
@@ -366,7 +368,7 @@ public class CollectionController {
     @GetMapping("/nearby")
     @PermitAll
     @Operation(
-            summary = "주위의 컬렉션 조회",
+            summary = "주위의 컬렉션 조회 (인증: optional)",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
                     주위의 컬렉션을 조회합니다.

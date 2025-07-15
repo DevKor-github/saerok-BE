@@ -9,7 +9,9 @@ import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollect
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
@@ -31,6 +33,8 @@ public class CollectionQueryService {
     
     private final CollectionRepository collectionRepository;
     private final CollectionImageRepository collectionImageRepository;
+    private final CollectionLikeRepository collectionLikeRepository;
+    private final CollectionCommentRepository collectionCommentRepository;
     private final CollectionWebMapper collectionWebMapper;
     private final UserRepository userRepository;
     private final ImageDomainService imageDomainService;
@@ -68,11 +72,19 @@ public class CollectionQueryService {
                     String objectKey = collectionImageRepository.findObjectKeysByCollectionId(collection.getId()).stream()
                             .findFirst().orElse(null);
                     String imageUrl = objectKey != null ? imageDomainService.toUploadImageUrl(objectKey) : null;
+                    
+                    // 좋아요 수 조회
+                    long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
+                    
+                    // 댓글 수 조회
+                    long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
 
                     return new MyCollectionsResponse.Item(
                             collection.getId(),
                             imageUrl,
-                            collection.getBird() == null ? null : collection.getBird().getName().getKoreanName()
+                            collection.getBird() == null ? null : collection.getBird().getName().getKoreanName(),
+                            likeCount,
+                            commentCount
                     );
                 })
                 .toList();
@@ -96,8 +108,17 @@ public class CollectionQueryService {
 
         List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collectionId);
         String imageUrl = objectKeys.isEmpty() ? null : imageDomainService.toUploadImageUrl(objectKeys.getFirst());
+        
+        // 좋아요 수 조회
+        long likeCount = collectionLikeRepository.countByCollectionId(collectionId);
+        
+        // 댓글 수 조회
+        long commentCount = collectionCommentRepository.countByCollectionId(collectionId);
+        
+        // 내가 좋아요 눌렀는지 확인 (비회원인 경우 false)
+        boolean isLiked = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
 
-        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl);
+        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, likeCount, commentCount, isLiked);
     }
 
     public GetNearbyCollectionsResponse getNearbyCollections(GetNearbyCollectionsCommand command) {
@@ -116,7 +137,17 @@ public class CollectionQueryService {
                 .map(collection -> {
                     List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collection.getId());
                     String imageUrl = objectKeys.isEmpty() ? null : imageDomainService.toUploadImageUrl(objectKeys.getFirst());
-                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl);
+                    
+                    // 좋아요 수 조회
+                    long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
+                    
+                    // 댓글 수 조회
+                    long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
+                    
+                    // 내가 좋아요 눌렀는지 확인 (비회원인 경우 false)
+                    boolean isLiked = command.userId() != null && collectionLikeRepository.existsByUserIdAndCollectionId(command.userId(), collection.getId());
+                    
+                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl, likeCount, commentCount, isLiked);
                 })
                 .toList();
         // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도

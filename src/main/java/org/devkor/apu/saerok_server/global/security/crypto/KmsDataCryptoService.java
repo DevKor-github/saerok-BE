@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.global.security.crypto;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.global.security.util.SecureRandomBytesGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,6 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 @Component
@@ -22,6 +22,7 @@ import java.util.Arrays;
 public class KmsDataCryptoService implements DataCryptoService{
 
     private final KmsClient kms;
+    private final SecureRandomBytesGenerator secureRandomBytesGenerator;
 
     @Value("${aws.kms.key-id}")
     private String cmkId;
@@ -38,7 +39,7 @@ public class KmsDataCryptoService implements DataCryptoService{
             byte[] cdk = dk.ciphertextBlob().asByteArray();
 
             // AES-256-GCM 암호화
-            byte[] iv = randomBytes(12);
+            byte[] iv = secureRandomBytesGenerator.generate(12);
             Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
             c.init(Cipher.ENCRYPT_MODE,
                     new SecretKeySpec(pdk, "AES"),
@@ -75,11 +76,5 @@ public class KmsDataCryptoService implements DataCryptoService{
             throw new RuntimeException(e);
         }
 
-    }
-
-    private byte[] randomBytes(int length) {
-        byte[] bytes = new byte[length];
-        new SecureRandom().nextBytes(bytes);
-        return bytes;
     }
 }

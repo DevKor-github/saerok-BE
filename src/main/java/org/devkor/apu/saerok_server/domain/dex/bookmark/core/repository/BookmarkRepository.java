@@ -1,13 +1,8 @@
 package org.devkor.apu.saerok_server.domain.dex.bookmark.core.repository;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
-import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.core.entity.UserBirdBookmark;
-import org.devkor.apu.saerok_server.domain.user.core.entity.User;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,8 +13,6 @@ import java.util.Optional;
 public class BookmarkRepository {
 
     private final EntityManager em;
-    private final UserRepository userRepository;
-    private final BirdRepository birdRepository;
 
     /**
      * 사용자의 모든 북마크를 조회합니다.
@@ -36,21 +29,38 @@ public class BookmarkRepository {
     }
 
     /**
-     * 사용자와 조류 ID를 기준으로 북마크 존재 여부를 확인합니다.
-     * @param userId 사용자 ID
-     * @param birdId 조류 ID
-     * @return 북마크 존재 여부
+     * 사용자와 조류 ID를 기준으로 북마크를 조회합니다.
      */
-    public boolean existsByUserIdAndBirdId(Long userId, Long birdId) {
-        Long count = em.createQuery(
-                "SELECT COUNT(b) FROM UserBirdBookmark b " +
+    public Optional<UserBirdBookmark> findByUserIdAndBirdId(Long userId, Long birdId) {
+        List<UserBirdBookmark> results = em.createQuery(
+                "SELECT b FROM UserBirdBookmark b " +
+                "JOIN b.bird bird " +
                 "WHERE b.user.id = :userId " +
-                "AND b.bird.id = :birdId", Long.class)
+                "AND b.bird.id = :birdId " +
+                "AND bird.deletedAt IS NULL", UserBirdBookmark.class)
                 .setParameter("userId", userId)
                 .setParameter("birdId", birdId)
                 .setMaxResults(1)
-                .getSingleResult();
-        return count > 0;
+                .getResultList();
+        
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
+    }
+
+    /**
+     * 사용자와 조류 ID를 기준으로 북마크 존재 여부를 확인합니다.
+     */
+    public boolean existsByUserIdAndBirdId(Long userId, Long birdId) {
+        return !em.createQuery(
+                "SELECT 1 FROM UserBirdBookmark b " +
+                "JOIN b.bird bird " +
+                "WHERE b.user.id = :userId " +
+                "AND b.bird.id = :birdId " +
+                "AND bird.deletedAt IS NULL", Integer.class)
+                .setParameter("userId", userId)
+                .setParameter("birdId", birdId)
+                .setMaxResults(1)
+                .getResultList()
+                .isEmpty();
     }
 
     /**
@@ -59,8 +69,9 @@ public class BookmarkRepository {
     public List<UserBirdBookmark> findAllWithBirdDetailsByUserId(Long userId) {
         return em.createQuery(
                 "SELECT b FROM UserBirdBookmark b " +
-                "JOIN FETCH b.bird " +
+                "JOIN FETCH b.bird bird " +
                 "WHERE b.user.id = :userId " +
+                "AND bird.deletedAt IS NULL " +
                 "ORDER BY b.createdAt DESC", UserBirdBookmark.class)
                 .setParameter("userId", userId)
                 .getResultList();
@@ -69,27 +80,8 @@ public class BookmarkRepository {
     public void save(UserBirdBookmark bookmark) {
         em.persist(bookmark);
     }
-    
-    /**
-     * 사용자와 조류 ID를 기준으로 북마크를 삭제합니다.
-     * @param userId 사용자 ID
-     * @param birdId 조류 ID
-     */
-    public void deleteByUserIdAndBirdId(Long userId, Long birdId) {
-        em.createQuery(
-                "DELETE FROM UserBirdBookmark b " +
-                "WHERE b.user.id = :userId " +
-                "AND b.bird.id = :birdId")
-                .setParameter("userId", userId)
-                .setParameter("birdId", birdId)
-                .executeUpdate();
-    }
 
-    public Optional<User> findUserById(Long userId) {
-        return userRepository.findById(userId);
-    }
-
-    public Optional<Bird> findBirdById(Long birdId) {
-        return birdRepository.findById(birdId);
+    public void remove(UserBirdBookmark bookmark) {
+        em.remove(bookmark);
     }
 }
