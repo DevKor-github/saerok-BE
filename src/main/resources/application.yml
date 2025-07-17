@@ -29,6 +29,10 @@ api_prefix: /api/v1
 jwt:
   secret: ${JWT_SECRET}
 
+firebase:
+  admin:
+    key-path: classpath:config/firebase-admin-key.json
+
 app:
   cookie:
     secure: false
