@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record GetCollectionCommentsResponse(
-    List<Item> items
+    List<Item> items,
+    @Schema(description = "내 컬렉션인지 여부", example = "true")
+    Boolean isMyCollection
 ) {
 
     public record Item(
