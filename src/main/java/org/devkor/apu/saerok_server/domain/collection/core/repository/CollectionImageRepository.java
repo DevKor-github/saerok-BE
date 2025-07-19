@@ -6,7 +6,9 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -44,4 +46,28 @@ public class CollectionImageRepository {
                 .setParameter("collectionId", collectionId)
                 .executeUpdate();
     }
+
+    /**
+     * 여러 컬렉션의 '첫번째 이미지' objectKey 를 한 방에 가져옴
+     * (orderIndex 가장 작은 것 1개)
+     */
+    public Map<Long, String> findThumbKeysByCollectionIds(List<Long> collectionIds) {
+        return em.createQuery("""
+            SELECT i.collection.id, i.objectKey
+            FROM UserBirdCollectionImage i
+            WHERE i.collection.id IN :ids
+              AND i.orderIndex = (
+                  SELECT MIN(i2.orderIndex)
+                  FROM UserBirdCollectionImage i2
+                  WHERE i2.collection.id = i.collection.id
+              )
+            """, Object[].class)
+                .setParameter("ids", collectionIds)
+                .getResultStream()
+                .collect(Collectors.toMap(
+                        r -> (Long)   r[0],
+                        r -> (String) r[1]
+                ));
+    }
+
 }

@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.collection.core.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Repository;
@@ -85,6 +86,21 @@ public class CollectionRepository {
                 .setParameter("refPoint", ref)
                 .setParameter("radius", radiusMeters)
                 .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    /**
+     * bird_id 가 비어 있고 공개(PUBLIC)인 컬렉션 조회 + 작성자 fetch join
+     */
+    public List<UserBirdCollection> findPublicPendingCollections() {
+        return em.createQuery("""
+            SELECT c FROM UserBirdCollection c
+            JOIN FETCH c.user u
+            WHERE c.accessLevel = :public
+              AND c.bird IS NULL
+            ORDER BY c.createdAt DESC
+            """, UserBirdCollection.class)
+                .setParameter("public", AccessLevelType.PUBLIC)
                 .getResultList();
     }
 }
