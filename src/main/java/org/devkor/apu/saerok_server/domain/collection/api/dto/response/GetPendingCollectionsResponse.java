@@ -1,10 +1,27 @@
 package org.devkor.apu.saerok_server.domain.collection.api.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.List;
 
-public record GetPendingCollectionsResponse(List<Item> items) {
-    public record Item(Long   collectionId,
-                       String imageUrl,
-                       String note,
-                       String nickname) {}
+@Schema(description = "bird_id 미확정 PUBLIC 컬렉션 목록 응답")
+public record GetPendingCollectionsResponse(
+        @Schema(description = "미확정 컬렉션 목록")
+        List<Item> items
+) {
+
+    @Schema(name = "GetPendingCollectionsResponse.Item", description = "미확정 bird_id 컬렉션 개별 항목")
+    public record Item(
+            @Schema(description = "컬렉션 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
+            Long collectionId,
+
+            @Schema(description = "대표 이미지 URL", example = "https://cdn.saerok.dev/images/abc.jpg")
+            String imageUrl,
+
+            @Schema(description = "한 줄 평", example = "처음 보는 새 발견")
+            String note,
+
+            @Schema(description = "작성자 닉네임", example = "새덕후99", requiredMode = Schema.RequiredMode.REQUIRED)
+            String nickname
+    ) {}
 }
