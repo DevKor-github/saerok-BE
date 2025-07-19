@@ -98,7 +98,7 @@ public class CollectionRepository {
             JOIN FETCH c.user u
             WHERE c.accessLevel = :public
               AND c.bird IS NULL
-            ORDER BY c.createdAt DESC
+            ORDER BY c.birdIdSuggestionRequestedAt DESC
             """, UserBirdCollection.class)
                 .setParameter("public", AccessLevelType.PUBLIC)
                 .getResultList();
