@@ -74,33 +74,6 @@ public class BirdIdSuggestionRepository {
     /* ────────────────────────── 컬렉션 단위 조회 ────────────────────────── */
 
     /**
-     * 특정 컬렉션의 모든 동정 의견 조회 (createdAt ASC)
-     */
-    public List<BirdIdSuggestion> findByCollectionId(Long collectionId) {
-        return em.createQuery(
-                        "SELECT s FROM BirdIdSuggestion s " +
-                                "WHERE s.collection.id = :collectionId " +
-                                "ORDER BY s.createdAt ASC",
-                        BirdIdSuggestion.class)
-                .setParameter("collectionId", collectionId)
-                .getResultList();
-    }
-
-    /**
-     * 특정 컬렉션·birdId 조합의 동의 수(count) 조회
-     */
-    public long countByCollectionIdAndBirdId(Long collectionId, Long birdId) {
-        return em.createQuery(
-                        "SELECT COUNT(s) FROM BirdIdSuggestion s " +
-                                "WHERE s.collection.id = :collectionId " +
-                                "  AND s.bird.id = :birdId",
-                        Long.class)
-                .setParameter("collectionId", collectionId)
-                .setParameter("birdId", birdId)
-                .getSingleResult();
-    }
-
-    /**
      * 컬렉션 삭제 시 모든 동정 의견 일괄 삭제
      */
     public void deleteByCollectionId(Long collectionId) {
@@ -178,21 +151,4 @@ public class BirdIdSuggestionRepository {
                 })
                 .toList();
     }
-
-    /* ───────────────────────────── 유저 단위 조회 ───────────────────────────── */
-
-    /**
-     * 사용자가 제안/동의한 모든 동정 의견 조회
-     */
-    public List<BirdIdSuggestion> findByUserId(Long userId) {
-        return em.createQuery(
-                        "SELECT s FROM BirdIdSuggestion s " +
-                                "WHERE s.user.id = :userId " +
-                                "ORDER BY s.createdAt DESC",
-                        BirdIdSuggestion.class)
-                .setParameter("userId", userId)
-                .getResultList();
-    }
-
-    /* ──────────────────────────────────────────────────────────────────────── */
 }

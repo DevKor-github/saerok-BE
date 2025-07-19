@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.collection.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Schema(description = "bird_id 미확정 PUBLIC 컬렉션 목록 응답")
@@ -22,6 +23,9 @@ public record GetPendingCollectionsResponse(
             String note,
 
             @Schema(description = "작성자 닉네임", example = "새덕후99", requiredMode = Schema.RequiredMode.REQUIRED)
-            String nickname
+            String nickname,
+
+            @Schema(description = "동정 의견 요청 시각", example = "2025-07-20T00:23:58.164815", requiredMode = Schema.RequiredMode.REQUIRED)
+            LocalDateTime birdIdSuggestionRequestedAt
     ) {}
 }
