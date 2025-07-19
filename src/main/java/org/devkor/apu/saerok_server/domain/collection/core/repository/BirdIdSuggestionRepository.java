@@ -3,10 +3,14 @@ package org.devkor.apu.saerok_server.domain.collection.core.repository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -121,19 +125,57 @@ public class BirdIdSuggestionRepository {
      * 서비스 계층에서 DTO로 변환하여 사용한다.
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> findSummaryByCollectionId(Long collectionId, Long myUserId) {
-        return em.createQuery("""
-                SELECT s.bird,
-                       COUNT(s) as agreeCnt,
-                       SUM(CASE WHEN s.user.id = :myUserId THEN 1 ELSE 0 END) > 0
-                FROM BirdIdSuggestion s
-                WHERE s.collection.id = :collectionId
-                GROUP BY s.bird
-                ORDER BY agreeCnt DESC, s.bird.id ASC
-                """)
-                .setParameter("collectionId", collectionId)
-                .setParameter("myUserId",   myUserId)
+    public List<BirdIdSuggestionSummary> findSummaryByCollectionId(Long collectionId, Long userId) {
+
+        // 1) 요약 데이터
+        List<Object[]> rows = em.createQuery("""
+            SELECT s.bird,
+                   COUNT(s)        AS agreeCnt,
+                   SUM(CASE WHEN s.user.id = :myId THEN 1 ELSE 0 END) > 0
+            FROM BirdIdSuggestion s
+            WHERE s.collection.id = :colId
+            GROUP BY s.bird
+            ORDER BY agreeCnt DESC, s.bird.id ASC
+            """)
+                .setParameter("colId", collectionId)
+                .setParameter("myId",  userId)
                 .getResultList();
+
+        // 2) 썸네일 일괄 로드
+        List<Long> birdIds = rows.stream()
+                .map(r -> ((Bird) r[0]).getId())
+                .toList();
+
+        Map<Long, String> thumbMap = em.createQuery("""
+            SELECT bi.bird.id, bi.objectKey
+            FROM BirdImage bi
+            WHERE bi.isThumb = true
+              AND bi.bird.id IN :ids
+            """, Object[].class)
+                .setParameter("ids", birdIds)
+                .getResultStream()
+                .collect(Collectors.toMap(
+                        r -> (Long)  r[0],
+                        r -> (String) r[1]
+                ));
+
+        // 3) DTO 조립
+        return rows.stream()
+                .map(r -> {
+                    Bird    bird        = (Bird)   r[0];
+                    Long    agreeCnt    = (Long)   r[1];
+                    Boolean agreedByMe  = (Boolean)r[2];
+                    String  thumbKey    = thumbMap.get(bird.getId());
+
+                    return new BirdIdSuggestionSummary(
+                            bird.getId(),
+                            bird.getName().getKoreanName(),
+                            thumbKey,
+                            agreeCnt,
+                            agreedByMe
+                    );
+                })
+                .toList();
     }
 
     /* ───────────────────────────── 유저 단위 조회 ───────────────────────────── */
