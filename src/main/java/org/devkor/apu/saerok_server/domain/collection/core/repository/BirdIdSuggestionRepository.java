@@ -134,7 +134,7 @@ public class BirdIdSuggestionRepository {
                    SUM(CASE WHEN s.user.id = :myId THEN 1 ELSE 0 END) > 0
             FROM BirdIdSuggestion s
             WHERE s.collection.id = :colId
-            GROUP BY s.bird
+            GROUP BY s.bird, s.bird.id
             ORDER BY agreeCnt DESC, s.bird.id ASC
             """)
                 .setParameter("colId", collectionId)
