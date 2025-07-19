@@ -11,6 +11,7 @@ import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -29,7 +30,6 @@ public class UserBirdCollection extends Auditable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bird_id", nullable = true)
-    @Setter
     private Bird bird;
 
     @Column(name = "temp_bird_name")
@@ -63,6 +63,10 @@ public class UserBirdCollection extends Auditable {
     @Setter
     private AccessLevelType accessLevel;
 
+    @Column(name = "bird_id_suggestion_requested_at")
+    @Setter
+    private OffsetDateTime birdIdSuggestionRequestedAt;
+
     @Builder
     public UserBirdCollection(User user, Bird bird, String tempBirdName, LocalDate discoveredDate, Point location, String locationAlias, String address, String note, boolean isPinned, AccessLevelType accessLevel) {
 
@@ -71,7 +75,7 @@ public class UserBirdCollection extends Auditable {
         if (location == null) throw new IllegalArgumentException("location은 null일 수 없습니다.");
 
         this.user = user;
-        this.bird = bird;
+        changeBird(bird);
         this.tempBirdName = tempBirdName;
         this.discoveredDate = discoveredDate;
         this.location = location;
@@ -80,6 +84,20 @@ public class UserBirdCollection extends Auditable {
         this.note = note;
         this.isPinned = isPinned;
         this.accessLevel = accessLevel == null ? AccessLevelType.PUBLIC : accessLevel;
+    }
+
+    /**
+     * bird가 변경됨에 따라 birdIdSuggestionRequestedAt이 변경되는 규칙.
+     */
+    public void changeBird(Bird newBird) {
+        boolean wasPresent = this.bird != null;
+        this.bird = newBird;
+
+        if (wasPresent && newBird == null) {
+            this.birdIdSuggestionRequestedAt = OffsetDateTime.now();
+        } else if (newBird != null) {
+            this.birdIdSuggestionRequestedAt = null;
+        }
     }
 
     public double getLongitude() {

@@ -80,7 +80,7 @@ public class BirdIdSuggestionCommandService {
         Bird bird = birdRepo.findById(birdId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
 
-        collection.setBird(bird);
+        collection.changeBird(bird);
 
         // NOTE: 컬렉션에 달린 동정 의견들은 삭제되지 않음
 
