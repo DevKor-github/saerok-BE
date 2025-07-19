@@ -4,7 +4,8 @@ import java.util.List;
 
 public record GetBirdIdSuggestionsResponse(List<Item> items) {
     public record Item(Long    birdId,
-                       String  birdName,
+                       String  birdKoreanName,
+                       String  birdScientificName,
                        String  birdImageUrl,
                        Long    agreeCount,
                        Boolean isAgreedByMe) {}

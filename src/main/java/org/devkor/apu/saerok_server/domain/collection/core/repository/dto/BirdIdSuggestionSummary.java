@@ -5,7 +5,8 @@ package org.devkor.apu.saerok_server.domain.collection.core.repository.dto;
  */
 public record BirdIdSuggestionSummary(
         Long birdId,
-        String birdName,
+        String birdKoreanName,
+        String birdScientificName,
         String birdThumbImageObjectKey,
         Long agreeCount,
         Boolean isAgreedByMe

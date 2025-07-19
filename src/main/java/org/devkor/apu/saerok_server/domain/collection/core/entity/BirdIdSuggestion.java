@@ -8,6 +8,10 @@ import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.shared.entity.CreatedAtOnly;
 
+/**
+ * 동정 의견.
+ * user가 collection에 대해 bird라는 의견을 제시함.
+ */
 @Entity
 @Table(
         name = "bird_id_suggestion",

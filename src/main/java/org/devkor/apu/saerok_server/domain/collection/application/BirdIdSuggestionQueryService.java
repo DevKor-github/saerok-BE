@@ -72,7 +72,8 @@ public class BirdIdSuggestionQueryService {
         List<GetBirdIdSuggestionsResponse.Item> items = summaries.stream()
                 .map(s -> new GetBirdIdSuggestionsResponse.Item(
                         s.birdId(),
-                        s.birdName(),
+                        s.birdKoreanName(),
+                        s.birdScientificName(),
                         imageDomainService.toDexImageUrl(s.birdThumbImageObjectKey()),
                         s.agreeCount(),
                         s.isAgreedByMe()

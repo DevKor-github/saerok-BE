@@ -170,6 +170,7 @@ public class BirdIdSuggestionRepository {
                     return new BirdIdSuggestionSummary(
                             bird.getId(),
                             bird.getName().getKoreanName(),
+                            bird.getName().getScientificName(),
                             thumbKey,
                             agreeCnt,
                             agreedByMe
