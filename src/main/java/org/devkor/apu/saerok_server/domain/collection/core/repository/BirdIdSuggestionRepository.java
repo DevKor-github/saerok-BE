@@ -74,7 +74,20 @@ public class BirdIdSuggestionRepository {
     /* ────────────────────────── 컬렉션 단위 조회 ────────────────────────── */
 
     /**
-     * 컬렉션 삭제 시 모든 동정 의견 일괄 삭제
+     * 특정 컬렉션의 모든 동정 의견 조회 (createdAt ASC)
+     */
+    public List<BirdIdSuggestion> findByCollectionId(Long collectionId) {
+        return em.createQuery(
+                        "SELECT s FROM BirdIdSuggestion s " +
+                                "WHERE s.collection.id = :collectionId " +
+                                "ORDER BY s.createdAt ASC",
+                        BirdIdSuggestion.class)
+                .setParameter("collectionId", collectionId)
+                .getResultList();
+    }
+
+    /**
+     * 모든 동정 의견 일괄 삭제
      */
     public void deleteByCollectionId(Long collectionId) {
         em.createQuery(

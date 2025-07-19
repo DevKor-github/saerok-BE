@@ -12,6 +12,6 @@ public record AdoptSuggestionResponse(
         Long birdId,
 
         @Schema(description = "채택된 새의 이름 (한글)", example = "참새", requiredMode = Schema.RequiredMode.REQUIRED)
-        String birdName
+        String birdKoreanName
 
 ) {}
