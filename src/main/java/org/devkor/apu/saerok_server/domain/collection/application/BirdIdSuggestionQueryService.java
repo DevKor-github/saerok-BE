@@ -37,6 +37,7 @@ public class BirdIdSuggestionQueryService {
                 .map(UserBirdCollection::getId)
                 .toList();
         Map<Long, String> thumbMap =
+                ids.isEmpty() ? Map.of() :
                 collectionImageRepo.findThumbKeysByCollectionIds(ids);
 
         // ── 3단계: DTO 조립

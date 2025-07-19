@@ -52,6 +52,9 @@ public class CollectionImageRepository {
      * (orderIndex 가장 작은 것 1개)
      */
     public Map<Long, String> findThumbKeysByCollectionIds(List<Long> collectionIds) {
+
+        if (collectionIds.isEmpty()) return Map.of();
+
         return em.createQuery("""
             SELECT i.collection.id, i.objectKey
             FROM UserBirdCollectionImage i
