@@ -17,9 +17,10 @@ public interface CollectionCommentWebMapper {
             List<UserBirdCollectionComment> entities, 
             Map<Long, Long> likeCounts,
             Map<Long, Boolean> likeStatuses,
-            Map<Long, Boolean> mineStatuses) {
+            Map<Long, Boolean> mineStatuses,
+            Boolean isMyCollection) {
         if (entities == null || entities.isEmpty()) {
-            return new GetCollectionCommentsResponse(List.of());
+            return new GetCollectionCommentsResponse(List.of(), isMyCollection);
         }
 
         for (UserBirdCollectionComment entity : entities) {
@@ -47,7 +48,7 @@ public interface CollectionCommentWebMapper {
                     return toCommentItem(comment, likeCount, isLiked, isMine);
                 })
                 .toList();
-        return new GetCollectionCommentsResponse(items);
+        return new GetCollectionCommentsResponse(items, isMyCollection);
     }
 
     /* 단일 엔티티 → Item DTO */

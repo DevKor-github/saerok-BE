@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentCountResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
@@ -29,9 +30,11 @@ public class CollectionCommentQueryService {
     /* 댓글 목록 (createdAt ASC) */
     public GetCollectionCommentsResponse getComments(Long collectionId, Long userId) {
 
-        // 존재 여부만 검증
-        collectionRepository.findById(collectionId)
+        UserBirdCollection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new NotFoundException("해당 id의 컬렉션이 존재하지 않아요"));
+        
+        // 내 컬렉션인지 여부 판단 (비회원인 경우 false)
+        boolean isMyCollection = userId != null && userId.equals(collection.getUser().getId());
 
         // 1. 댓글 목록 조회
         List<UserBirdCollectionComment> comments = commentRepository.findByCollectionId(collectionId);
@@ -57,7 +60,7 @@ public class CollectionCommentQueryService {
                 ));
         
         // 6. 응답 생성
-        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses);
+        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, isMyCollection);
     }
 
     /* 댓글 개수 */

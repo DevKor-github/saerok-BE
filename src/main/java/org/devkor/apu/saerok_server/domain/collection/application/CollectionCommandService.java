@@ -102,9 +102,9 @@ public class CollectionCommandService {
         if (command.isBirdIdUpdated() != null && command.isBirdIdUpdated()) {
             if (command.birdId() != null) {
                 Bird bird = birdRepository.findById(command.birdId()).orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
-                collection.setBird(bird);
+                collection.changeBird(bird);
             } else {
-                collection.setBird(null);
+                collection.changeBird(null);
             }
         }
 
