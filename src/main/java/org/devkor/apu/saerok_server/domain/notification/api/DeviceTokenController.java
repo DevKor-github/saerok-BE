@@ -8,6 +8,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.devkor.apu.saerok_server.domain.notification.api.dto.request.DeviceIdRequest;
+import org.devkor.apu.saerok_server.domain.notification.api.dto.request.RegisterTokenRequest;
+import org.devkor.apu.saerok_server.domain.notification.api.dto.response.DeviceTokenToggleResponse;
+import org.devkor.apu.saerok_server.domain.notification.api.dto.response.RegisterTokenResponse;
+import org.devkor.apu.saerok_server.domain.notification.application.DeviceTokenCommandService;
+import org.devkor.apu.saerok_server.domain.notification.mapper.DeviceTokenWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${api_prefix}/notifications/tokens")
 public class DeviceTokenController {
 
-    private final DeviceTokenService deviceTokenService;
+    private final DeviceTokenCommandService deviceTokenCommandService;
+    private final DeviceTokenWebMapper deviceTokenWebMapper;
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
@@ -33,15 +40,17 @@ public class DeviceTokenController {
                     """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "등록/갱신 성공",
-                        content = @Content(schema = @Schema(implementation = DeviceTokenListResponse.class))),
+                        content = @Content(schema = @Schema(implementation = RegisterTokenResponse.class))),
                     @ApiResponse(responseCode = "401", description = "등록/갱신 실패", content = @Content)
             }
     )
-    public void registerToken(
+    public RegisterTokenResponse registerToken(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @RequestBody RegisterTokenRequest request
+            @Valid @RequestBody RegisterTokenRequest request
     ) {
-        return;
+        return deviceTokenCommandService.registerToken(
+                deviceTokenWebMapper.toRegisterTokenCommand(request, userPrincipal.getId())
+        );
     }
 
     @PatchMapping("/device/toggle")
@@ -51,16 +60,19 @@ public class DeviceTokenController {
             security = @SecurityRequirement(name = "bearerAuth"),
             description = "사용자의 특정 디바이스에 대해 푸시 알림을 설정하거나 해제합니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "토글 성공"),
+                    @ApiResponse(responseCode = "200", description = "토글 성공",
+                        content = @Content(schema = @Schema(implementation = DeviceTokenToggleResponse.class))),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
                     @ApiResponse(responseCode = "404", description = "해당 디바이스를 찾을 수 없음", content = @Content)
             }
     )
-    public void toggleDevicePushNotification(
+    public DeviceTokenToggleResponse toggleDevicePushNotification(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @Valid @RequestBody DeviceTokenToggleRequest request
+            @Valid @RequestBody DeviceIdRequest request
     ) {
-        return;
+        return deviceTokenCommandService.toggleDevicePushNotification(
+                deviceTokenWebMapper.toDeviceTokenToggleCommand(request, userPrincipal.getId())
+        );
     }
 
     @DeleteMapping("/device")
@@ -80,9 +92,11 @@ public class DeviceTokenController {
     )
     public void deleteDevice(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @Valid @RequestBody DeviceTokenDeleteRequest request
+            @Valid @RequestBody DeviceIdRequest request
     ) {
-        return;
+        deviceTokenCommandService.deleteDevice(
+                deviceTokenWebMapper.toDeviceTokenDeleteCommand(request, userPrincipal.getId())
+        );
     }
 
     @DeleteMapping
@@ -102,6 +116,8 @@ public class DeviceTokenController {
     public void deleteAllTokens(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        return;
+        deviceTokenCommandService.deleteAllTokens(
+                deviceTokenWebMapper.toDeleteAllTokensCommand(userPrincipal.getId())
+        );
     }
 }
