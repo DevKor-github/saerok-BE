@@ -7,14 +7,19 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.notification.api.dto.request.SendPushRequest;
+import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.SendBroadcastPushCommand;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.SendPushToUserCommand;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Push Notification API", description = "푸시 알림 관련 API")
+@Tag(name = "Admin Notification API", description = "관리자용 알림 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api_prefix}/notifications/push")
-public class PushNotificationController {
+@RequestMapping("${api_prefix}/admin/notifications")
+public class AdminNotificationController {
 
     private final PushNotificationService pushNotificationService;
 
@@ -28,16 +33,24 @@ public class PushNotificationController {
                     개별 공지가 필요할 때 사용됩니다.
                     """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "발송 성공",
-                            content = @Content(schema = @Schema(implementation = DeviceTokenListResponse.class))),
-                    @ApiResponse(responseCode = "401", description = "발송 실패", content = @Content)
+                    @ApiResponse(responseCode = "200", description = "발송 성공"),
+                    @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음", content = @Content)
             }
     )
     public void sendNotificationToUser(
             @PathVariable Long userId,
             @RequestBody SendPushRequest request
     ) {
-        return;
+        PushMessageCommand messageCommand = new PushMessageCommand(
+                request.title(),
+                request.body(),
+                "ADMIN_NOTICE",
+                request.data(),
+                request.deepLink()
+        );
+        
+        SendPushToUserCommand command = new SendPushToUserCommand(userId, messageCommand);
+        pushNotificationService.sendToUser(command);
     }
 
     // 전체 사용자에게 공지 발송 (시스템 점검, 업데이트, 이벤트 공지 등에 사용)
@@ -51,13 +64,21 @@ public class PushNotificationController {
                     업데이트, 공지 등에 사용됩니다.
                     """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "발송 성공",
-                            content = @Content(schema = @Schema(implementation = DeviceTokenListResponse.class))),
-                    @ApiResponse(responseCode = "401", description = "발송 실패", content = @Content)
+                    @ApiResponse(responseCode = "200", description = "발송 성공"),
+                    @ApiResponse(responseCode = "401", description = "권한 없음", content = @Content)
             }
     )
     public void sendBroadcastNotification(
             @RequestBody SendPushRequest request) {
-        return;
+        PushMessageCommand messageCommand = new PushMessageCommand(
+                request.title(),
+                request.body(),
+                "ADMIN_BROADCAST",
+                request.data(),
+                request.deepLink()
+        );
+        
+        SendBroadcastPushCommand command = new SendBroadcastPushCommand(messageCommand);
+        pushNotificationService.sendBroadcast(command);
     }
 }

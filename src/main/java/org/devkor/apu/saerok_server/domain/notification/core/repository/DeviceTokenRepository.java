@@ -31,11 +31,14 @@ public class DeviceTokenRepository {
                 .setParameter("userId", userId)
                 .executeUpdate();
     }
-
-    // 만료된 특정 토큰 삭제
-    public void deleteByToken(String token) {
-        em.createQuery("DELETE FROM DeviceToken dt WHERE dt.token = :token")
-                .setParameter("token", token)
+    
+    // 무효한 토큰들 일괄 삭제
+    public void deleteByTokens(List<String> tokens) {
+        if (tokens.isEmpty()) {
+            return;
+        }
+        em.createQuery("DELETE FROM DeviceToken dt WHERE dt.token IN :tokens")
+                .setParameter("tokens", tokens)
                 .executeUpdate();
     }
 
@@ -62,17 +65,12 @@ public class DeviceTokenRepository {
                 .getResultList();
     }
 
-    // 여러 사용자의 활성화된 디바이스 토큰들을 조회 (푸시 브로드캐스트 최적화용)
-    public List<DeviceToken> findAllActiveTokensByUserIds(List<Long> userIds) {
-        if (userIds.isEmpty()) {
-            return List.of();
-        }
-
+    // 모든 활성화된 디바이스 토큰 조회 (브로드캐스트용)
+    public List<DeviceToken> findAllActiveTokens() {
         return em.createQuery(
                         "SELECT dt FROM DeviceToken dt " +
-                                "WHERE dt.user.id IN :userIds AND dt.isActive = true " +
+                                "WHERE dt.isActive = true " +
                                 "ORDER BY dt.user.id, dt.createdAt DESC", DeviceToken.class)
-                .setParameter("userIds", userIds)
                 .getResultList();
     }
 }
