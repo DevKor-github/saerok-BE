@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSugg
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
+import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -32,13 +33,14 @@ class BirdIdSuggestionCommandServiceTest {
     @Mock CollectionRepository       collectionRepo;
     @Mock BirdRepository             birdRepo;
     @Mock UserRepository             userRepo;
+    @Mock PushNotificationService    pushNotificationService;
 
     BirdIdSuggestionCommandService sut;
 
     @BeforeEach
     void setUp() {
         sut = new BirdIdSuggestionCommandService(
-                suggestionRepo, collectionRepo, birdRepo, userRepo
+                suggestionRepo, collectionRepo, birdRepo, userRepo, pushNotificationService
         );
     }
 
