@@ -8,17 +8,22 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.user.api.dto.request.ProfileImagePresignRequest;
 import org.devkor.apu.saerok_server.domain.user.api.dto.request.UpdateUserProfileRequest;
+import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.api.response.CheckNicknameResponse;
 import org.devkor.apu.saerok_server.domain.user.api.response.GetMyUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.UserCommandService;
+import org.devkor.apu.saerok_server.domain.user.application.UserProfileImageCommandService;
 import org.devkor.apu.saerok_server.domain.user.application.UserQueryService;
 import org.devkor.apu.saerok_server.domain.user.mapper.UserWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 @Tag(name = "User API", description = "회원 정보 관련 API")
 @RestController
@@ -29,6 +34,7 @@ public class UserController {
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
     private final UserWebMapper userWebMapper;
+    private final UserProfileImageCommandService userProfileImageCommandService;
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('USER')")
@@ -65,12 +71,21 @@ public class UserController {
             description = """
             회원 정보를 수정합니다. 수정할 항목만 골라 보낼 수 있습니다.
 
-            수정 가능한 항목
-              - nickname (닉네임 정책 미준수 또는 다른 사용자와 중복 시 400 Bad Request)
+            수정 가능한 항목:
+              - nickname: 닉네임 (정책 미준수 또는 중복 시 400 Bad Request)
+              - profileImageObjectKey: 프로필 이미지 S3 객체 키
+                * 사용자 이미지: 'profile-images/{userId}/{uuid}'
+                * 기본 이미지: 'profile-images/default/default.png'
+              - profileImageContentType: 프로필 이미지 콘텐츠 타입 (사용자 이미지일 때 필수)
             
             닉네임 정책
               - 닉네임은 0자일 수 없음
               - 닉네임의 앞뒤로 공백이 있을 수 없음
+            
+            프로필 이미지 업데이트 방법
+              1. POST /me/profile-image/presign 으로 Presigned URL 발급
+              2. 발급받은 URL로 클라이언트가 S3에 이미지 직접 업로드
+              3. 업로드 후 objectKey와 contentType을 이 API로 전송
             """,
             responses = {
                     @ApiResponse(
@@ -97,6 +112,86 @@ public class UserController {
         return userCommandService.updateUserProfile(
                 userWebMapper.toUpdateUserProfileCommand(request, userPrincipal.getId())
         );
+    }
+
+    @PostMapping("/me/profile-image/presign")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(
+            summary = "프로필 이미지 업로드용 Presigned URL 발급",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+            프로필 이미지를 S3에 직접 업로드하기 위한 Presigned URL을 발급합니다.
+            
+            사용 방법:
+            1. 이 API로 Presigned URL 발급
+            2. 발급받은 presignedUrl에 PUT 메서드로 이미지 파일 업로드
+               - Content-Type 헤더는 요청 시 전송한 contentType과 동일해야 함
+            3. 업로드 완료 후 PATCH /me API로 objectKey와 contentType 전송
+            
+            주의사항:
+            - Presigned URL은 10분간 유효
+            - 업로드 시 Content-Type 헤더 필수
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Presigned URL 발급 성공",
+                            content = @Content(schema = @Schema(implementation = ProfileImagePresignResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청 - contentType 누락 또는 잘못된 형식", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+            }
+    )
+    public ProfileImagePresignResponse generateProfileImagePresignUrl(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody ProfileImagePresignRequest request
+    ) {
+        return userProfileImageCommandService.generatePresignedUploadUrl(
+                userPrincipal.getId(), 
+                request.getContentType()
+        );
+    }
+
+    @DeleteMapping("/me/profile-image")
+    @PreAuthorize("hasRole('USER')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "프로필 이미지 기본 이미지로 변경",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+            현재 프로필 이미지를 기본 이미지로 변경합니다.
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "프로필 이미지 기본 이미지로 변경 성공"),
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content)
+            }
+    )
+    public void deleteProfileImage(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        userProfileImageCommandService.setDefaultProfileImage(userPrincipal.getId());
+    }
+
+    @DeleteMapping("/me/profile-image/temp")
+    @PreAuthorize("hasRole('USER')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "임시 프로필 이미지 삭제",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+            업로드된 프로필 이미지를 사용하지 않기로 결정했을 때 S3에서 삭제합니다.
+            이미 DB에 등록된 프로필 이미지는 삭제되지 않습니다.
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "임시 이미지 삭제 성공"),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "삭제할 이미지를 찾을 수 없음", content = @Content)
+            }
+    )
+    public void deleteTempProfileImage(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam String objectKey
+    ) {
+        userProfileImageCommandService.cleanupTempImage(userPrincipal.getId(), objectKey);
     }
 
     @GetMapping("/check-nickname")
