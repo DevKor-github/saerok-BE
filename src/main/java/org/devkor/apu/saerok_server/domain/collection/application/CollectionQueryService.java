@@ -16,6 +16,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
@@ -37,6 +38,7 @@ public class CollectionQueryService {
     private final CollectionCommentRepository collectionCommentRepository;
     private final CollectionWebMapper collectionWebMapper;
     private final UserRepository userRepository;
+    private final UserProfileImageRepository userProfileImageRepository;
     private final ImageDomainService imageDomainService;
 
     public GetCollectionEditDataResponse getCollectionEditDataResponse(GetCollectionEditDataCommand command) {
@@ -118,7 +120,12 @@ public class CollectionQueryService {
         // 내가 좋아요 눌렀는지 확인 (비회원인 경우 false)
         boolean isLiked = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
 
-        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, likeCount, commentCount, isLiked);
+        // 사용자 프로필 이미지 URL 조회
+        String userProfileImageUrl = imageDomainService.toUploadImageUrl(
+            userProfileImageRepository.findObjectKeyByUserId(collection.getUser().getId())
+        );
+
+        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLiked);
     }
 
     public GetNearbyCollectionsResponse getNearbyCollections(GetNearbyCollectionsCommand command) {
