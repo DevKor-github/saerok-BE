@@ -11,12 +11,13 @@ import org.devkor.apu.saerok_server.global.shared.entity.CreatedAtOnly;
 /**
  * 동정 의견.
  * user가 collection에 대해 bird라는 의견을 제시함.
+ * type에 따라 제안(SUGGEST), 동의(AGREE), 비동의(DISAGREE)를 구분
  */
 @Entity
 @Table(
         name = "bird_id_suggestion",
         uniqueConstraints = @UniqueConstraint(columnNames = {
-                "user_id", "user_bird_collection_id", "bird_id"
+                "user_id", "user_bird_collection_id", "bird_id", "type"
         })
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -39,12 +40,24 @@ public class BirdIdSuggestion extends CreatedAtOnly {
     @JoinColumn(name = "bird_id", nullable = false)
     private Bird bird;
 
-    public BirdIdSuggestion(User user, UserBirdCollection collection, Bird bird) {
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private SuggestionType type;
+
+    public BirdIdSuggestion(User user, UserBirdCollection collection, Bird bird, SuggestionType type) {
         if (user == null) throw new IllegalArgumentException("user는 null일 수 없습니다.");
         if (collection == null) throw new IllegalArgumentException("collection은 null일 수 없습니다.");
         if (bird == null) throw new IllegalArgumentException("bird는 null일 수 없습니다.");
+        if (type == null) throw new IllegalArgumentException("type은 null일 수 없습니다.");
         this.user = user;
         this.collection = collection;
         this.bird = bird;
+        this.type = type;
+    }
+
+    public enum SuggestionType {
+        SUGGEST,    // 제안
+        AGREE,      // 동의
+        DISAGREE    // 비동의
     }
 }
