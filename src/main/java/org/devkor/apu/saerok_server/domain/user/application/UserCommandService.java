@@ -19,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserCommandService {
 
-    private static final String DEFAULT_PROFILE_IMAGE_KEY = "profile-images/default/default.png";
-
     private final UserRepository userRepository;
     private final UserProfileUpdateService userProfileUpdateService;
     private final UserSignupStatusService userSignupStatusService;
@@ -60,7 +58,8 @@ public class UserCommandService {
         // 프로필 이미지 업데이트 요청이 있는 경우만 처리
         if (objectKey == null) {return;}
         
-        if (DEFAULT_PROFILE_IMAGE_KEY.equals(objectKey)) {
+        // 기본 이미지 요청인지 확인
+        if (objectKey.startsWith("profile-images/default/")) {
             userProfileImageCommandService.setDefaultProfileImage(user.getId());
         } else {
             if (contentType == null || contentType.isEmpty()) {

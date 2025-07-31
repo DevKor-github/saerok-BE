@@ -11,9 +11,6 @@ import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 @Getter
 @NoArgsConstructor
 public class UserProfileImage extends Auditable {
-
-    private static final String DEFAULT_PROFILE_IMAGE_KEY = "profile-images/default/default.png";
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
@@ -39,9 +36,16 @@ public class UserProfileImage extends Auditable {
         this.contentType = contentType;
     }
 
-    public String updateToDefault(String defaultContentType) {
+    public String updateToDefault(String defaultObjectKey, String defaultContentType) {
+        if (defaultObjectKey == null || defaultObjectKey.isEmpty()) {
+            throw new IllegalArgumentException("defaultObjectKey는 null이거나 빈 문자열일 수 없습니다.");
+        }
+        if (defaultContentType == null || defaultContentType.isEmpty()) {
+            throw new IllegalArgumentException("defaultContentType은 null이거나 빈 문자열일 수 없습니다.");
+        }
+        
         String oldObjectKey = this.objectKey;
-        this.objectKey = DEFAULT_PROFILE_IMAGE_KEY;
+        this.objectKey = defaultObjectKey;
         this.contentType = defaultContentType;
         return oldObjectKey;
     }
@@ -58,12 +62,5 @@ public class UserProfileImage extends Auditable {
         this.objectKey = newObjectKey;
         this.contentType = newContentType;
         return oldObjectKey;
-    }
-
-    /**
-     * 현재 기본 이미지인지 확인
-     */
-    public boolean isDefaultImage() {
-        return DEFAULT_PROFILE_IMAGE_KEY.equals(this.objectKey);
     }
 }
