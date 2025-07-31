@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.request.SuggestOrAgreeRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.request.SuggestBirdIdRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.collection.application.BirdIdSuggestionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.BirdIdSuggestionQueryService;
@@ -63,47 +63,72 @@ public class BirdIdSuggestionController {
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
-            summary  = "동정 의견 제안/동의",
-            description = "400 error: 나 자신의 컬렉션에 동정 의견 제안/동의하는 경우, bird_id 확정된 컬렉션에 동정 의견 제안/동의하는 경우",
+            summary  = "동정 의견 제안",
+            description = "새로운 조류 동정 의견을 제안합니다. 첫 제안이면 목록에 등록되고 자동으로 동의 +1, 중복 제안이면 동의 +1 (기존 비동의가 있다면 -1). " +
+                    "400 error: 나 자신의 컬렉션에 제안하는 경우, bird_id 확정된 컬렉션에 제안하는 경우",
             security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
-                    content  = @Content(schema = @Schema(implementation = SuggestOrAgreeRequest.class))
+                    content  = @Content(schema = @Schema(implementation = SuggestBirdIdRequest.class))
             ),
             responses = {
-                    @ApiResponse(responseCode = "201", description = "제안/동의 성공",
-                            content = @Content(schema = @Schema(implementation = SuggestOrAgreeResponse.class))),
+                    @ApiResponse(responseCode = "201", description = "제안 성공",
+                            content = @Content(schema = @Schema(implementation = SuggestBirdIdResponse.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
                     @ApiResponse(responseCode = "404", description = "컬렉션/조류 없음", content = @Content)
             }
     )
-    public SuggestOrAgreeResponse suggestOrAgree(
+    public SuggestBirdIdResponse suggest(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
-            @RequestBody SuggestOrAgreeRequest request
+            @RequestBody SuggestBirdIdRequest request
     ) {
-        return commandService.suggestOrAgree(userPrincipal.getId(), collectionId, request.birdId());
+        return commandService.suggest(userPrincipal.getId(), collectionId, request.birdId());
     }
 
-    @DeleteMapping("/{collectionId}/bird-id-suggestions/{birdId}/agree")
+    @PostMapping("/{collectionId}/bird-id-suggestions/{birdId}/agree")
     @PreAuthorize("hasRole('USER')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
-            summary  = "동정 의견 동의 취소",
+            summary  = "동정 의견 동의 토글",
+            description = "특정 조류 동정 의견에 대한 동의를 추가하거나 제거합니다. 동의 시 기존 비동의는 자동으로 취소됩니다.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
-                    @ApiResponse(responseCode = "204", description = "동의 취소 성공"),
+                    @ApiResponse(responseCode = "200", description = "동의 토글 성공",
+                            content = @Content(schema = @Schema(implementation = AgreeStatusResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "동의 기록 없음", content = @Content)
+                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content)
             }
     )
-    public void cancelAgree(
+    public AgreeStatusResponse toggleAgree(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
             @PathVariable Long birdId
     ) {
-        commandService.cancelAgree(userPrincipal.getId(), collectionId, birdId);
+        return commandService.toggleAgree(userPrincipal.getId(), collectionId, birdId);
+    }
+
+    @PostMapping("/{collectionId}/bird-id-suggestions/{birdId}/disagree")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(
+            summary  = "동정 의견 비동의 토글",
+            description = "특정 조류 동정 의견에 대한 비동의를 추가하거나 제거합니다. 비동의 시 기존 동의는 자동으로 취소됩니다.",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "비동의 토글 성공",
+                            content = @Content(schema = @Schema(implementation = DisagreeStatusResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content)
+            }
+    )
+    public DisagreeStatusResponse toggleDisagree(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @PathVariable Long birdId
+    ) {
+        return commandService.toggleDisagree(userPrincipal.getId(), collectionId, birdId);
     }
 
     @PostMapping("/{collectionId}/bird-id-suggestions/{birdId}/adopt")
