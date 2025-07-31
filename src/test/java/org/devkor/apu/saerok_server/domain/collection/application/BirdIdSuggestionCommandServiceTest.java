@@ -1,8 +1,11 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.AdoptSuggestionResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SuggestOrAgreeResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.AgreeStatusResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.DisagreeStatusResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SuggestBirdIdResponse;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion.SuggestionType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSuggestionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
@@ -13,8 +16,10 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +28,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -78,26 +87,31 @@ class BirdIdSuggestionCommandServiceTest {
         return b;
     }
 
-    private BirdIdSuggestion suggestion(long id, User u, UserBirdCollection c, Bird b) {
-        BirdIdSuggestion s = new BirdIdSuggestion(u, c, b);
+    private BirdIdSuggestion suggestion(long id, User u, UserBirdCollection c, Bird b, SuggestionType t) {
+        BirdIdSuggestion s = new BirdIdSuggestion(u, c, b, t);
         ReflectionTestUtils.setField(s, "id", id);
         return s;
     }
     // ────────────────────────────────────────────────────────────────────────
 
-    @Nested @DisplayName("suggestOrAgree")
-    class SuggestOrAgree {
+    @Nested @DisplayName("suggestion")
+    class Suggest {
 
-        @Test @DisplayName("성공")
-        void success() {
-            User u  = user(1L);
+        @Test @DisplayName("성공 - 첫 제안 (제안+동의 생성)")
+        void firstTime() {
+            User u = user(1L);
             UserBirdCollection col = collection(100L, user(2L));
-            Bird b  = bird(5L);
+            Bird b = bird(5L);
 
             when(userRepo.findById(1L)).thenReturn(Optional.of(u));
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
             when(birdRepo.findById(5L)).thenReturn(Optional.of(b));
-            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdId(1L, 100L, 5L))
+            
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST))
+                    .thenReturn(false);
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE))
+                    .thenReturn(false);
+            when(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST))
                     .thenReturn(false);
 
             doAnswer(inv -> {
@@ -106,17 +120,44 @@ class BirdIdSuggestionCommandServiceTest {
                 return null;
             }).when(suggestionRepo).save(any(BirdIdSuggestion.class));
 
-            SuggestOrAgreeResponse res = sut.suggestOrAgree(1L, 100L, 5L);
+            SuggestBirdIdResponse res = sut.suggest(1L, 100L, 5L);
 
             assertThat(res.suggestionId()).isEqualTo(999L);
-            verify(suggestionRepo).save(any(BirdIdSuggestion.class));
+            verify(suggestionRepo, times(2)).save(any(BirdIdSuggestion.class));
             System.out.println("[suggestOrAgree.success] ✔︎ id=" + res.suggestionId());
+        }
+
+        @Test @DisplayName("성공 - 이미 제안된 새 (동의만 생성)")
+        void alreadySuggested() {
+            User u = user(1L);
+            UserBirdCollection col = collection(100L, user(2L));
+            Bird b = bird(5L);
+
+            given(userRepo.findById(1L)).willReturn(Optional.of(u));
+            given(collectionRepo.findById(100L)).willReturn(Optional.of(col));
+            given(birdRepo.findById(5L)).willReturn(Optional.of(b));
+            
+            // 서비스 로직에 맞게 모든 체크 목킹
+            given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST))
+                    .willReturn(false);
+            given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE))
+                    .willReturn(false);
+            given(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST))
+                    .willReturn(true); // 이미 다른 사람이 제안한 상황
+            
+            // DISAGREE 제거 체크
+            given(suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.DISAGREE))
+                    .willReturn(Optional.empty());
+
+            sut.suggest(1L, 100L, 5L);
+
+            verify(suggestionRepo, times(1)).save(any(BirdIdSuggestion.class));
         }
 
         @Test @DisplayName("사용자 없음 → NotFoundException")
         void userNotFound() {
             when(userRepo.findById(1L)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> sut.suggestOrAgree(1L, 100L, 5L))
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
 
@@ -124,7 +165,7 @@ class BirdIdSuggestionCommandServiceTest {
         void collectionNotFound() {
             when(userRepo.findById(1L)).thenReturn(Optional.of(user(1L)));
             when(collectionRepo.findById(100L)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> sut.suggestOrAgree(1L, 100L, 5L))
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
 
@@ -137,7 +178,7 @@ class BirdIdSuggestionCommandServiceTest {
             when(userRepo.findById(1L)).thenReturn(Optional.of(user(1L)));
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
 
-            assertThatThrownBy(() -> sut.suggestOrAgree(1L, 100L, 5L))
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L))
                     .isExactlyInstanceOf(BadRequestException.class);
         }
 
@@ -149,7 +190,7 @@ class BirdIdSuggestionCommandServiceTest {
             when(userRepo.findById(1L)).thenReturn(Optional.of(u));
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
 
-            assertThatThrownBy(() -> sut.suggestOrAgree(1L, 100L, 5L))
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L))
                     .isExactlyInstanceOf(BadRequestException.class);
         }
 
@@ -161,49 +202,123 @@ class BirdIdSuggestionCommandServiceTest {
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
             when(birdRepo.findById(5L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> sut.suggestOrAgree(1L, 100L, 5L))
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
 
-        @Test @DisplayName("이미 제안된 bird → BadRequestException")
-        void duplicate() {
+        @Test @DisplayName("이미 내가 제안한 bird → BadRequestException")
+        void duplicateMyOwnSuggestion() {
             UserBirdCollection col = collection(100L, user(2L));
 
             when(userRepo.findById(1L)).thenReturn(Optional.of(user(1L)));
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
             when(birdRepo.findById(5L)).thenReturn(Optional.of(bird(5L)));
-            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdId(1L, 100L, 5L))
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST))
                     .thenReturn(true);
 
-            assertThatThrownBy(() -> sut.suggestOrAgree(1L, 100L, 5L))
-                    .isExactlyInstanceOf(BadRequestException.class);
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L))
+                    .isExactlyInstanceOf(BadRequestException.class)
+                    .hasMessage("이미 내가 제안한 항목이에요");
+        }
+        
+        @Test @DisplayName("이미 내가 동의한 bird → BadRequestException")
+        void duplicateMyOwnAgree() {
+            UserBirdCollection col = collection(100L, user(2L));
+
+            when(userRepo.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
+            when(birdRepo.findById(5L)).thenReturn(Optional.of(bird(5L)));
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST))
+                    .thenReturn(false);
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE))
+                    .thenReturn(true);
+
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L))
+                    .isExactlyInstanceOf(BadRequestException.class)
+                    .hasMessage("이미 동의한 항목이에요");
         }
     }
 
-    @Nested @DisplayName("cancelAgree")
-    class CancelAgree {
-        @Test @DisplayName("성공")
-        void success() {
-            BirdIdSuggestion s = suggestion(10L,
-                    user(1L), collection(100L, user(2L)), bird(5L)
-            );
+    @Nested @DisplayName("동의 토글(toggleAgree)")
+    class ToggleAgree {
 
-            when(suggestionRepo.findByUserIdAndCollectionIdAndBirdId(1L,100L,5L))
-                    .thenReturn(Optional.of(s));
+        @Test @DisplayName("성공 - 동의 추가")
+        void addAgree() {
+            User user = user(1L);
+            UserBirdCollection coll = collection(100L, user(2L));
+            Bird bird = bird(5L);
 
-            sut.cancelAgree(1L, 100L, 5L);
+            given(userRepo.findById(1L)).willReturn(Optional.of(user));
+            given(collectionRepo.findById(100L)).willReturn(Optional.of(coll));
+            given(birdRepo.findById(5L)).willReturn(Optional.of(bird));
+            given(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).willReturn(true);
+            given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE)).willReturn(false);
 
-            verify(suggestionRepo).remove(s);
-            System.out.println("[cancelAgree.success] ✔︎ removedId=" + s.getId());
+            AgreeStatusResponse res = sut.toggleAgree(1L, 100L, 5L);
+
+            assertTrue(res.isAgreed());
+            verify(suggestionRepo).save(any(BirdIdSuggestion.class));
         }
 
-        @Test @DisplayName("기록 없음 → NotFoundException")
-        void notFound() {
-            when(suggestionRepo.findByUserIdAndCollectionIdAndBirdId(1L,100L,5L))
-                    .thenReturn(Optional.empty());
+        @Test
+        @DisplayName("성공 - 동의 취소")
+        void cancelAgree() {
+            BirdIdSuggestion existingAgree = suggestion(999L, user(1L), collection(100L, user(2L)), bird(5L), SuggestionType.AGREE);
+            
+            given(userRepo.findById(1L)).willReturn(Optional.of(user(1L)));
+            given(collectionRepo.findById(100L)).willReturn(Optional.of(collection(100L, user(2L))));
+            given(birdRepo.findById(5L)).willReturn(Optional.of(bird(5L)));
+            given(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).willReturn(true);
+            given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE)).willReturn(true);
+            given(suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE))
+                    .willReturn(Optional.of(existingAgree));
 
-            assertThatThrownBy(() -> sut.cancelAgree(1L,100L,5L))
-                    .isExactlyInstanceOf(NotFoundException.class);
+            AgreeStatusResponse res = sut.toggleAgree(1L, 100L, 5L);
+
+            assertFalse(res.isAgreed());
+            verify(suggestionRepo).remove(existingAgree);
+        }
+    }
+
+    @Nested @DisplayName("비동의 토글(toggleDisagree)")
+    class ToggleDisagree {
+
+        @Test
+        @DisplayName("성공 - 비동의 추가")
+        void addDisagree() {
+            User user = user(1L);
+            UserBirdCollection coll = collection(100L, user(2L));
+            Bird bird = bird(5L);
+
+            given(userRepo.findById(1L)).willReturn(Optional.of(user));
+            given(collectionRepo.findById(100L)).willReturn(Optional.of(coll));
+            given(birdRepo.findById(5L)).willReturn(Optional.of(bird));
+            given(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).willReturn(true);
+            given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.DISAGREE)).willReturn(false);
+
+            DisagreeStatusResponse res = sut.toggleDisagree(1L, 100L, 5L);
+
+            assertTrue(res.isDisagreed());
+            verify(suggestionRepo).save(any(BirdIdSuggestion.class));
+        }
+
+        @Test
+        @DisplayName("성공 - 비동의 취소")
+        void cancelDisagree() {
+            BirdIdSuggestion existingDisagree = suggestion(999L, user(1L), collection(100L, user(2L)), bird(5L), SuggestionType.DISAGREE);
+            
+            given(userRepo.findById(1L)).willReturn(Optional.of(user(1L)));
+            given(collectionRepo.findById(100L)).willReturn(Optional.of(collection(100L, user(2L))));
+            given(birdRepo.findById(5L)).willReturn(Optional.of(bird(5L)));
+            given(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).willReturn(true);
+            given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.DISAGREE)).willReturn(true);
+            given(suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.DISAGREE))
+                    .willReturn(Optional.of(existingDisagree));
+
+            DisagreeStatusResponse res = sut.toggleDisagree(1L, 100L, 5L);
+
+            assertFalse(res.isDisagreed());
+            verify(suggestionRepo).remove(existingDisagree);
         }
     }
 

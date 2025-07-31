@@ -97,9 +97,10 @@ class BirdIdSuggestionQueryServiceTest {
     class SuggestList {
 
         // DTO 헬퍼
-        private BirdIdSuggestionSummary sum(long birdId,long agree,boolean my){
+        private BirdIdSuggestionSummary sum(long birdId, long agree, long disagree, boolean isAgreed, boolean isDisagreed){
             return new BirdIdSuggestionSummary(
-                    birdId,"kor"+birdId,"sci"+birdId,"key"+birdId+".jpg",agree,my);
+                    birdId, "kor"+birdId, "sci"+birdId, "key"+birdId+".jpg",
+                    agree, disagree, isAgreed, isDisagreed);
         }
 
         @Test @DisplayName("성공 – 비회원")
@@ -107,7 +108,7 @@ class BirdIdSuggestionQueryServiceTest {
             when(collectionRepo.findById(10L))
                     .thenReturn(Optional.of(coll(10,user(1,"u"),"note")));
             when(suggestionRepo.findSummaryByCollectionId(10L,null))
-                    .thenReturn(List.of(sum(5,3,false)));
+                    .thenReturn(List.of(sum(5,3, 2, false, false)));
             when(imageDomainService.toDexImageUrl("key5.jpg")).thenReturn("url5");
 
             GetBirdIdSuggestionsResponse res = sut.getSuggestions(null,10L);

@@ -6,6 +6,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSugg
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion.SuggestionType;
 
 /**
  * Builder for creating and persisting BirdIdSuggestion fixtures in tests.
@@ -16,6 +17,7 @@ public class SuggestionBuilder {
     private User user;
     private UserBirdCollection collection;
     private Bird bird;
+    private SuggestionType type = SuggestionType.SUGGEST; // default type
 
     public SuggestionBuilder(BirdIdSuggestionRepository repo, TestEntityManager em) {
         this.repo = repo;
@@ -37,11 +39,16 @@ public class SuggestionBuilder {
         return this;
     }
 
+    public SuggestionBuilder type(SuggestionType type) {
+        this.type = type;
+        return this;
+    }
+
     /**
      * Builds and persists the BirdIdSuggestion.
      */
     public BirdIdSuggestion build() {
-        BirdIdSuggestion suggestion = new BirdIdSuggestion(user, collection, bird);
+        BirdIdSuggestion suggestion = new BirdIdSuggestion(user, collection, bird, type);
         repo.save(suggestion);
         em.flush();
         return suggestion;
