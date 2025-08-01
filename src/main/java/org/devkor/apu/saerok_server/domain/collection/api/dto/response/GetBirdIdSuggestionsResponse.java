@@ -27,7 +27,13 @@ public record GetBirdIdSuggestionsResponse(
             @Schema(description = "해당 조류에 동의한 사용자 수", example = "8", requiredMode = Schema.RequiredMode.REQUIRED)
             Long agreeCount,
 
+            @Schema(description = "해당 조류에 비동의한 사용자 수", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
+            Long disagreeCount,
+
             @Schema(description = "현재 사용자가 동의했는지 여부", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
-            Boolean isAgreedByMe
+            Boolean isAgreedByMe,
+
+            @Schema(description = "현재 사용자가 비동의했는지 여부", example = "false", requiredMode = Schema.RequiredMode.REQUIRED)
+            Boolean isDisagreedByMe
     ) {}
 }
