@@ -95,7 +95,9 @@ public class BirdIdSuggestionQueryService {
                         s.birdScientificName(),
                         imageDomainService.toDexImageUrl(s.birdThumbImageObjectKey()),
                         s.agreeCount(),
-                        s.isAgreedByMe()
+                        s.disagreeCount(),
+                        s.isAgreedByMe(),
+                        s.isDisagreedByMe()
                 ))
                 .toList();
 
