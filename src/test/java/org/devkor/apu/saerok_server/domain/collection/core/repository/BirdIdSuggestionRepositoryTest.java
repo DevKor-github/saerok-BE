@@ -125,6 +125,67 @@ class BirdIdSuggestionRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
+    @DisplayName("findToggleStatusByCollectionIdAndBirdId - 특정 birdId의 토글 상태 조회")
+    void toggle_status() {
+        User current = new UserBuilder(em).build();
+        User other1  = new UserBuilder(em).build();
+        User other2  = new UserBuilder(em).build();
+        User collectionOwner = new UserBuilder(em).nickname("owner").build();
+        UserBirdCollection col = new CollectionBuilder(em).owner(collectionOwner).build();
+
+        Bird b1 = new BirdBuilder(em)
+                .korName("직박구리")
+                .sciName("Hypsipetes amaurotis")
+                .build();
+
+        // b1: 제안(current), 동의(current, other1), 비동의(other2)
+        new SuggestionBuilder(repo, em).user(current).collection(col).bird(b1).type(SuggestionType.SUGGEST).build();
+        new SuggestionBuilder(repo, em).user(current).collection(col).bird(b1).type(SuggestionType.AGREE).build();
+        new SuggestionBuilder(repo, em).user(other1).collection(col).bird(b1).type(SuggestionType.AGREE).build();
+        new SuggestionBuilder(repo, em).user(other2).collection(col).bird(b1).type(SuggestionType.DISAGREE).build();
+
+        em.flush();
+        em.clear();
+
+        // current 사용자 관점에서 조회
+        Object[] status = repo.findToggleStatusByCollectionIdAndBirdId(col.getId(), b1.getId(), current.getId());
+        
+        assertThat(status).hasSize(4);
+        assertThat((Long) status[0]).isEqualTo(2L);    // agreeCount
+        assertThat((Long) status[1]).isEqualTo(1L);    // disagreeCount
+        assertThat((Boolean) status[2]).isTrue();      // isAgreedByMe
+        assertThat((Boolean) status[3]).isFalse();     // isDisagreedByMe
+        
+        System.out.println("[toggle_status] ✔︎ agreeCount=" + status[0] + ", disagreeCount=" + status[1] + 
+                          ", isAgreedByMe=" + status[2] + ", isDisagreedByMe=" + status[3]);
+    }
+
+    @Test
+    @DisplayName("findToggleStatusByCollectionIdAndBirdId - 데이터가 없는 경우")
+    void toggle_status_empty() {
+        User current = new UserBuilder(em).build();
+        UserBirdCollection col = new CollectionBuilder(em).owner(current).build();
+        Bird b1 = new BirdBuilder(em)
+                .korName("참새")
+                .sciName("Passer montanus")
+                .build();
+
+        em.flush();
+        em.clear();
+
+        // 아무 데이터도 없는 상태에서 조회
+        Object[] status = repo.findToggleStatusByCollectionIdAndBirdId(col.getId(), b1.getId(), current.getId());
+        
+        assertThat(status).hasSize(4);
+        assertThat((Long) status[0]).isEqualTo(0L);     // agreeCount
+        assertThat((Long) status[1]).isEqualTo(0L);     // disagreeCount
+        assertThat((Boolean) status[2]).isFalse();      // isAgreedByMe
+        assertThat((Boolean) status[3]).isFalse();      // isDisagreedByMe
+        
+        System.out.println("[toggle_status_empty] ✔︎ all zeros and false as expected");
+    }
+
+    @Test
     @DisplayName("findSummaryByCollectionId – 동의/비동의 관련 계산")
     void summary() {
         User current = new UserBuilder(em).build();

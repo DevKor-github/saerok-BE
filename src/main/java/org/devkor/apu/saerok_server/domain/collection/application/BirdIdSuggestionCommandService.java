@@ -81,7 +81,7 @@ public class BirdIdSuggestionCommandService {
         return new SuggestBirdIdResponse(suggestionId);
     }
 
-    public AgreeStatusResponse toggleAgree(Long userId, Long collectionId, Long birdId) {
+    public ToggleStatusResponse toggleAgree(Long userId, Long collectionId, Long birdId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
@@ -110,7 +110,6 @@ public class BirdIdSuggestionCommandService {
             suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(
                     userId, collectionId, birdId, BirdIdSuggestion.SuggestionType.AGREE)
                 .ifPresent(suggestionRepo::remove);
-            return new AgreeStatusResponse(false);
         } else {
             // 기존 비동의가 있다면 제거 (비동의 -1)
             suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(
@@ -120,11 +119,19 @@ public class BirdIdSuggestionCommandService {
             // 동의 추가 (동의 +1)
             BirdIdSuggestion agree = new BirdIdSuggestion(user, collection, bird, BirdIdSuggestion.SuggestionType.AGREE);
             suggestionRepo.save(agree);
-            return new AgreeStatusResponse(true);
         }
+
+        // 토글 완료 후 현재 상태 조회
+        Object[] status = suggestionRepo.findToggleStatusByCollectionIdAndBirdId(collectionId, birdId, userId);
+        return new ToggleStatusResponse(
+                (Long) status[0],    // agreeCount
+                (Long) status[1],    // disagreeCount
+                (Boolean) status[2], // isAgreedByMe
+                (Boolean) status[3]  // isDisagreedByMe
+        );
     }
 
-    public DisagreeStatusResponse toggleDisagree(Long userId, Long collectionId, Long birdId) {
+    public ToggleStatusResponse toggleDisagree(Long userId, Long collectionId, Long birdId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
@@ -153,7 +160,6 @@ public class BirdIdSuggestionCommandService {
             suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(
                     userId, collectionId, birdId, BirdIdSuggestion.SuggestionType.DISAGREE)
                 .ifPresent(suggestionRepo::remove);
-            return new DisagreeStatusResponse(false);
         } else {
             // 기존 동의가 있다면 제거 (동의 -1)
             suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(
@@ -163,8 +169,16 @@ public class BirdIdSuggestionCommandService {
             // 비동의 추가 (비동의 +1)
             BirdIdSuggestion disagree = new BirdIdSuggestion(user, collection, bird, BirdIdSuggestion.SuggestionType.DISAGREE);
             suggestionRepo.save(disagree);
-            return new DisagreeStatusResponse(true);
         }
+
+        // 토글 완료 후 현재 상태 조회
+        Object[] status = suggestionRepo.findToggleStatusByCollectionIdAndBirdId(collectionId, birdId, userId);
+        return new ToggleStatusResponse(
+                (Long) status[0],    // agreeCount
+                (Long) status[1],    // disagreeCount
+                (Boolean) status[2], // isAgreedByMe
+                (Boolean) status[3]  // isDisagreedByMe
+        );
     }
 
     /* 채택 */

@@ -95,13 +95,13 @@ public class BirdIdSuggestionController {
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "동의 토글 성공",
-                            content = @Content(schema = @Schema(implementation = AgreeStatusResponse.class))),
+                            content = @Content(schema = @Schema(implementation = ToggleStatusResponse.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
                     @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content)
             }
     )
-    public AgreeStatusResponse toggleAgree(
+    public ToggleStatusResponse toggleAgree(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
             @PathVariable Long birdId
@@ -117,13 +117,13 @@ public class BirdIdSuggestionController {
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "비동의 토글 성공",
-                            content = @Content(schema = @Schema(implementation = DisagreeStatusResponse.class))),
+                            content = @Content(schema = @Schema(implementation = ToggleStatusResponse.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
                     @ApiResponse(responseCode = "404", description = "컬렉션 없음", content = @Content)
             }
     )
-    public DisagreeStatusResponse toggleDisagree(
+    public ToggleStatusResponse toggleDisagree(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
             @PathVariable Long birdId
