@@ -1,8 +1,7 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.AdoptSuggestionResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.AgreeStatusResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.DisagreeStatusResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.ToggleStatusResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SuggestBirdIdResponse;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion.SuggestionType;
@@ -253,10 +252,15 @@ class BirdIdSuggestionCommandServiceTest {
             given(birdRepo.findById(5L)).willReturn(Optional.of(bird));
             given(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).willReturn(true);
             given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE)).willReturn(false);
+            given(suggestionRepo.findToggleStatusByCollectionIdAndBirdId(100L, 5L, 1L))
+                    .willReturn(new Object[]{8L, 1L, true, false}); // agreeCount=8, disagreeCount=1, isAgreedByMe=true, isDisagreedByMe=false
 
-            AgreeStatusResponse res = sut.toggleAgree(1L, 100L, 5L);
+            ToggleStatusResponse res = sut.toggleAgree(1L, 100L, 5L);
 
-            assertTrue(res.isAgreed());
+            assertThat(res.agreeCount()).isEqualTo(8L);
+            assertThat(res.disagreeCount()).isEqualTo(1L);
+            assertThat(res.isAgreedByMe()).isTrue();
+            assertThat(res.isDisagreedByMe()).isFalse();
             verify(suggestionRepo).save(any(BirdIdSuggestion.class));
         }
 
@@ -272,10 +276,15 @@ class BirdIdSuggestionCommandServiceTest {
             given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE)).willReturn(true);
             given(suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE))
                     .willReturn(Optional.of(existingAgree));
+            given(suggestionRepo.findToggleStatusByCollectionIdAndBirdId(100L, 5L, 1L))
+                    .willReturn(new Object[]{7L, 1L, false, false}); // agreeCount=7, disagreeCount=1, isAgreedByMe=false, isDisagreedByMe=false
 
-            AgreeStatusResponse res = sut.toggleAgree(1L, 100L, 5L);
+            ToggleStatusResponse res = sut.toggleAgree(1L, 100L, 5L);
 
-            assertFalse(res.isAgreed());
+            assertThat(res.agreeCount()).isEqualTo(7L);
+            assertThat(res.disagreeCount()).isEqualTo(1L);
+            assertThat(res.isAgreedByMe()).isFalse();
+            assertThat(res.isDisagreedByMe()).isFalse();
             verify(suggestionRepo).remove(existingAgree);
         }
     }
@@ -295,10 +304,15 @@ class BirdIdSuggestionCommandServiceTest {
             given(birdRepo.findById(5L)).willReturn(Optional.of(bird));
             given(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).willReturn(true);
             given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.DISAGREE)).willReturn(false);
+            given(suggestionRepo.findToggleStatusByCollectionIdAndBirdId(100L, 5L, 1L))
+                    .willReturn(new Object[]{8L, 2L, false, true}); // agreeCount=8, disagreeCount=2, isAgreedByMe=false, isDisagreedByMe=true
 
-            DisagreeStatusResponse res = sut.toggleDisagree(1L, 100L, 5L);
+            ToggleStatusResponse res = sut.toggleDisagree(1L, 100L, 5L);
 
-            assertTrue(res.isDisagreed());
+            assertThat(res.agreeCount()).isEqualTo(8L);
+            assertThat(res.disagreeCount()).isEqualTo(2L);
+            assertThat(res.isAgreedByMe()).isFalse();
+            assertThat(res.isDisagreedByMe()).isTrue();
             verify(suggestionRepo).save(any(BirdIdSuggestion.class));
         }
 
@@ -314,10 +328,15 @@ class BirdIdSuggestionCommandServiceTest {
             given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.DISAGREE)).willReturn(true);
             given(suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.DISAGREE))
                     .willReturn(Optional.of(existingDisagree));
+            given(suggestionRepo.findToggleStatusByCollectionIdAndBirdId(100L, 5L, 1L))
+                    .willReturn(new Object[]{8L, 1L, false, false}); // agreeCount=8, disagreeCount=1, isAgreedByMe=false, isDisagreedByMe=false
 
-            DisagreeStatusResponse res = sut.toggleDisagree(1L, 100L, 5L);
+            ToggleStatusResponse res = sut.toggleDisagree(1L, 100L, 5L);
 
-            assertFalse(res.isDisagreed());
+            assertThat(res.agreeCount()).isEqualTo(8L);
+            assertThat(res.disagreeCount()).isEqualTo(1L);
+            assertThat(res.isAgreedByMe()).isFalse();
+            assertThat(res.isDisagreedByMe()).isFalse();
             verify(suggestionRepo).remove(existingDisagree);
         }
     }

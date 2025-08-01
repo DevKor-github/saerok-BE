@@ -126,6 +126,40 @@ public class BirdIdSuggestionRepository {
     /* ──────────────────────────── 통계/집계용 ──────────────────────────── */
 
     /**
+     * 특정 컬렉션의 특정 birdId에 대한 동의/비동의 카운트와 사용자 상태 조회
+     * 
+     * @param collectionId 컬렉션 ID
+     * @param birdId 조류 ID
+     * @param userId 사용자 ID
+     * @return Object[4] - [동의수, 비동의수, 내가동의했는지, 내가비동의했는지]
+     */
+    public Object[] findToggleStatusByCollectionIdAndBirdId(Long collectionId, Long birdId, Long userId) {
+        List<Object[]> results = em.createQuery("""
+            SELECT 
+                SUM(CASE WHEN s.type = :agreeType THEN 1 ELSE 0 END) AS agreeCount,
+                SUM(CASE WHEN s.type = :disagreeType THEN 1 ELSE 0 END) AS disagreeCount,
+                CASE WHEN SUM(CASE WHEN s.user.id = :userId AND s.type = :agreeType THEN 1 ELSE 0 END) > 0 THEN true ELSE false END AS isAgreedByMe,
+                CASE WHEN SUM(CASE WHEN s.user.id = :userId AND s.type = :disagreeType THEN 1 ELSE 0 END) > 0 THEN true ELSE false END AS isDisagreedByMe
+            FROM BirdIdSuggestion s
+            WHERE s.collection.id = :collectionId
+              AND s.bird.id = :birdId
+              AND s.type IN (:agreeType, :disagreeType)
+            """)
+                .setParameter("collectionId", collectionId)
+                .setParameter("birdId", birdId)
+                .setParameter("userId", userId)
+                .setParameter("agreeType", BirdIdSuggestion.SuggestionType.AGREE)
+                .setParameter("disagreeType", BirdIdSuggestion.SuggestionType.DISAGREE)
+                .getResultList();
+
+        if (results.isEmpty() || results.getFirst()[0] == null) {
+            return new Object[]{0L, 0L, false, false};
+        }
+        
+        return results.getFirst();
+    }
+
+    /**
      * 특정 컬렉션에 제안된 birdId별 동의/비동의 숫자와
      * '내가 동의했는지/비동의했는지' 여부까지 포함한 요약 리스트를 반환.
      *
