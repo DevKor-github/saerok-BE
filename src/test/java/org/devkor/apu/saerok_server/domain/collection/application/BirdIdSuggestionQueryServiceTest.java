@@ -100,7 +100,7 @@ class BirdIdSuggestionQueryServiceTest {
             GetPendingCollectionsResponse res = sut.getPendingCollections();
 
             assertThat(res.items()).isEmpty();
-            verify(userProfileImageRepo, never()).findObjectKeysByUserIds(any());
+            verify(userProfileImageRepo).findObjectKeysByUserIds(List.of());
             System.out.println("[Pending.empty] ✔︎ empty list");
         }
     }

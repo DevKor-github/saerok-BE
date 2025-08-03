@@ -32,23 +32,12 @@ class UserCommandServiceTest {
 
     UserCommandService userCommandService;
 
-    @Mock
-    UserRepository userRepository;
-
-    @Mock
-    UserProfileUpdateService userProfileUpdateService;
-
-    @Mock
-    UserSignupStatusService userSignupStatusService;
-
-    @Mock
-    UserProfileImageCommandService userProfileImageCommandService;
-
-    @Mock
-    UserProfileImageRepository userProfileImageRepository;
-
-    @Mock
-    ImageDomainService imageDomainService;
+    @Mock UserRepository userRepository;
+    @Mock UserProfileUpdateService userProfileUpdateService;
+    @Mock UserSignupStatusService userSignupStatusService;
+    @Mock UserProfileImageCommandService userProfileImageCommandService;
+    @Mock UserProfileImageRepository userProfileImageRepository;
+    @Mock ImageDomainService imageDomainService;
 
     private User testUser;
 
@@ -89,6 +78,13 @@ class UserCommandServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
         given(userProfileImageRepository.findObjectKeyByUserId(userId)).willReturn(objectKey);
         given(imageDomainService.toUploadImageUrl(objectKey)).willReturn(expectedImageUrl);
+        
+        // changeNickname 호출 시 testUser의 닉네임이 실제로 변경되도록 시뮬레이션
+        doAnswer(invocation -> {
+            String nickname = invocation.getArgument(1); // 두 번째 인수 (newNickname)
+            testUser.setNickname(nickname);
+            return null;
+        }).when(userProfileUpdateService).changeNickname(testUser, newNickname);
 
         // when
         UpdateUserProfileResponse result = userCommandService.updateUserProfile(command);
@@ -184,6 +180,13 @@ class UserCommandServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
         given(userProfileImageRepository.findObjectKeyByUserId(userId)).willReturn(customObjectKey);
         given(imageDomainService.toUploadImageUrl(customObjectKey)).willReturn(expectedImageUrl);
+        
+        // changeNickname 호출 시 testUser의 닉네임이 실제로 변경되도록 시뮬레이션
+        doAnswer(invocation -> {
+            String nickname = invocation.getArgument(1); // 두 번째 인수 (newNickname)
+            testUser.setNickname(nickname);
+            return null;
+        }).when(userProfileUpdateService).changeNickname(testUser, newNickname);
 
         // when
         UpdateUserProfileResponse result = userCommandService.updateUserProfile(command);
