@@ -10,6 +10,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
@@ -44,8 +45,8 @@ class CollectionQueryServiceTest {
     @Mock CollectionCommentRepository collectionCommentRepository;
     @Mock CollectionWebMapper collectionWebMapper;
     @Mock UserRepository userRepository;
-    @Mock
-    ImageDomainService imageDomainService;
+    @Mock UserProfileImageRepository userProfileImageRepository;
+    @Mock ImageDomainService imageDomainService;
 
     Field userIdField;
     Field collectionIdField;
@@ -60,6 +61,7 @@ class CollectionQueryServiceTest {
                 collectionCommentRepository,
                 collectionWebMapper,
                 userRepository,
+                userProfileImageRepository,
                 imageDomainService
         );
 
@@ -96,7 +98,9 @@ class CollectionQueryServiceTest {
         given(collectionLikeRepository.countByCollectionId(collectionId)).willReturn(5L);
         given(collectionCommentRepository.countByCollectionId(collectionId)).willReturn(3L);
         given(imageDomainService.toUploadImageUrl(objectKey)).willReturn(imageUrl);
-        given(collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, 5L, 3L, false)).willReturn(expected);
+        given(userProfileImageRepository.findObjectKeyByUserId(10L)).willReturn("profile-images/10/profile.jpg");
+        given(imageDomainService.toUploadImageUrl("profile-images/10/profile.jpg")).willReturn("https://cdn.example.com/profile/10/profile.jpg");
+        given(collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, "https://cdn.example.com/profile/10/profile.jpg", 5L, 3L, false)).willReturn(expected);
 
         // when
         GetCollectionDetailResponse actual = collectionQueryService.getCollectionDetailResponse(null, collectionId);
@@ -127,8 +131,10 @@ class CollectionQueryServiceTest {
         given(collectionLikeRepository.countByCollectionId(collectionId)).willReturn(3L);
         given(collectionCommentRepository.countByCollectionId(collectionId)).willReturn(2L);
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(true);
+        given(userProfileImageRepository.findObjectKeyByUserId(userId)).willReturn("profile-images/1/profile.jpg");
+        given(imageDomainService.toUploadImageUrl("profile-images/1/profile.jpg")).willReturn("https://cdn.example.com/profile/1/profile.jpg");
         GetCollectionDetailResponse expected = new GetCollectionDetailResponse();
-        given(collectionWebMapper.toGetCollectionDetailResponse(collection, null, 3L, 2L, true)).willReturn(expected);
+        given(collectionWebMapper.toGetCollectionDetailResponse(collection, null, "https://cdn.example.com/profile/1/profile.jpg", 3L, 2L, true)).willReturn(expected);
 
         // when
         GetCollectionDetailResponse actual =

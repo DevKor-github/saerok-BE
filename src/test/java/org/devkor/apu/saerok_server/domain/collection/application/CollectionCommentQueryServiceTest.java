@@ -8,7 +8,9 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -35,6 +37,8 @@ class CollectionCommentQueryServiceTest {
     @Mock CollectionRepository       collectionRepo;
     @Mock CollectionCommentLikeRepository commentLikeRepo;
     @Mock CollectionCommentWebMapper mapper;
+    @Mock UserProfileImageRepository userProfileImageRepo;
+    @Mock ImageDomainService imageDomainService;
 
     private static UserBirdCollection collection(long id, Long userId) {
         UserBirdCollection c = new UserBirdCollection();
@@ -48,7 +52,11 @@ class CollectionCommentQueryServiceTest {
     }
 
     @BeforeEach
-    void init() { sut = new CollectionCommentQueryService(commentRepo, collectionRepo, commentLikeRepo, mapper); }
+    void init() { 
+        sut = new CollectionCommentQueryService(
+            commentRepo, collectionRepo, commentLikeRepo, mapper, 
+            userProfileImageRepo, imageDomainService); 
+    }
 
     /* ------------------------------------------------------------------ */
     @Nested @DisplayName("댓글 목록 조회")
@@ -65,13 +73,17 @@ class CollectionCommentQueryServiceTest {
             Map<Long, Long> likeCounts = Map.of();
             when(commentLikeRepo.countLikesByCommentIds(List.of())).thenReturn(likeCounts);
 
+            Map<Long, String> profileImageUrls = Map.of();
+            when(userProfileImageRepo.findObjectKeysByUserIds(List.of())).thenReturn(Map.of());
+
             GetCollectionCommentsResponse expected = new GetCollectionCommentsResponse(List.of(), false);
-            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, Map.of(), Map.of(), false)).thenReturn(expected);
+            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, Map.of(), Map.of(), profileImageUrls, false))
+                    .thenReturn(expected);
 
             var res = sut.getComments(COLL_ID, null); // userId = null (비회원)
 
             assertThat(res).isSameAs(expected);
-            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, Map.of(), Map.of(), false);
+            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, Map.of(), Map.of(), profileImageUrls, false);
         }
         
         @Test @DisplayName("성공 - 회원 (내 컬렉션 아님)")
@@ -89,13 +101,17 @@ class CollectionCommentQueryServiceTest {
             Map<Long, Boolean> likeStatuses = Map.of();
             when(commentLikeRepo.findLikeStatusByUserIdAndCommentIds(userId, List.of())).thenReturn(likeStatuses);
 
+            Map<Long, String> profileImageUrls = Map.of();
+            when(userProfileImageRepo.findObjectKeysByUserIds(List.of())).thenReturn(Map.of());
+
             GetCollectionCommentsResponse expected = new GetCollectionCommentsResponse(List.of(), false);
-            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of(), false)).thenReturn(expected);
+            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of(), profileImageUrls, false))
+                    .thenReturn(expected);
 
             var res = sut.getComments(COLL_ID, userId);
 
             assertThat(res).isSameAs(expected);
-            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of(), false);
+            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of(), profileImageUrls, false);
         }
         
         @Test @DisplayName("성공 - 회원 (내 컬렉션)")
@@ -113,13 +129,17 @@ class CollectionCommentQueryServiceTest {
             Map<Long, Boolean> likeStatuses = Map.of();
             when(commentLikeRepo.findLikeStatusByUserIdAndCommentIds(userId, List.of())).thenReturn(likeStatuses);
 
+            Map<Long, String> profileImageUrls = Map.of();
+            when(userProfileImageRepo.findObjectKeysByUserIds(List.of())).thenReturn(Map.of());
+
             GetCollectionCommentsResponse expected = new GetCollectionCommentsResponse(List.of(), true);
-            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of(), true)).thenReturn(expected);
+            when(mapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of(), profileImageUrls, true))
+                    .thenReturn(expected);
 
             var res = sut.getComments(COLL_ID, userId);
 
             assertThat(res).isSameAs(expected);
-            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of(), true);
+            verify(mapper).toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, Map.of(), profileImageUrls, true);
         }
 
         @Test @DisplayName("컬렉션 없음 → NotFoundException")

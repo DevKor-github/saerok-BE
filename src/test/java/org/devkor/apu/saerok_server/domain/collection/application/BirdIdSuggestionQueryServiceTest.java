@@ -6,6 +6,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.junit.jupiter.api.*;
@@ -29,13 +30,14 @@ class BirdIdSuggestionQueryServiceTest {
     @Mock CollectionImageRepository  collectionImageRepo;
     @Mock ImageDomainService         imageDomainService;
     @Mock UserRepository             userRepo;
+    @Mock UserProfileImageRepository userProfileImageRepo;
 
     BirdIdSuggestionQueryService sut;
 
     @BeforeEach void init() {
         sut = new BirdIdSuggestionQueryService(
                 suggestionRepo, collectionRepo, collectionImageRepo,
-                imageDomainService, userRepo);
+                imageDomainService, userRepo, userProfileImageRepo);
     }
 
     /* ────────── 헬퍼 ────────── */
@@ -64,8 +66,14 @@ class BirdIdSuggestionQueryServiceTest {
                     .thenReturn(List.of(c1, c2));
             when(collectionImageRepo.findThumbKeysByCollectionIds(List.of(1L,2L)))
                     .thenReturn(Map.of(1L, "thumb/key1.jpg"));
+            when(userProfileImageRepo.findObjectKeysByUserIds(List.of(1L, 2L)))
+                    .thenReturn(Map.of(1L, "profile-images/1/profile.jpg", 2L, "profile-images/default/default-1.png"));
             when(imageDomainService.toUploadImageUrl("thumb/key1.jpg"))
                     .thenReturn("http://cdn/img/thumb/key1.jpg");
+            when(imageDomainService.toUploadImageUrl("profile-images/1/profile.jpg"))
+                    .thenReturn("http://cdn/profile/1/profile.jpg");
+            when(imageDomainService.toUploadImageUrl("profile-images/default/default-1.png"))
+                    .thenReturn("http://cdn/profile/default/default-1.png");
 
             /* ── 실행 ─────────────────────────────────────────────── */
             GetPendingCollectionsResponse res = sut.getPendingCollections();
@@ -74,10 +82,14 @@ class BirdIdSuggestionQueryServiceTest {
             assertThat(res.items()).hasSize(2);
 
             GetPendingCollectionsResponse.Item first = res.items().getFirst();
-            assertThat(first.collectionId()).isEqualTo(1L);       // ❶
-            assertThat(first.imageUrl())                          // ❷
-                    .isEqualTo("http://cdn/img/thumb/key1.jpg");
-            assertThat(res.items().get(1).imageUrl()).isNull();
+            assertThat(first.collectionId()).isEqualTo(1L);
+            assertThat(first.imageUrl()).isEqualTo("http://cdn/img/thumb/key1.jpg");
+            assertThat(first.profileImageUrl()).isEqualTo("http://cdn/profile/1/profile.jpg");
+            
+            GetPendingCollectionsResponse.Item second = res.items().get(1);
+            assertThat(second.imageUrl()).isNull();
+            assertThat(second.profileImageUrl()).isEqualTo("http://cdn/profile/default/default-1.png");
+            
             System.out.println("[Pending.success] ✔︎ items=" + res.items().size());
         }
 
@@ -88,6 +100,7 @@ class BirdIdSuggestionQueryServiceTest {
             GetPendingCollectionsResponse res = sut.getPendingCollections();
 
             assertThat(res.items()).isEmpty();
+            verify(userProfileImageRepo, never()).findObjectKeysByUserIds(any());
             System.out.println("[Pending.empty] ✔︎ empty list");
         }
     }
@@ -117,7 +130,7 @@ class BirdIdSuggestionQueryServiceTest {
             System.out.println("[SuggestList.guest] ✔︎ birdId=" + res.items().getFirst().birdId());
         }
 
-        @Test @DisplayName("userId 있지만 사용자 없음 → NotFoundException")
+        @Test @DisplayName("userId 있지만 사용자 없음 → NotFoundException")
         void userNotFound() {
             when(userRepo.findById(77L)).thenReturn(Optional.empty());
             assertThatThrownBy(() -> sut.getSuggestions(77L,10L))
