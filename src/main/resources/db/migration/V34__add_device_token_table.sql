@@ -6,7 +6,6 @@ CREATE TABLE device_token (
     user_id    BIGINT        NOT NULL,
     device_id  VARCHAR(256)  NOT NULL,
     token      VARCHAR(512)  NOT NULL,
-    is_active  BOOLEAN       NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -22,7 +21,5 @@ ALTER TABLE device_token
 -- 사용자별 디바이스 토큰 조회에 이용
 CREATE INDEX idx_device_token_user ON device_token(user_id);
 CREATE INDEX idx_device_token_user_device ON device_token(user_id, device_id);
--- 전체 공지/업데이트 알림 발송 시 활성 토큰 조회에 이용
-CREATE INDEX idx_device_token_user_active ON device_token(user_id, is_active);
 -- 토큰 중복 확인 및 검색에 이용
 CREATE INDEX idx_device_token_token ON device_token(token);

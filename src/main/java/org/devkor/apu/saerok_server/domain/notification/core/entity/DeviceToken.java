@@ -29,21 +29,13 @@ public class DeviceToken extends Auditable {
     @Column(name = "token", nullable = false, length = 512)
     private String token;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
-
-    public static DeviceToken createActiveToken(User user, String deviceId, String token) {
+    public static DeviceToken create(User user, String deviceId, String token) {
         DeviceToken deviceToken = new DeviceToken();
         deviceToken.user = user;
         deviceToken.deviceId = deviceId;
         deviceToken.token = token;
-        deviceToken.isActive = true;
         return deviceToken;
     }
 
     public void updateToken(String newToken) { this.token = newToken; }
-
-    public void activate() { this.isActive = true; }
-
-    public void deactivate() { this.isActive = false; }
 }
