@@ -11,9 +11,6 @@ public record LocalDeviceTokenResponse(
         @Schema(description = "생성된 더미 FCM 토큰", example = "dummy_fcm_token_99999")
         String fcmToken,
 
-        @Schema(description = "디바이스 토큰 활성화 상태", example = "true")
-        Boolean isActive,
-
         @Schema(description = "등록된 사용자 ID", example = "99999")
         Long userId
 ) {
