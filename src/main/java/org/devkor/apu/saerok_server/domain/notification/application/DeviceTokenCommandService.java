@@ -56,7 +56,7 @@ public class DeviceTokenCommandService {
             }
         }
 
-        return deviceTokenWebMapper.toRegisterTokenResponse(command);
+        return deviceTokenWebMapper.toRegisterTokenResponse(command, true);
     }
 
     public void deleteDevice(DeviceTokenDeleteCommand command) {

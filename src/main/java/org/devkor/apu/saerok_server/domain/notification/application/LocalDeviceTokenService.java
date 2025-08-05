@@ -30,7 +30,7 @@ public class LocalDeviceTokenService {
         String dummyDeviceId = "dummy_device_99999";
         String dummyFcmToken = "dummy_fcm_token_99999";
 
-        // 기존 더미 디바이스 토큰 확인
+        // 기존 더미 디바이스 토큰 확인 및 처리
         DeviceToken deviceToken = deviceTokenRepository
                 .findByUserIdAndDeviceId(dummyUser.getId(), dummyDeviceId)
                 .map(token -> {
@@ -46,12 +46,20 @@ public class LocalDeviceTokenService {
                             dummyFcmToken
                     );
                     deviceTokenRepository.save(newDeviceToken);
-
-                    notificationSettingsRepository
-                            .findByUserIdAndDeviceId(dummyUser.getId(), dummyDeviceId)
-                            .ifPresent(notificationSettingsRepository::save);
-
                     return newDeviceToken;
+                });
+
+        // 알림 설정 확인 및 생성
+        notificationSettingsRepository
+                .findByUserIdAndDeviceId(dummyUser.getId(), dummyDeviceId)
+                .orElseGet(() -> {
+                    // 기존 알림 설정이 없으면 기본 설정으로 생성
+                    NotificationSettings newSettings = NotificationSettings.createDefault(
+                            dummyUser,
+                            dummyDeviceId
+                    );
+                    notificationSettingsRepository.save(newSettings);
+                    return newSettings;
                 });
 
         return deviceTokenWebMapper.toLocalDeviceTokenResponse(deviceToken);

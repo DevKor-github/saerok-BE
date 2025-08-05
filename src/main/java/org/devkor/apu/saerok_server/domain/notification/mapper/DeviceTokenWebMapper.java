@@ -25,8 +25,10 @@ public interface DeviceTokenWebMapper {
     @Mapping(target = "userId", source = "userId")
     DeleteAllTokensCommand toDeleteAllTokensCommand(Long userId);
 
-    RegisterTokenResponse toRegisterTokenResponse(RegisterTokenCommand command);
+    RegisterTokenResponse toRegisterTokenResponse(RegisterTokenCommand command, Boolean success);
 
     @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "deviceId", target = "deviceId")
+    @Mapping(source = "token", target = "fcmToken")
     LocalDeviceTokenResponse toLocalDeviceTokenResponse(DeviceToken deviceToken);
 }
