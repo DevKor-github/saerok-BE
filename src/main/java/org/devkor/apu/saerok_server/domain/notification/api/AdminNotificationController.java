@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.notification.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,7 +10,7 @@ import org.devkor.apu.saerok_server.domain.notification.api.dto.request.SendPush
 import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.SendBroadcastPushCommand;
-import org.devkor.apu.saerok_server.domain.notification.application.dto.SendPushToUserCommand;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,9 +47,8 @@ public class AdminNotificationController {
                 request.data(),
                 request.deepLink()
         );
-        
-        SendPushToUserCommand command = new SendPushToUserCommand(userId, messageCommand);
-        pushNotificationService.sendToUser(command);
+
+        pushNotificationService.sendToUser(userId, NotificationType.SYSTEM, messageCommand);
     }
 
     // 전체 사용자에게 공지 발송 (시스템 점검, 업데이트, 이벤트 공지 등에 사용)

@@ -55,22 +55,17 @@ public class DeviceTokenRepository {
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
     }
 
-    // 사용자의 활성 토큰 조회 (푸쉬 알림 메시지 전송용)
-    public List<DeviceToken> findActiveTokensByUserId(Long userId) {
+    // 특정 사용자의 특정 디바이스들의 토큰 조회
+    public List<DeviceToken> findByUserIdAndDeviceIds(Long userId, List<String> deviceIds) {
+        if (deviceIds.isEmpty()) {
+            return List.of();
+        }
         return em.createQuery(
                 "SELECT dt FROM DeviceToken dt " +
-                "WHERE dt.user.id = :userId AND dt.isActive = true " +
+                "WHERE dt.user.id = :userId AND dt.deviceId IN :deviceIds " +
                 "ORDER BY dt.createdAt DESC", DeviceToken.class)
                 .setParameter("userId", userId)
-                .getResultList();
-    }
-
-    // 모든 활성화된 디바이스 토큰 조회 (브로드캐스트용)
-    public List<DeviceToken> findAllActiveTokens() {
-        return em.createQuery(
-                        "SELECT dt FROM DeviceToken dt " +
-                                "WHERE dt.isActive = true " +
-                                "ORDER BY dt.user.id, dt.createdAt DESC", DeviceToken.class)
+                .setParameter("deviceIds", deviceIds)
                 .getResultList();
     }
 }

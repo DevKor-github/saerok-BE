@@ -47,7 +47,8 @@ public class CollectionCommentCommandService {
             pushNotificationService.sendCollectionCommentNotification(
                 collection.getUser().getId(), // 컬렉션 소유자에게
                 user.getNickname(), // 댓글을 달은 사용자의 닉네임
-                collectionId // 컬렉션 ID
+                collectionId, // 컬렉션 ID
+                req.content() // 댓글 내용
             );
         }
         
