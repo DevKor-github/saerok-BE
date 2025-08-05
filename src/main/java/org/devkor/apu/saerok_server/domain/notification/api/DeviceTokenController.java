@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.request.DeviceIdRequest;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.request.RegisterTokenRequest;
-import org.devkor.apu.saerok_server.domain.notification.api.dto.response.DeviceTokenToggleResponse;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.RegisterTokenResponse;
 import org.devkor.apu.saerok_server.domain.notification.application.DeviceTokenCommandService;
 import org.devkor.apu.saerok_server.domain.notification.mapper.DeviceTokenWebMapper;
@@ -50,28 +49,6 @@ public class DeviceTokenController {
     ) {
         return deviceTokenCommandService.registerToken(
                 deviceTokenWebMapper.toRegisterTokenCommand(request, userPrincipal.getId())
-        );
-    }
-
-    @PatchMapping("/device/toggle")
-    @PreAuthorize("hasRole('USER')")
-    @Operation(
-            summary = "특정 디바이스 푸시 알림 설정 토글",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            description = "사용자의 특정 디바이스에 대해 푸시 알림을 설정하거나 해제합니다.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "토글 성공",
-                        content = @Content(schema = @Schema(implementation = DeviceTokenToggleResponse.class))),
-                    @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "해당 디바이스를 찾을 수 없음", content = @Content)
-            }
-    )
-    public DeviceTokenToggleResponse toggleDevicePushNotification(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @Valid @RequestBody DeviceIdRequest request
-    ) {
-        return deviceTokenCommandService.toggleDevicePushNotification(
-                deviceTokenWebMapper.toDeviceTokenToggleCommand(request, userPrincipal.getId())
         );
     }
 
