@@ -28,6 +28,10 @@ import java.util.List;
 @RequestMapping("${api_prefix}/notifications/settings/")
 public class NotificationSettingsController {
 
+    private final NotificationSettingsCommandService notificationSettingsCommandService;
+    private final NotificationSettingsQueryService notificationSettingsQueryService;
+    private final NotificationSettingsWebMapper notificationSettingsWebMapper;
+
     @GetMapping
     @PreAuthorize("hasRole('USER')")
     @Operation(
@@ -40,11 +44,14 @@ public class NotificationSettingsController {
                     @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음", content = @Content)
             }
     )
-    public void getNotificationSettings(
+    public NotificationSettingsResponse getNotificationSettings(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Parameter(description = "디바이스 ID", required = true, example = "device-123")
             @RequestParam String deviceId
     ) {
+        return notificationSettingsQueryService.getNotificationSettings(
+                notificationSettingsWebMapper.toGetNotificationSettingsCommand(userPrincipal.getId(), deviceId)
+        );
     }
 
     @GetMapping("all")
@@ -58,10 +65,10 @@ public class NotificationSettingsController {
                     @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음", content = @Content)
             }
     )
-    public void getAllNotificationSettings(
+    public List<NotificationSettingsResponse> getAllNotificationSettings(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-
+        return notificationSettingsQueryService.getAllNotificationSettings(userPrincipal.getId());
     }
 
     @PatchMapping("toggle")
@@ -78,10 +85,12 @@ public class NotificationSettingsController {
                     @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음", content = @Content)
             }
     )
-    public void toggleNotificationSetting(
+    public ToggleNotificationResponse toggleNotificationSetting(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody ToggleNotificationRequest request
     ) {
-
+        return notificationSettingsCommandService.toggleNotificationSetting(
+                notificationSettingsWebMapper.toToggleNotificationSettingCommand(request, userPrincipal.getId())
+        );
     }
 }
