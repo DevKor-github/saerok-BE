@@ -9,9 +9,8 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionLikeWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,23 +32,11 @@ class CollectionLikeQueryServiceTest {
 
     CollectionLikeQueryService collectionLikeQueryService;
 
-    @Mock
-    CollectionLikeRepository collectionLikeRepository;
-
-    @Mock
-    CollectionRepository collectionRepository;
-
-    @Mock
-    UserRepository userRepository;
-
-    @Mock
-    UserProfileImageRepository userProfileImageRepository;
-
-    @Mock
-    CollectionLikeWebMapper collectionLikeWebMapper;
-
-    @Mock
-    ImageDomainService imageDomainService;
+    @Mock CollectionLikeRepository      collectionLikeRepository;
+    @Mock CollectionRepository          collectionRepository;
+    @Mock UserRepository                userRepository;
+    @Mock CollectionLikeWebMapper       collectionLikeWebMapper;
+    @Mock UserProfileImageUrlService    userProfileImageUrlService;
 
     private User testUser;
     private UserBirdCollection testCollection;
@@ -60,9 +47,8 @@ class CollectionLikeQueryServiceTest {
                 collectionLikeRepository,
                 collectionRepository,
                 userRepository,
-                userProfileImageRepository,
                 collectionLikeWebMapper,
-                imageDomainService
+                userProfileImageUrlService
         );
 
         testUser = new User();
@@ -75,7 +61,6 @@ class CollectionLikeQueryServiceTest {
     @Test
     @DisplayName("좋아요 상태 조회 - 좋아요 있음")
     void getLikeStatusResponse_liked_returnsTrue() {
-        // given
         Long userId = 1L;
         Long collectionId = 1L;
 
@@ -83,10 +68,8 @@ class CollectionLikeQueryServiceTest {
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(testCollection));
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(true);
 
-        // when
         LikeStatusResponse result = collectionLikeQueryService.getLikeStatusResponse(userId, collectionId);
 
-        // then
         assertTrue(result.isLiked());
         verify(userRepository).findById(userId);
         verify(collectionRepository).findById(collectionId);
@@ -96,7 +79,6 @@ class CollectionLikeQueryServiceTest {
     @Test
     @DisplayName("좋아요 상태 조회 - 좋아요 없음")
     void getLikeStatusResponse_notLiked_returnsFalse() {
-        // given
         Long userId = 1L;
         Long collectionId = 1L;
 
@@ -104,10 +86,8 @@ class CollectionLikeQueryServiceTest {
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(testCollection));
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(false);
 
-        // when
         LikeStatusResponse result = collectionLikeQueryService.getLikeStatusResponse(userId, collectionId);
 
-        // then
         assertFalse(result.isLiked());
         verify(userRepository).findById(userId);
         verify(collectionRepository).findById(collectionId);
@@ -117,16 +97,14 @@ class CollectionLikeQueryServiceTest {
     @Test
     @DisplayName("존재하지 않는 사용자로 좋아요 상태 조회 시 예외 발생")
     void getLikeStatusResponse_userNotFound_throwsException() {
-        // given
         Long userId = 999L;
         Long collectionId = 1L;
 
         given(userRepository.findById(userId)).willReturn(Optional.empty());
 
-        // when & then
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-            collectionLikeQueryService.getLikeStatusResponse(userId, collectionId);
-        });
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                collectionLikeQueryService.getLikeStatusResponse(userId, collectionId)
+        );
 
         assertTrue(exception.getMessage().contains("사용자를 찾을 수 없습니다"));
         verify(userRepository).findById(userId);
@@ -135,17 +113,15 @@ class CollectionLikeQueryServiceTest {
     @Test
     @DisplayName("존재하지 않는 컬렉션으로 좋아요 상태 조회 시 예외 발생")
     void getLikeStatusResponse_collectionNotFound_throwsException() {
-        // given
         Long userId = 1L;
         Long collectionId = 999L;
 
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
         given(collectionRepository.findById(collectionId)).willReturn(Optional.empty());
 
-        // when & then
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-            collectionLikeQueryService.getLikeStatusResponse(userId, collectionId);
-        });
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                collectionLikeQueryService.getLikeStatusResponse(userId, collectionId)
+        );
 
         assertTrue(exception.getMessage().contains("컬렉션을 찾을 수 없습니다"));
         verify(userRepository).findById(userId);
@@ -155,7 +131,6 @@ class CollectionLikeQueryServiceTest {
     @Test
     @DisplayName("사용자가 좋아요한 컬렉션 목록 조회")
     void getLikedCollectionIdsResponse_returnsLikedCollections() {
-        // given
         Long userId = 1L;
         List<UserBirdCollection> likedCollections = List.of(testCollection);
         GetLikedCollectionsResponse expectedResponse = new GetLikedCollectionsResponse(List.of());
@@ -164,10 +139,8 @@ class CollectionLikeQueryServiceTest {
         given(collectionLikeRepository.findLikedCollectionsByUserId(userId)).willReturn(likedCollections);
         given(collectionLikeWebMapper.toGetLikedCollectionsResponse(likedCollections)).willReturn(expectedResponse);
 
-        // when
         GetLikedCollectionsResponse result = collectionLikeQueryService.getLikedCollectionIdsResponse(userId);
 
-        // then
         assertEquals(expectedResponse, result);
         verify(userRepository).findById(userId);
         verify(collectionLikeRepository).findLikedCollectionsByUserId(userId);
@@ -177,15 +150,13 @@ class CollectionLikeQueryServiceTest {
     @Test
     @DisplayName("존재하지 않는 사용자로 좋아요한 컬렉션 목록 조회 시 예외 발생")
     void getLikedCollectionIdsResponse_userNotFound_throwsException() {
-        // given
         Long userId = 999L;
 
         given(userRepository.findById(userId)).willReturn(Optional.empty());
 
-        // when & then
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-            collectionLikeQueryService.getLikedCollectionIdsResponse(userId);
-        });
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                collectionLikeQueryService.getLikedCollectionIdsResponse(userId)
+        );
 
         assertTrue(exception.getMessage().contains("사용자를 찾을 수 없습니다"));
         verify(userRepository).findById(userId);
@@ -194,7 +165,6 @@ class CollectionLikeQueryServiceTest {
     @Test
     @DisplayName("컬렉션을 좋아요한 사용자 목록 조회")
     void getCollectionLikersResponse_returnsLikers() {
-        // given
         Long collectionId = 1L;
         List<User> likers = List.of(testUser);
         Map<Long, String> profileImageUrls = Map.of(1L, "https://example.com/profile/1.jpg");
@@ -202,37 +172,30 @@ class CollectionLikeQueryServiceTest {
 
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(testCollection));
         given(collectionLikeRepository.findLikersByCollectionId(collectionId)).willReturn(likers);
-        given(userProfileImageRepository.findObjectKeysByUserIds(List.of(1L)))
-                .willReturn(Map.of(1L, "profile-images/1/profile.jpg"));
-        given(imageDomainService.toUploadImageUrl("profile-images/1/profile.jpg"))
-                .willReturn("https://example.com/profile/1.jpg");
+        given(userProfileImageUrlService.getProfileImageUrlsFor(likers))
+                .willReturn(profileImageUrls);
         given(collectionLikeWebMapper.toGetCollectionLikersResponse(likers, profileImageUrls))
                 .willReturn(expectedResponse);
 
-        // when
         GetCollectionLikersResponse result = collectionLikeQueryService.getCollectionLikersResponse(collectionId);
 
-        // then
         assertEquals(expectedResponse, result);
         verify(collectionRepository).findById(collectionId);
         verify(collectionLikeRepository).findLikersByCollectionId(collectionId);
-        verify(userProfileImageRepository).findObjectKeysByUserIds(List.of(1L));
-        verify(imageDomainService).toUploadImageUrl("profile-images/1/profile.jpg");
+        verify(userProfileImageUrlService).getProfileImageUrlsFor(likers);
         verify(collectionLikeWebMapper).toGetCollectionLikersResponse(likers, profileImageUrls);
     }
 
     @Test
     @DisplayName("존재하지 않는 컬렉션으로 좋아요한 사용자 목록 조회 시 예외 발생")
     void getCollectionLikersResponse_collectionNotFound_throwsException() {
-        // given
         Long collectionId = 999L;
 
         given(collectionRepository.findById(collectionId)).willReturn(Optional.empty());
 
-        // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            collectionLikeQueryService.getCollectionLikersResponse(collectionId);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                collectionLikeQueryService.getCollectionLikersResponse(collectionId)
+        );
 
         assertTrue(exception.getMessage().contains("컬렉션을 찾을 수 없습니다"));
         verify(collectionRepository).findById(collectionId);

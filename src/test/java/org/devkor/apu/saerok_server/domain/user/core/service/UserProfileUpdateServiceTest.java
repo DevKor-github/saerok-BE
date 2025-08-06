@@ -34,9 +34,18 @@ class UserProfileUpdateServiceTest {
     @Mock
     ImageService imageService;
 
+    @Mock
+    ProfileImageDefaultService profileImageDefaultService;
+
     @BeforeEach
     void setUp() {
-        userProfileUpdateService = new UserProfileUpdateService(nicknamePolicy, userRepository, userProfileImageRepository, imageService);
+        userProfileUpdateService = new UserProfileUpdateService(
+                nicknamePolicy,
+                userRepository,
+                userProfileImageRepository,
+                imageService,
+                profileImageDefaultService
+        );
     }
 
     @Test
@@ -69,9 +78,12 @@ class UserProfileUpdateServiceTest {
         given(nicknamePolicy.isNicknameValid(badNick)).willReturn(false);
 
         // when / then
-        assertThrows(IllegalArgumentException.class,
-                () -> userProfileUpdateService.changeNickname(user, badNick),
-                "해당 닉네임은 정책상 사용할 수 없습니다.");
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userProfileUpdateService.changeNickname(user, badNick)
+        );
+        assertTrue(ex.getMessage().contains("정책상 사용할 수 없습니다"));
+        verify(nicknamePolicy).isNicknameValid(badNick);
     }
 
     @Test
@@ -85,8 +97,12 @@ class UserProfileUpdateServiceTest {
         given(userRepository.findByNickname(dupNick)).willReturn(Optional.of(new User()));
 
         // when / then
-        assertThrows(IllegalArgumentException.class,
-                () -> userProfileUpdateService.changeNickname(user, dupNick),
-                "해당 닉네임은 다른 사용자가 사용 중입니다.");
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userProfileUpdateService.changeNickname(user, dupNick)
+        );
+        assertTrue(ex.getMessage().contains("다른 사용자가 사용 중입니다"));
+        verify(nicknamePolicy).isNicknameValid(dupNick);
+        verify(userRepository).findByNickname(dupNick);
     }
 }

@@ -112,10 +112,10 @@ public class UserController {
     @PostMapping("/me/profile-image/presign")
     @PreAuthorize("hasRole('USER')")
     @Operation(
-            summary = "프로필 이미지 업로드용 Presigned URL 발급",
+            summary = "프로필 사진 Presigned URL 발급",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-            프로필 이미지를 S3에 직접 업로드하기 위한 Presigned URL을 발급합니다.
+            프로필 사진을 S3에 직접 업로드하기 위한 Presigned URL을 발급합니다.
             
             사용 방법:
             1. 이 API로 Presigned URL 발급
@@ -149,13 +149,13 @@ public class UserController {
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
-            summary = "프로필 이미지 삭제",
+            summary = "프로필 사진 삭제",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-            사용자의 기존 프로필 이미지를 삭제합니다.
+            사용자의 기존 프로필 사진을 삭제합니다.
             """,
             responses = {
-                    @ApiResponse(responseCode = "204", description = "프로필 이미지 삭제 성공"),
+                    @ApiResponse(responseCode = "204", description = "프로필 사진 삭제 성공"),
                     @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content)
             }
     )

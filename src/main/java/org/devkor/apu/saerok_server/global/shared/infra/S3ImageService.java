@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 
 /**
- * S3의 업로드 이미지 버킷과 통신해 이미지 업로드/삭제/조회 등의 기능을 제공하는 서비스
+ * S3의 업로드 이미지 버킷과 통신해 이미지 업로드/삭제/조회 기능을 제공하는 서비스
  */
 @Service
 @RequiredArgsConstructor

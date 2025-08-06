@@ -1,12 +1,15 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetBirdIdSuggestionsResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetPendingCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
-import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSuggestionRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.junit.jupiter.api.*;
@@ -30,14 +33,15 @@ class BirdIdSuggestionQueryServiceTest {
     @Mock CollectionImageRepository  collectionImageRepo;
     @Mock ImageDomainService         imageDomainService;
     @Mock UserRepository             userRepo;
-    @Mock UserProfileImageRepository userProfileImageRepo;
+    @Mock UserProfileImageUrlService userProfileImageUrlService;
 
     BirdIdSuggestionQueryService sut;
 
     @BeforeEach void init() {
         sut = new BirdIdSuggestionQueryService(
                 suggestionRepo, collectionRepo, collectionImageRepo,
-                imageDomainService, userRepo, userProfileImageRepo);
+                imageDomainService, userRepo, userProfileImageUrlService
+        );
     }
 
     /* ────────── 헬퍼 ────────── */
@@ -66,14 +70,15 @@ class BirdIdSuggestionQueryServiceTest {
                     .thenReturn(List.of(c1, c2));
             when(collectionImageRepo.findThumbKeysByCollectionIds(List.of(1L,2L)))
                     .thenReturn(Map.of(1L, "thumb/key1.jpg"));
-            when(userProfileImageRepo.findObjectKeysByUserIds(List.of(1L, 2L)))
-                    .thenReturn(Map.of(1L, "profile-images/1/profile.jpg", 2L, "profile-images/default/default-1.png"));
             when(imageDomainService.toUploadImageUrl("thumb/key1.jpg"))
                     .thenReturn("http://cdn/img/thumb/key1.jpg");
-            when(imageDomainService.toUploadImageUrl("profile-images/1/profile.jpg"))
-                    .thenReturn("http://cdn/profile/1/profile.jpg");
-            when(imageDomainService.toUploadImageUrl("profile-images/default/default-1.png"))
-                    .thenReturn("http://cdn/profile/default/default-1.png");
+
+            // 프로필 이미지 URL은 UserProfileImageUrlService에서 일괄 반환
+            when(userProfileImageUrlService.getProfileImageUrlsFor(anyList()))
+                    .thenReturn(Map.of(
+                            1L, "http://cdn/profile/1/profile.jpg",
+                            2L, "http://cdn/profile/default/default-1.png"
+                    ));
 
             /* ── 실행 ─────────────────────────────────────────────── */
             GetPendingCollectionsResponse res = sut.getPendingCollections();
@@ -85,11 +90,11 @@ class BirdIdSuggestionQueryServiceTest {
             assertThat(first.collectionId()).isEqualTo(1L);
             assertThat(first.imageUrl()).isEqualTo("http://cdn/img/thumb/key1.jpg");
             assertThat(first.profileImageUrl()).isEqualTo("http://cdn/profile/1/profile.jpg");
-            
+
             GetPendingCollectionsResponse.Item second = res.items().get(1);
             assertThat(second.imageUrl()).isNull();
             assertThat(second.profileImageUrl()).isEqualTo("http://cdn/profile/default/default-1.png");
-            
+
             System.out.println("[Pending.success] ✔︎ items=" + res.items().size());
         }
 
@@ -100,7 +105,7 @@ class BirdIdSuggestionQueryServiceTest {
             GetPendingCollectionsResponse res = sut.getPendingCollections();
 
             assertThat(res.items()).isEmpty();
-            verify(userProfileImageRepo).findObjectKeysByUserIds(List.of());
+            verify(userProfileImageUrlService).getProfileImageUrlsFor(List.of());
             System.out.println("[Pending.empty] ✔︎ empty list");
         }
     }

@@ -1,5 +1,8 @@
 package org.devkor.apu.saerok_server.global.shared.infra;
 
+/**
+ * 이미지 업로드/삭제/조회 기능을 제공하는 서비스
+ */
 public interface ImageService {
     /**
      * 업로드용 Presigned URL을 생성하고, S3에 실제 업로드할 키를 반환

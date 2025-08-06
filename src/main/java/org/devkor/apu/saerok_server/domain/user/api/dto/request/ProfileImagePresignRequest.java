@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Schema(description = "프로필 이미지 업로드용 Presigned URL 발급 요청 DTO")
+@Schema(description = "프로필 사진 업로드용 Presigned URL 발급 요청 DTO")
 @Data
 @NoArgsConstructor
 public class ProfileImagePresignRequest {
