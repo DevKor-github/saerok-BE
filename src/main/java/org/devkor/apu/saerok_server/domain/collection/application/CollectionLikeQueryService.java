@@ -11,6 +11,7 @@ import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionLikeWebMa
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.springframework.stereotype.Service;
@@ -28,9 +29,8 @@ public class CollectionLikeQueryService {
     private final CollectionLikeRepository collectionLikeRepository;
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
-    private final UserProfileImageRepository userProfileImageRepository;
     private final CollectionLikeWebMapper collectionLikeWebMapper;
-    private final ImageDomainService imageDomainService;
+    private final UserProfileImageUrlService userProfileImageUrlService;
 
     /**
      * 좋아요 상태 조회
@@ -65,18 +65,7 @@ public class CollectionLikeQueryService {
                 .orElseThrow(() -> new IllegalArgumentException("컬렉션을 찾을 수 없습니다."));
 
         List<User> users = collectionLikeRepository.findLikersByCollectionId(collectionId);
-        
-        // 사용자 프로필 이미지 URL 일괄 조회
-        List<Long> userIds = users.stream()
-                .map(User::getId)
-                .toList();
-        Map<Long, String> profileImageObjectKeys = userProfileImageRepository.findObjectKeysByUserIds(userIds);
-        Map<Long, String> profileImageUrls = profileImageObjectKeys.entrySet().stream()
-                .collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    entry -> imageDomainService.toUploadImageUrl(entry.getValue())
-                ));
-        
+        Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
         return collectionLikeWebMapper.toGetCollectionLikersResponse(users, profileImageUrls);
     }
 }

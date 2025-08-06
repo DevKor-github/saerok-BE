@@ -98,7 +98,7 @@ class CollectionQueryServiceTest {
         given(collectionLikeRepository.countByCollectionId(collectionId)).willReturn(5L);
         given(collectionCommentRepository.countByCollectionId(collectionId)).willReturn(3L);
         given(imageDomainService.toUploadImageUrl(objectKey)).willReturn(imageUrl);
-        given(userProfileImageRepository.findObjectKeyByUserId(10L)).willReturn("profile-images/10/profile.jpg");
+        given(userProfileImageRepository.findObjectKeyByUserId(10L)).willReturn(Optional.of("profile-images/10/profile.jpg"));
         given(imageDomainService.toUploadImageUrl("profile-images/10/profile.jpg")).willReturn("https://cdn.example.com/profile/10/profile.jpg");
         given(collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, "https://cdn.example.com/profile/10/profile.jpg", 5L, 3L, false)).willReturn(expected);
 
@@ -131,7 +131,7 @@ class CollectionQueryServiceTest {
         given(collectionLikeRepository.countByCollectionId(collectionId)).willReturn(3L);
         given(collectionCommentRepository.countByCollectionId(collectionId)).willReturn(2L);
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(true);
-        given(userProfileImageRepository.findObjectKeyByUserId(userId)).willReturn("profile-images/1/profile.jpg");
+        given(userProfileImageRepository.findObjectKeyByUserId(userId)).willReturn(Optional.of("profile-images/1/profile.jpg"));
         given(imageDomainService.toUploadImageUrl("profile-images/1/profile.jpg")).willReturn("https://cdn.example.com/profile/1/profile.jpg");
         GetCollectionDetailResponse expected = new GetCollectionDetailResponse();
         given(collectionWebMapper.toGetCollectionDetailResponse(collection, null, "https://cdn.example.com/profile/1/profile.jpg", 3L, 2L, true)).willReturn(expected);

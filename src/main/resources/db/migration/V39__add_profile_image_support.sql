@@ -17,8 +17,11 @@ CREATE TABLE user_profile_image (
 ALTER TABLE user_profile_image
     ADD CONSTRAINT fk_user_profile_image_user FOREIGN KEY (user_id) REFERENCES users(id);
 
--- 2) users 테이블에 default_profile_image_variant 칼럼을 추가하여, 기본 프로필 사진 set 중 어떤 것을 줄지 설정값으로 관리
--- 초기값을 일괄 설정하지 않고, 애플리케이션 레벨에서 각 user가 필요할 때 lazy하게 설정해주는 방식을 사용
-
+-- 2) users.default_profile_image_variant 컬럼 추가
 ALTER TABLE users
     ADD COLUMN default_profile_image_variant SMALLINT;
+
+-- 2-1) 기존 유저의 default_profile_image_variant를 결정적으로 초기화 (기본 프사 개수 6개 기준으로 0~5)
+UPDATE users
+SET default_profile_image_variant = (id % 6)::smallint
+WHERE default_profile_image_variant IS NULL;

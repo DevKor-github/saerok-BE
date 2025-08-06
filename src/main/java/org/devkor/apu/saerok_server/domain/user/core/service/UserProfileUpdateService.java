@@ -22,6 +22,7 @@ public class UserProfileUpdateService {
     private final UserRepository userRepository;
     private final UserProfileImageRepository userProfileImageRepository;
     private final ImageService imageService;
+    private final ProfileImageDefaultService profileImageDefaultService;
 
     public void changeNickname(User user, String nickname) {
 
@@ -60,6 +61,7 @@ public class UserProfileUpdateService {
         userProfileImageRepository.findByUserId(user.getId()).ifPresent(image -> {
             String oldObjectKey = image.getObjectKey();
             userProfileImageRepository.remove(image);
+            profileImageDefaultService.setRandomVariant(user);
             runAfterCommitOrNow(() -> imageService.delete(oldObjectKey));
         });
     }

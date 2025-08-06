@@ -5,8 +5,10 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
+import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
@@ -27,7 +29,7 @@ public class BirdIdSuggestionQueryService {
     private final CollectionImageRepository  collectionImageRepo;
     private final ImageDomainService         imageDomainService;
     private final UserRepository userRepo;
-    private final UserProfileImageRepository userProfileImageRepo;
+    private final UserProfileImageUrlService userProfileImageUrlService;
 
     /* 전체 PUBLIC + pending 컬렉션 조회 */
     public GetPendingCollectionsResponse getPendingCollections() {
@@ -45,16 +47,11 @@ public class BirdIdSuggestionQueryService {
                 collectionImageRepo.findThumbKeysByCollectionIds(ids);
 
         // ── 3단계: 사용자 프로필 이미지 URL 일괄 조회
-        List<Long> userIds = collections.stream()
-                .map(c -> c.getUser().getId())
+        List<User> users = collections.stream()
+                .map(UserBirdCollection::getUser)
                 .distinct()
                 .toList();
-        Map<Long, String> profileImageObjectKeys = userProfileImageRepo.findObjectKeysByUserIds(userIds);
-        Map<Long, String> profileImageUrls = profileImageObjectKeys.entrySet().stream()
-                .collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    entry -> imageDomainService.toUploadImageUrl(entry.getValue())
-                ));
+        Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
 
         // ── 4단계: DTO 조립
         List<GetPendingCollectionsResponse.Item> items = collections.stream()
