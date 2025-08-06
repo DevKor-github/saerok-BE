@@ -1,3 +1,4 @@
+-- 로컬 더미 유저 생성 (없을 경우에만)
 INSERT INTO users (id, nickname, email, signup_status, joined_at, created_at, updated_at)
 VALUES (
            99999,
@@ -7,22 +8,20 @@ VALUES (
            now(),
            now(),
            now()
-       ) ON CONFLICT (id) DO NOTHING;
+       )
+ON CONFLICT (id) DO NOTHING;
 
+-- 이미 존재하는 로컬 더미 유저의 joined_at 값이 NULL이면 채우기
+UPDATE users
+SET joined_at = now()
+WHERE id = 99999
+  AND joined_at IS NULL;
+
+-- 로컬 더미 유저 역할 생성 (없을 경우에만)
 INSERT INTO user_role(id, user_id, role)
 VALUES (
-            99999,
-            99999,
-            'USER'
-       ) ON CONFLICT (id) DO NOTHING;
-
--- 더미 유저 기본 프로필 이미지 추가
-INSERT INTO user_profile_image (id, user_id, object_key, content_type, created_at, updated_at)
-VALUES (
-    99999,
-    99999,
-    'profile-images/default/default.png',
-    'image/png',
-    now(),
-    now()
-) ON CONFLICT (id) DO NOTHING;
+           99999,
+           99999,
+           'USER'
+       )
+ON CONFLICT (id) DO NOTHING;

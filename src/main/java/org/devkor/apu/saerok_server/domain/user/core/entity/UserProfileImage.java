@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
+import org.devkor.apu.saerok_server.global.shared.entity.CreatedAtOnly;
 
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = "user_id"))
 @Getter
 @NoArgsConstructor
-public class UserProfileImage extends Auditable {
+public class UserProfileImage extends CreatedAtOnly {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
