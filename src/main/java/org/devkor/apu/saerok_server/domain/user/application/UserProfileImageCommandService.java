@@ -160,28 +160,4 @@ public class UserProfileImageCommandService {
             log.error("프로필 이미지 S3 삭제 실패: objectKey={}, error={}", objectKey, e.getMessage());
         }
     }
-
-    public void cleanupTempImage(Long userId, String objectKey) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
-
-        // 오브젝트 키 유효성 검증
-        validateProfileImageObjectKey(userId, objectKey);
-
-        // 이미 DB에 등록된 이미지인지 확인
-        String registeredKey = userProfileImageRepository.findObjectKeyByUserId(userId);
-        if (registeredKey.equals(objectKey)) {
-            throw new IllegalArgumentException("이미 등록된 프로필 이미지는 삭제할 수 없습니다.");
-        }
-
-        try {
-            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(objectKey)
-                    .build();
-            s3Client.deleteObject(deleteRequest);
-        } catch (S3Exception e) {
-            log.error("임시 프로필 이미지 삭제 실패: objectKey={}, error={}", objectKey, e.getMessage());
-            throw new S3DeleteException("임시 이미지 삭제에 실패했습니다.");
-        }
-    }
 }

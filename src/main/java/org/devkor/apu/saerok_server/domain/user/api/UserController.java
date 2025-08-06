@@ -170,30 +170,6 @@ public class UserController {
         userProfileImageCommandService.setDefaultProfileImage(userPrincipal.getId());
     }
 
-    @DeleteMapping("/me/profile-image/temp")
-    @PreAuthorize("hasRole('USER')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(
-            summary = "임시 프로필 이미지 삭제",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            description = """
-            업로드된 프로필 이미지를 사용하지 않기로 결정했을 때 S3에서 삭제합니다.
-            이미 DB에 등록된 프로필 이미지는 삭제되지 않습니다.
-            """,
-            responses = {
-                    @ApiResponse(responseCode = "204", description = "임시 이미지 삭제 성공"),
-                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
-                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "삭제할 이미지를 찾을 수 없음", content = @Content)
-            }
-    )
-    public void deleteTempProfileImage(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @RequestParam String objectKey
-    ) {
-        userProfileImageCommandService.cleanupTempImage(userPrincipal.getId(), objectKey);
-    }
-
     @GetMapping("/check-nickname")
     @PermitAll
     @Operation(
