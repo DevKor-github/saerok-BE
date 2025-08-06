@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -15,15 +16,15 @@ public class UserProfileImageRepository {
 
     private final EntityManager em;
 
-    public Long save(UserProfileImage profileImage) {
+    public void save(UserProfileImage profileImage) {
         em.persist(profileImage);
-        return profileImage.getId();
     }
 
-    public UserProfileImage findByUserId(Long userId) {
+    public Optional<UserProfileImage> findByUserId(Long userId) {
         return em.createQuery("SELECT p FROM UserProfileImage p WHERE p.user.id = :userId", UserProfileImage.class)
                 .setParameter("userId", userId)
-                .getSingleResult();
+                .getResultStream()
+                .findFirst();
     }
 
     public String findObjectKeyByUserId(Long userId) {

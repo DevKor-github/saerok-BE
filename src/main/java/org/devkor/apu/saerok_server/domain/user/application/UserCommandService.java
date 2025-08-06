@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.user.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -10,9 +11,12 @@ import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileUpdateSe
 import org.devkor.apu.saerok_server.domain.user.core.service.UserSignupStatusService;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -22,9 +26,9 @@ public class UserCommandService {
     private final UserRepository userRepository;
     private final UserProfileUpdateService userProfileUpdateService;
     private final UserSignupStatusService userSignupStatusService;
-    private final UserProfileImageCommandService userProfileImageCommandService;
     private final UserProfileImageRepository userProfileImageRepository;
     private final ImageDomainService imageDomainService;
+    private final ImageService imageService;
 
     public UpdateUserProfileResponse updateUserProfile(UpdateUserProfileCommand command) {
 
@@ -32,40 +36,39 @@ public class UserCommandService {
 
         try {
             if (command.nickname() != null) userProfileUpdateService.changeNickname(user, command.nickname());
-
-            handleProfileImageUpdate(user, command);
-
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("사용자 정보 수정이 거부되었습니다: " + e.getMessage());
         }
 
-        userSignupStatusService.tryCompleteSignup(user);
+        if (command.profileImageContentType() != null && command.profileImageObjectKey() != null) {
+            userProfileUpdateService.changeProfileImage(user, command.profileImageObjectKey(), command.profileImageContentType());
+        }
 
-        // 프로필 이미지 URL 생성
-        String profileImageUrl = imageDomainService.toUploadImageUrl(userProfileImageRepository.findObjectKeyByUserId(user.getId()));
+        userSignupStatusService.tryCompleteSignup(user);
 
         return new UpdateUserProfileResponse(
                 user.getNickname(),
                 user.getEmail(),
-                profileImageUrl
+                imageDomainService.toUploadImageUrl(command.profileImageObjectKey())
         );
     }
-    
-    private void handleProfileImageUpdate(User user, UpdateUserProfileCommand command) {
-        String objectKey = command.profileImageObjectKey();
-        String contentType = command.profileImageContentType();
-        
-        // 프로필 이미지 업데이트 요청이 있는 경우만 처리
-        if (objectKey == null) {return;}
-        
-        // 기본 이미지 요청인지 확인
-        if (objectKey.startsWith("profile-images/default/")) {
-            userProfileImageCommandService.setDefaultProfileImage(user.getId());
-        } else {
-            if (contentType == null || contentType.isEmpty()) {
-                throw new IllegalArgumentException("사용자 이미지 업데이트 시 contentType이 필수입니다.");
-            }
-            userProfileImageCommandService.setCustomProfileImage(user.getId(), objectKey, contentType);
-        }
+
+    public ProfileImagePresignResponse generateProfileImagePresignUrl(Long userId, String contentType) {
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+
+        String fileName = UUID.randomUUID().toString();
+        String objectKey = String.format("profile-images/%d/%s", userId, fileName);
+
+        String uploadUrl = imageService.generateUploadUrl(objectKey, contentType, 10);
+
+        return new ProfileImagePresignResponse(
+                uploadUrl,
+                objectKey
+        );
+    }
+
+    public void deleteProfileImage(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
+        userProfileUpdateService.deleteProfileImage(user);
     }
 }

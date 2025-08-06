@@ -6,7 +6,6 @@ import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialAuth;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
-import org.devkor.apu.saerok_server.domain.user.application.UserProfileImageCommandService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
@@ -27,10 +26,9 @@ public class UserProvisioningService {
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final SocialAuthRepository socialAuthRepository;
-    private final UserProfileImageCommandService userProfileImageCommandService;
 
     /**
-     * 새로운 사용자에게 필요한 자원(User, UserRole, SocialAuth, 기본 프로필 이미지)을 할당한다.
+     * 새로운 사용자에게 필요한 자원(User, UserRole, SocialAuth)을 할당한다.
      * @param provider 소셜 공급자 (ex. Apple, Kakao)
      * @param userInfo 소셜 공급자로부터 받은 사용자 정보 (sub, email)
      * @return 해당 사용자에게 생성된 SocialAuth 엔티티
@@ -43,9 +41,6 @@ public class UserProvisioningService {
 
         User user = userRepository.save(User.createUser(userInfo.email()));
         userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
-        
-        // 신규 가입자에게 기본 프로필 이미지 생성
-        userProfileImageCommandService.createDefaultProfileImage(user.getId());
 
         return socialAuthRepository.save(
                 SocialAuth.createSocialAuth(user, provider, userInfo.sub())

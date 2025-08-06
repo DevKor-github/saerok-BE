@@ -25,42 +25,12 @@ public class UserProfileImage extends CreatedAtOnly {
     @Column(name = "content_type", nullable = false)
     private String contentType;
 
-    @Builder
-    public UserProfileImage(User user, String objectKey, String contentType) {
-        if (user == null) throw new IllegalArgumentException("user는 null일 수 없습니다.");
-        if (objectKey == null || objectKey.isEmpty()) throw new IllegalArgumentException("objectKey는 null이거나 빈 문자열일 수 없습니다.");
-        if (contentType == null || contentType.isEmpty()) throw new IllegalArgumentException("contentType은 null이거나 빈 문자열일 수 없습니다.");
+    public static UserProfileImage of(User user, String objectKey, String contentType) {
+        UserProfileImage img = new UserProfileImage();
+        img.user = user;
+        img.objectKey = objectKey;
+        img.contentType = contentType;
 
-        this.user = user;
-        this.objectKey = objectKey;
-        this.contentType = contentType;
-    }
-
-    public String updateToDefault(String defaultObjectKey, String defaultContentType) {
-        if (defaultObjectKey == null || defaultObjectKey.isEmpty()) {
-            throw new IllegalArgumentException("defaultObjectKey는 null이거나 빈 문자열일 수 없습니다.");
-        }
-        if (defaultContentType == null || defaultContentType.isEmpty()) {
-            throw new IllegalArgumentException("defaultContentType은 null이거나 빈 문자열일 수 없습니다.");
-        }
-        
-        String oldObjectKey = this.objectKey;
-        this.objectKey = defaultObjectKey;
-        this.contentType = defaultContentType;
-        return oldObjectKey;
-    }
-
-    public String updateToCustom(String newObjectKey, String newContentType) {
-        if (newObjectKey == null || newObjectKey.isEmpty()) {
-            throw new IllegalArgumentException("objectKey는 null이거나 빈 문자열일 수 없습니다.");
-        }
-        if (newContentType == null || newContentType.isEmpty()) {
-            throw new IllegalArgumentException("contentType은 null이거나 빈 문자열일 수 없습니다.");
-        }
-        
-        String oldObjectKey = this.objectKey;
-        this.objectKey = newObjectKey;
-        this.contentType = newContentType;
-        return oldObjectKey;
+        return img;
     }
 }

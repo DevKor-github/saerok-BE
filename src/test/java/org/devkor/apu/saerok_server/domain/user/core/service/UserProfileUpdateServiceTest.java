@@ -1,7 +1,9 @@
 package org.devkor.apu.saerok_server.domain.user.core.service;
 
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,9 +28,15 @@ class UserProfileUpdateServiceTest {
     @Mock
     UserRepository userRepository;
 
+    @Mock
+    UserProfileImageRepository userProfileImageRepository;
+
+    @Mock
+    ImageService imageService;
+
     @BeforeEach
     void setUp() {
-        userProfileUpdateService = new UserProfileUpdateService(userProfilePolicy, userRepository);
+        userProfileUpdateService = new UserProfileUpdateService(userProfilePolicy, userRepository, userProfileImageRepository, imageService);
     }
 
     @Test

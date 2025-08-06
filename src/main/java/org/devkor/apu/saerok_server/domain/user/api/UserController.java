@@ -15,14 +15,12 @@ import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfi
 import org.devkor.apu.saerok_server.domain.user.api.response.CheckNicknameResponse;
 import org.devkor.apu.saerok_server.domain.user.api.response.GetMyUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.UserCommandService;
-import org.devkor.apu.saerok_server.domain.user.application.UserProfileImageCommandService;
 import org.devkor.apu.saerok_server.domain.user.application.UserQueryService;
 import org.devkor.apu.saerok_server.domain.user.mapper.UserWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 @Tag(name = "User API", description = "회원 정보 관련 API")
@@ -34,7 +32,6 @@ public class UserController {
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
     private final UserWebMapper userWebMapper;
-    private final UserProfileImageCommandService userProfileImageCommandService;
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('USER')")
@@ -144,7 +141,7 @@ public class UserController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody ProfileImagePresignRequest request
     ) {
-        return userProfileImageCommandService.generatePresignedUploadUrl(
+        return userCommandService.generateProfileImagePresignUrl(
                 userPrincipal.getId(), 
                 request.getContentType()
         );
@@ -154,20 +151,20 @@ public class UserController {
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
-            summary = "프로필 이미지 기본 이미지로 변경",
+            summary = "프로필 이미지 삭제",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-            현재 프로필 이미지를 기본 이미지로 변경합니다.
+            사용자의 기존 프로필 이미지를 삭제합니다.
             """,
             responses = {
-                    @ApiResponse(responseCode = "204", description = "프로필 이미지 기본 이미지로 변경 성공"),
+                    @ApiResponse(responseCode = "204", description = "프로필 이미지 삭제 성공"),
                     @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content)
             }
     )
     public void deleteProfileImage(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        userProfileImageCommandService.setDefaultProfileImage(userPrincipal.getId());
+        userCommandService.deleteProfileImage(userPrincipal.getId());
     }
 
     @GetMapping("/check-nickname")

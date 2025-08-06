@@ -2,7 +2,11 @@ package org.devkor.apu.saerok_server.domain.user.core.service;
 
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.entity.UserProfileImage;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +19,8 @@ public class UserProfileUpdateService {
 
     private final UserProfilePolicy userProfilePolicy;
     private final UserRepository userRepository;
+    private final UserProfileImageRepository userProfileImageRepository;
+    private final ImageService imageService;
 
     public void changeNickname(User user, String nickname) {
 
@@ -29,5 +35,29 @@ public class UserProfileUpdateService {
         }
 
         user.setNickname(nickname);
+    }
+
+    public void changeProfileImage(User user, String objectKey, String contentType) {
+        deleteProfileImage(user);
+        createProfileImage(user, objectKey, contentType);
+    }
+
+    /**
+     * 사용자의 프로필 사진을 삭제합니다.
+     * 삭제할 프로필 사진이 애초에 없으면 무시합니다.
+     */
+    public void deleteProfileImage(User user) {
+        userProfileImageRepository.findByUserId(user.getId()).ifPresent(
+                image -> {
+                    imageService.delete(image.getObjectKey());
+                    userProfileImageRepository.remove(image);
+                }
+        );
+    }
+
+    private void createProfileImage(User user, String objectKey, String contentType) {
+        userProfileImageRepository.save(
+                UserProfileImage.of(user, objectKey, contentType)
+        );
     }
 }
