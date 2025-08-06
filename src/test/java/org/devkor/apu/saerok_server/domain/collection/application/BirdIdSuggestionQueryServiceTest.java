@@ -1,11 +1,15 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetBirdIdSuggestionsResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetPendingCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
-import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSuggestionRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.junit.jupiter.api.*;
@@ -29,13 +33,15 @@ class BirdIdSuggestionQueryServiceTest {
     @Mock CollectionImageRepository  collectionImageRepo;
     @Mock ImageDomainService         imageDomainService;
     @Mock UserRepository             userRepo;
+    @Mock UserProfileImageUrlService userProfileImageUrlService;
 
     BirdIdSuggestionQueryService sut;
 
     @BeforeEach void init() {
         sut = new BirdIdSuggestionQueryService(
                 suggestionRepo, collectionRepo, collectionImageRepo,
-                imageDomainService, userRepo);
+                imageDomainService, userRepo, userProfileImageUrlService
+        );
     }
 
     /* ────────── 헬퍼 ────────── */
@@ -67,6 +73,13 @@ class BirdIdSuggestionQueryServiceTest {
             when(imageDomainService.toUploadImageUrl("thumb/key1.jpg"))
                     .thenReturn("http://cdn/img/thumb/key1.jpg");
 
+            // 프로필 이미지 URL은 UserProfileImageUrlService에서 일괄 반환
+            when(userProfileImageUrlService.getProfileImageUrlsFor(anyList()))
+                    .thenReturn(Map.of(
+                            1L, "http://cdn/profile/1/profile.jpg",
+                            2L, "http://cdn/profile/default/default-1.png"
+                    ));
+
             /* ── 실행 ─────────────────────────────────────────────── */
             GetPendingCollectionsResponse res = sut.getPendingCollections();
 
@@ -74,10 +87,14 @@ class BirdIdSuggestionQueryServiceTest {
             assertThat(res.items()).hasSize(2);
 
             GetPendingCollectionsResponse.Item first = res.items().getFirst();
-            assertThat(first.collectionId()).isEqualTo(1L);       // ❶
-            assertThat(first.imageUrl())                          // ❷
-                    .isEqualTo("http://cdn/img/thumb/key1.jpg");
-            assertThat(res.items().get(1).imageUrl()).isNull();
+            assertThat(first.collectionId()).isEqualTo(1L);
+            assertThat(first.imageUrl()).isEqualTo("http://cdn/img/thumb/key1.jpg");
+            assertThat(first.profileImageUrl()).isEqualTo("http://cdn/profile/1/profile.jpg");
+
+            GetPendingCollectionsResponse.Item second = res.items().get(1);
+            assertThat(second.imageUrl()).isNull();
+            assertThat(second.profileImageUrl()).isEqualTo("http://cdn/profile/default/default-1.png");
+
             System.out.println("[Pending.success] ✔︎ items=" + res.items().size());
         }
 
@@ -88,6 +105,7 @@ class BirdIdSuggestionQueryServiceTest {
             GetPendingCollectionsResponse res = sut.getPendingCollections();
 
             assertThat(res.items()).isEmpty();
+            verify(userProfileImageUrlService).getProfileImageUrlsFor(List.of());
             System.out.println("[Pending.empty] ✔︎ empty list");
         }
     }
@@ -117,7 +135,7 @@ class BirdIdSuggestionQueryServiceTest {
             System.out.println("[SuggestList.guest] ✔︎ birdId=" + res.items().getFirst().birdId());
         }
 
-        @Test @DisplayName("userId 있지만 사용자 없음 → NotFoundException")
+        @Test @DisplayName("userId 있지만 사용자 없음 → NotFoundException")
         void userNotFound() {
             when(userRepo.findById(77L)).thenReturn(Optional.empty());
             assertThatThrownBy(() -> sut.getSuggestions(77L,10L))

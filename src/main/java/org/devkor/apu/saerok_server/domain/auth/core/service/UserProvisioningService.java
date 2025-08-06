@@ -11,6 +11,7 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.ProfileImageDefaultService;
 import org.devkor.apu.saerok_server.global.shared.exception.SocialAuthAlreadyExistsException;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +27,10 @@ public class UserProvisioningService {
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final SocialAuthRepository socialAuthRepository;
+    private final ProfileImageDefaultService profileImageDefaultService;
 
     /**
-     * 새로운 사용자에게 필요한 자원(User, UserRole, SocialAuth)을 할당한다.
+     * 새로운 사용자에게 필요한 자원을 할당한다.
      * @param provider 소셜 공급자 (ex. Apple, Kakao)
      * @param userInfo 소셜 공급자로부터 받은 사용자 정보 (sub, email)
      * @return 해당 사용자에게 생성된 SocialAuth 엔티티
@@ -40,6 +42,8 @@ public class UserProvisioningService {
         }
 
         User user = userRepository.save(User.createUser(userInfo.email()));
+        profileImageDefaultService.setRandomVariant(user);
+
         userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
 
         return socialAuthRepository.save(

@@ -9,7 +9,11 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
+import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +30,7 @@ public class CollectionCommentQueryService {
     private final CollectionRepository       collectionRepository;
     private final CollectionCommentLikeRepository commentLikeRepository;
     private final CollectionCommentWebMapper collectionCommentWebMapper;
+    private final UserProfileImageUrlService userProfileImageUrlService;
 
     /* 댓글 목록 (createdAt ASC) */
     public GetCollectionCommentsResponse getComments(Long collectionId, Long userId) {
@@ -59,8 +64,16 @@ public class CollectionCommentQueryService {
                     comment -> userId != null && userId.equals(comment.getUser().getId())
                 ));
         
-        // 6. 응답 생성
-        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, isMyCollection);
+        // 6. 사용자 프로필 이미지 URL 일괄 조회
+        List<User> users = comments.stream()
+                .map(UserBirdCollectionComment::getUser)
+                .distinct()
+                .toList();
+
+        Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
+
+        // 7. 응답 생성
+        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, profileImageUrls, isMyCollection);
     }
 
     /* 댓글 개수 */

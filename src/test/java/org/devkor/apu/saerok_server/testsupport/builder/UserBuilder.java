@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.testsupport.builder;
 
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.entity.UserProfileImage;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 /**

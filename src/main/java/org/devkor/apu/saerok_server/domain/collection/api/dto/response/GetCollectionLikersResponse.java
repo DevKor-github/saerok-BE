@@ -15,6 +15,9 @@ public record GetCollectionLikersResponse(
             Long userId,
 
             @Schema(description = "사용자 닉네임", example = "안암동새록마스터")
-            String nickname
+            String nickname,
+
+            @Schema(description = "사용자 프로필 이미지 URL", example = "https://cdn.example.com/user-profile-images/10.jpg")
+            String profileImageUrl
     ) {}
 }

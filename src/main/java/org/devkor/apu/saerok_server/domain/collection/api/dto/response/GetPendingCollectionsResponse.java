@@ -25,6 +25,9 @@ public record GetPendingCollectionsResponse(
             @Schema(description = "작성자 닉네임", example = "새덕후99", requiredMode = Schema.RequiredMode.REQUIRED)
             String nickname,
 
+            @Schema(description = "작성자 프로필 이미지 URL", example = "https://cdn.example.com/user-profile-images/user123.jpg", requiredMode = Schema.RequiredMode.REQUIRED)
+            String profileImageUrl,
+
             @Schema(description = "동정 의견 요청 시각", example = "2025-07-20T00:23:58.164815", requiredMode = Schema.RequiredMode.REQUIRED)
             LocalDateTime birdIdSuggestionRequestedAt
     ) {}
