@@ -18,7 +18,7 @@ import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.r
 @RequiredArgsConstructor
 public class UserProfileUpdateService {
 
-    private final UserProfilePolicy userProfilePolicy;
+    private final NicknamePolicy nicknamePolicy;
     private final UserRepository userRepository;
     private final UserProfileImageRepository userProfileImageRepository;
     private final ImageService imageService;
@@ -27,7 +27,7 @@ public class UserProfileUpdateService {
 
         if (user.getNickname() != null && user.getNickname().equals(nickname)) return;
 
-        if (!userProfilePolicy.isNicknameValid(nickname)) {
+        if (!nicknamePolicy.isNicknameValid(nickname)) {
             throw new IllegalArgumentException("해당 닉네임은 정책상 사용할 수 없습니다.");
         }
 

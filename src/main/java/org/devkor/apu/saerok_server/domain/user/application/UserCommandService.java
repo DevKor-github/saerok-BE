@@ -55,6 +55,9 @@ public class UserCommandService {
 
     public ProfileImagePresignResponse generateProfileImagePresignUrl(Long userId, String contentType) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+        if (contentType == null || contentType.isEmpty()) {
+            throw new BadRequestException("contentType 누락입니다.");
+        }
 
         String fileName = UUID.randomUUID().toString();
         String objectKey = String.format("user-profile-images/%d/%s", userId, fileName);

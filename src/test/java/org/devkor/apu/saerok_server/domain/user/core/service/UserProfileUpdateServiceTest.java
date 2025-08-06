@@ -23,7 +23,7 @@ class UserProfileUpdateServiceTest {
     UserProfileUpdateService userProfileUpdateService;
 
     @Mock
-    UserProfilePolicy userProfilePolicy;
+    NicknamePolicy nicknamePolicy;
 
     @Mock
     UserRepository userRepository;
@@ -36,7 +36,7 @@ class UserProfileUpdateServiceTest {
 
     @BeforeEach
     void setUp() {
-        userProfileUpdateService = new UserProfileUpdateService(userProfilePolicy, userRepository, userProfileImageRepository, imageService);
+        userProfileUpdateService = new UserProfileUpdateService(nicknamePolicy, userRepository, userProfileImageRepository, imageService);
     }
 
     @Test
@@ -47,7 +47,7 @@ class UserProfileUpdateServiceTest {
         user.setNickname("old");
         String newNick = "new";
 
-        given(userProfilePolicy.isNicknameValid(newNick)).willReturn(true);
+        given(nicknamePolicy.isNicknameValid(newNick)).willReturn(true);
         given(userRepository.findByNickname(newNick)).willReturn(Optional.empty());
 
         // when
@@ -55,7 +55,7 @@ class UserProfileUpdateServiceTest {
 
         // then
         assertEquals(newNick, user.getNickname());
-        verify(userProfilePolicy).isNicknameValid(newNick);
+        verify(nicknamePolicy).isNicknameValid(newNick);
         verify(userRepository).findByNickname(newNick);
     }
 
@@ -66,7 +66,7 @@ class UserProfileUpdateServiceTest {
         User user = new User();
         String badNick = "??";
 
-        given(userProfilePolicy.isNicknameValid(badNick)).willReturn(false);
+        given(nicknamePolicy.isNicknameValid(badNick)).willReturn(false);
 
         // when / then
         assertThrows(IllegalArgumentException.class,
@@ -81,7 +81,7 @@ class UserProfileUpdateServiceTest {
         User user = new User();
         String dupNick = "taken";
 
-        given(userProfilePolicy.isNicknameValid(dupNick)).willReturn(true);
+        given(nicknamePolicy.isNicknameValid(dupNick)).willReturn(true);
         given(userRepository.findByNickname(dupNick)).willReturn(Optional.of(new User()));
 
         // when / then
