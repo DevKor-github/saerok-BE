@@ -7,8 +7,8 @@ CREATE SEQUENCE user_profile_image_seq START WITH 1 INCREMENT BY 50;
 CREATE TABLE user_profile_image (
     id           BIGINT       NOT NULL PRIMARY KEY,
     user_id      BIGINT       NOT NULL,
-    object_key   VARCHAR(255) NOT NULL,
-    content_type VARCHAR(100) NOT NULL,
+    object_key   TEXT         NOT NULL,
+    content_type VARCHAR(50)  NOT NULL,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_user_profile_image_user UNIQUE (user_id)
