@@ -57,7 +57,7 @@ public class UserCommandService {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
 
         String fileName = UUID.randomUUID().toString();
-        String objectKey = String.format("profile-images/%d/%s", userId, fileName);
+        String objectKey = String.format("user-profile-images/%d/%s", userId, fileName);
 
         String uploadUrl = imageService.generateUploadUrl(objectKey, contentType, 10);
 

@@ -20,6 +20,10 @@ public class UserProfileImageRepository {
         em.persist(profileImage);
     }
 
+    public void flush() {
+        em.flush();
+    }
+
     public Optional<UserProfileImage> findByUserId(Long userId) {
         return em.createQuery("SELECT p FROM UserProfileImage p WHERE p.user.id = :userId", UserProfileImage.class)
                 .setParameter("userId", userId)

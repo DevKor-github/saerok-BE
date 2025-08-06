@@ -70,10 +70,8 @@ public class UserController {
 
             수정 가능한 항목:
               - nickname: 닉네임 (정책 미준수 또는 중복 시 400 Bad Request)
-              - profileImageObjectKey: 프로필 이미지 S3 객체 키
-                * 사용자 이미지: 'profile-images/{userId}/{uuid}'
-                * 기본 이미지: 'profile-images/default/default.png'
-              - profileImageContentType: 프로필 이미지 콘텐츠 타입 (사용자 이미지일 때 필수)
+              - profileImageObjectKey: 프로필 사진 Object Key (Presigned URL 발급 시 받은 것)
+              - profileImageContentType: 프로필 사진 Content-Type
             
             닉네임 정책
               - 닉네임은 0자일 수 없음

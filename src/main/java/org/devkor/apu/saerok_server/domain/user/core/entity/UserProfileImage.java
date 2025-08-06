@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.devkor.apu.saerok_server.global.shared.entity.CreatedAtOnly;
 
 @Entity
@@ -32,5 +33,10 @@ public class UserProfileImage extends CreatedAtOnly {
         img.contentType = contentType;
 
         return img;
+    }
+
+    public void change(String objectKey, String contentType) {
+        this.objectKey = objectKey;
+        this.contentType = contentType;
     }
 }

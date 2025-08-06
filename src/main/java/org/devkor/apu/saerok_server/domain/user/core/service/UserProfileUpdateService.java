@@ -5,9 +5,10 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserProfileImage;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
+
+import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
 
 /**
  * 사용자 프로필 수정을 전담하는 Domain Service.
@@ -38,8 +39,17 @@ public class UserProfileUpdateService {
     }
 
     public void changeProfileImage(User user, String objectKey, String contentType) {
-        deleteProfileImage(user);
-        createProfileImage(user, objectKey, contentType);
+        userProfileImageRepository.findByUserId(user.getId())
+                .ifPresentOrElse(
+                        image -> {
+                            String oldObjectKey = image.getObjectKey();
+                            if (!oldObjectKey.equals(objectKey)) {
+                                image.change(objectKey, contentType);
+                                runAfterCommitOrNow(() -> imageService.delete(oldObjectKey));
+                            }
+                        },
+                        () -> userProfileImageRepository.save(UserProfileImage.of(user, objectKey, contentType))
+                );
     }
 
     /**
@@ -47,17 +57,10 @@ public class UserProfileUpdateService {
      * 삭제할 프로필 사진이 애초에 없으면 무시합니다.
      */
     public void deleteProfileImage(User user) {
-        userProfileImageRepository.findByUserId(user.getId()).ifPresent(
-                image -> {
-                    imageService.delete(image.getObjectKey());
-                    userProfileImageRepository.remove(image);
-                }
-        );
-    }
-
-    private void createProfileImage(User user, String objectKey, String contentType) {
-        userProfileImageRepository.save(
-                UserProfileImage.of(user, objectKey, contentType)
-        );
+        userProfileImageRepository.findByUserId(user.getId()).ifPresent(image -> {
+            String oldObjectKey = image.getObjectKey();
+            userProfileImageRepository.remove(image);
+            runAfterCommitOrNow(() -> imageService.delete(oldObjectKey));
+        });
     }
 }
