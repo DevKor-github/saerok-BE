@@ -18,7 +18,7 @@ public record GetCollectionCommentsResponse(
             Long userId,
             @Schema(description = "작성자 닉네임", example = "안암동새록마스터", requiredMode = Schema.RequiredMode.REQUIRED)
             String nickname,
-            @Schema(description = "작성자 프로필 이미지 URL", example = "https://cdn.example.com/profile-images/3.jpg", requiredMode = Schema.RequiredMode.REQUIRED)
+            @Schema(description = "작성자 프로필 이미지 URL", example = "https://cdn.example.com/user-profile-images/3.jpg", requiredMode = Schema.RequiredMode.REQUIRED)
             String profileImageUrl,
             @Schema(description = "댓글 내용", example = "멋진 관찰 기록이네요!", requiredMode = Schema.RequiredMode.REQUIRED)
             String content,

@@ -74,7 +74,7 @@ public class GetCollectionDetailResponse {
         @Schema(description = "사용자 닉네임", example = "junhee")
         private String nickname;
 
-        @Schema(description = "사용자 프로필 이미지 URL", example = "https://cdn.example.com/profile-images/10.jpg")
+        @Schema(description = "사용자 프로필 이미지 URL", example = "https://cdn.example.com/user-profile-images/10.jpg")
         private String profileImageUrl;
     }
 }
