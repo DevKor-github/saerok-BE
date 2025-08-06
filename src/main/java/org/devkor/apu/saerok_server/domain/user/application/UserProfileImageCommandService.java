@@ -10,17 +10,8 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImage
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.core.config.feature.UserProfileImagesDefaultConfig;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.springframework.beans.factory.annotation.Value;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
-
-import java.time.Duration;
 import java.util.UUID;
 
 @Slf4j
@@ -29,14 +20,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserProfileImageCommandService {
 
-    private final S3Presigner s3Presigner;
     private final UserRepository userRepository;
     private final UserProfileImageRepository userProfileImageRepository;
-    private final S3Client s3Client;
     private final UserProfileImagesDefaultConfig userProfileImagesDefaultConfig;
-
-    @Value("${aws.s3.upload-image-bucket}")
-    private String bucket;
+    private final ImageService imageService;
 
     public ProfileImagePresignResponse generatePresignedUploadUrl(Long userId, String contentType) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
@@ -44,21 +31,10 @@ public class UserProfileImageCommandService {
         String fileName = UUID.randomUUID().toString();
         String objectKey = String.format("profile-images/%d/%s", userId, fileName);
 
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(objectKey)
-                .contentType(contentType)
-                .build();
-
-        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .putObjectRequest(putObjectRequest)
-                .signatureDuration(Duration.ofMinutes(10))
-                .build();
-
-        PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
+        String uploadUrl = imageService.generateUploadUrl(objectKey, contentType, 10);
 
         return new ProfileImagePresignResponse(
-                presignedRequest.url().toString(),
+                uploadUrl,
                 objectKey
         );
     }
@@ -82,7 +58,7 @@ public class UserProfileImageCommandService {
         
         // S3에서 기존 이미지 삭제 (기본 이미지가 아닌 경우)
         if (!isDefaultProfileImageKey(oldObjectKey)) {
-            deleteFromS3(oldObjectKey);
+            imageService.delete(oldObjectKey);
         }
     }
 
@@ -94,7 +70,7 @@ public class UserProfileImageCommandService {
         
         // S3에서 기존 이미지 삭제 (기본 이미지가 아닌 경우)
         if (!isDefaultProfileImageKey(oldObjectKey)) {
-            deleteFromS3(oldObjectKey);
+            imageService.delete(oldObjectKey);
         }
     }
 
@@ -137,17 +113,5 @@ public class UserProfileImageCommandService {
             }
         }
         return false;
-    }
-
-    private void deleteFromS3(String objectKey) {
-        try {
-            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(objectKey)
-                    .build();
-            s3Client.deleteObject(deleteRequest);
-        } catch (S3Exception e) {
-            log.error("프로필 이미지 S3 삭제 실패: objectKey={}, error={}", objectKey, e.getMessage());
-        }
     }
 }
