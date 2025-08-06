@@ -30,16 +30,6 @@ public class NotificationSettingsRepository {
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
     }
 
-    // 사용자의 모든 디바이스 알림 설정 조회
-    public List<NotificationSettings> findByUserId(Long userId) {
-        return em.createQuery(
-                "SELECT ns FROM NotificationSettings ns " +
-                "WHERE ns.user.id = :userId " +
-                "ORDER BY ns.createdAt DESC", NotificationSettings.class)
-                .setParameter("userId", userId)
-                .getResultList();
-    }
-
     // 사용자와 디바이스 ID로 알림 설정 삭제
     public void deleteByUserIdAndDeviceId(Long userId, String deviceId) {
         em.createQuery(

@@ -36,18 +36,4 @@ public class NotificationSettingsQueryService {
 
         return notificationSettingsWebMapper.toNotificationSettingsResponse(settings);
     }
-
-    /**
-     * 사용자의 모든 디바이스 알림 설정 조회
-     */
-    public List<NotificationSettingsResponse> getAllNotificationSettings(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
-
-        List<NotificationSettings> settingsList = notificationSettingsRepository.findByUserId(userId);
-
-        return settingsList.stream()
-                .map(notificationSettingsWebMapper::toNotificationSettingsResponse)
-                .toList();
-    }
 }
