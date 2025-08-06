@@ -2,15 +2,14 @@ package org.devkor.apu.saerok_server.domain.user.application;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserProfileImage;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.global.core.config.feature.UserProfileImagesDefaultConfig;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.shared.exception.S3DeleteException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -24,26 +23,17 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class UserProfileImageCommandService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserProfileImageCommandService.class);
-    private static final String[] DEFAULT_PROFILE_IMAGE_KEYS = {
-            "profile-images/default/default-1.png",
-            "profile-images/default/default-2.png", 
-            "profile-images/default/default-3.png",
-            "profile-images/default/default-4.png",
-            "profile-images/default/default-5.png",
-            "profile-images/default/default-6.png"
-    };
-    private static final String DEFAULT_CONTENT_TYPE = "image/png";
-
     private final S3Presigner s3Presigner;
     private final UserRepository userRepository;
     private final UserProfileImageRepository userProfileImageRepository;
     private final S3Client s3Client;
+    private final UserProfileImagesDefaultConfig userProfileImagesDefaultConfig;
 
     @Value("${aws.s3.upload-image-bucket}")
     private String bucket;
@@ -80,7 +70,7 @@ public class UserProfileImageCommandService {
         UserProfileImage defaultImage = UserProfileImage.builder()
                 .user(user)
                 .objectKey(randomDefaultImageKey)
-                .contentType(DEFAULT_CONTENT_TYPE)
+                .contentType(userProfileImagesDefaultConfig.getContentType())
                 .build();
         userProfileImageRepository.save(defaultImage);
     }
@@ -88,7 +78,7 @@ public class UserProfileImageCommandService {
     public void setDefaultProfileImage(Long userId) {
         UserProfileImage image = userProfileImageRepository.findByUserId(userId);
         String randomDefaultImageKey = getRandomDefaultProfileImageKey();
-        String oldObjectKey = image.updateToDefault(randomDefaultImageKey, DEFAULT_CONTENT_TYPE);
+        String oldObjectKey = image.updateToDefault(randomDefaultImageKey, userProfileImagesDefaultConfig.getContentType());
         
         // S3에서 기존 이미지 삭제 (기본 이미지가 아닌 경우)
         if (!isDefaultProfileImageKey(oldObjectKey)) {
@@ -132,8 +122,8 @@ public class UserProfileImageCommandService {
 
     // 랜덤 기본 프로필 이미지 키 선택
     private String getRandomDefaultProfileImageKey() {
-        int randomIndex = (int) (Math.random() * DEFAULT_PROFILE_IMAGE_KEYS.length);
-        return DEFAULT_PROFILE_IMAGE_KEYS[randomIndex];
+        int randomIndex = (int) (Math.random() * userProfileImagesDefaultConfig.getKeys().size());
+        return userProfileImagesDefaultConfig.getKeys().get(randomIndex);
     }
 
     //기본 프로필 이미지 키인지 확인
@@ -141,7 +131,7 @@ public class UserProfileImageCommandService {
         if (objectKey == null) {
             return false;
         }
-        for (String defaultKey : DEFAULT_PROFILE_IMAGE_KEYS) {
+        for (String defaultKey : userProfileImagesDefaultConfig.getKeys()) {
             if (defaultKey.equals(objectKey)) {
                 return true;
             }
