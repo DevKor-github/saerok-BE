@@ -7,8 +7,10 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetNearby
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollectionEditDataCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
@@ -20,12 +22,13 @@ import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrl
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,8 +41,8 @@ public class CollectionQueryService {
     private final CollectionCommentRepository collectionCommentRepository;
     private final CollectionWebMapper collectionWebMapper;
     private final UserRepository userRepository;
-    private final ImageDomainService imageDomainService;
     private final UserProfileImageUrlService userProfileImageUrlService;
+    private final CollectionImageUrlService collectionImageUrlService;
 
     public GetCollectionEditDataResponse getCollectionEditDataResponse(GetCollectionEditDataCommand command) {
         userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
@@ -49,19 +52,22 @@ public class CollectionQueryService {
         }
 
         GetCollectionEditDataResponse response = collectionWebMapper.toGetCollectionEditDataResponse(collection);
-        collectionImageRepository.findByCollectionId(command.collectionId())
-                .stream()
-                .findFirst()
-                .ifPresentOrElse(
-                        image -> {
-                            response.setImageId(image.getId());
-                            response.setImageUrl(imageDomainService.toUploadImageUrl(image.getObjectKey()));
-                        },
-                        () -> {
-                            response.setImageId(null);
-                            response.setImageUrl(null);
-                        }
-                );
+        Optional<String> imageUrl = collectionImageUrlService.getPrimaryImageUrlFor(collection);
+        imageUrl.ifPresentOrElse(
+                url -> {
+                    Long imageId = collectionImageRepository.findByCollectionId(collection.getId()).stream()
+                            .findFirst()
+                            .map(UserBirdCollectionImage::getId)
+                            .orElse(null);
+
+                    response.setImageId(imageId);
+                    response.setImageUrl(url);
+                },
+                () -> {
+                    response.setImageId(null);
+                    response.setImageUrl(null);
+                }
+        );
 
         return response;
     }
@@ -69,27 +75,24 @@ public class CollectionQueryService {
     public MyCollectionsResponse getMyCollections(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
 
-        List<MyCollectionsResponse.Item> items = collectionRepository.findByUserId(userId).stream()
-                .map(collection -> {
-                    String objectKey = collectionImageRepository.findObjectKeysByCollectionId(collection.getId()).stream()
-                            .findFirst().orElse(null);
-                    String imageUrl = objectKey != null ? imageDomainService.toUploadImageUrl(objectKey) : null;
-                    
-                    // 좋아요 수 조회
-                    long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
-                    
-                    // 댓글 수 조회
-                    long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
+        List<UserBirdCollection> collections = collectionRepository.findByUserId(userId);
+        Map<Long, String> urlMap = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
 
+        List<MyCollectionsResponse.Item> items = collections.stream()
+                .map(c -> {
+                    String imageUrl = urlMap.get(c.getId());
+                    long likeCount = collectionLikeRepository.countByCollectionId(c.getId());
+                    long commentCount = collectionCommentRepository.countByCollectionId(c.getId());
                     return new MyCollectionsResponse.Item(
-                            collection.getId(),
+                            c.getId(),
                             imageUrl,
-                            collection.getBird() == null ? null : collection.getBird().getName().getKoreanName(),
+                            c.getBird() == null ? null : c.getBird().getName().getKoreanName(),
                             likeCount,
                             commentCount
                     );
                 })
                 .toList();
+
         // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도
 
         return new MyCollectionsResponse(items);
@@ -108,22 +111,13 @@ public class CollectionQueryService {
             throw new ForbiddenException("해당 컬렉션을 볼 수 있는 권한이 없어요");
         }
 
-        List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collectionId);
-        String imageUrl = objectKeys.isEmpty() ? null : imageDomainService.toUploadImageUrl(objectKeys.getFirst());
-        
-        // 좋아요 수 조회
+        String imageUrl = collectionImageUrlService.getPrimaryImageUrlFor(collection).orElse(null);
         long likeCount = collectionLikeRepository.countByCollectionId(collectionId);
-        
-        // 댓글 수 조회
         long commentCount = collectionCommentRepository.countByCollectionId(collectionId);
-        
-        // 내가 좋아요 눌렀는지 확인 (비회원인 경우 false)
-        boolean isLiked = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
-
-        // 컬렉션 올린 사용자 프로필 이미지 URL 조회
+        boolean isLikedByMe = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
         String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
 
-        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLiked);
+        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLikedByMe);
     }
 
     public GetNearbyCollectionsResponse getNearbyCollections(GetNearbyCollectionsCommand command) {
@@ -138,21 +132,16 @@ public class CollectionQueryService {
         Point refPoint = PointFactory.create(command.latitude(), command.longitude());
         List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId(), command.isMineOnly());
 
+        Map<Long, String> urlMap = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
+
         List<GetNearbyCollectionsResponse.Item> items = collections.stream()
                 .map(collection -> {
-                    List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collection.getId());
-                    String imageUrl = objectKeys.isEmpty() ? null : imageDomainService.toUploadImageUrl(objectKeys.getFirst());
-                    
-                    // 좋아요 수 조회
+                    String imageUrl = urlMap.get(collection.getId());
                     long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
-                    
-                    // 댓글 수 조회
                     long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
+                    boolean isLikedByMe = command.userId() != null && collectionLikeRepository.existsByUserIdAndCollectionId(command.userId(), collection.getId());
                     
-                    // 내가 좋아요 눌렀는지 확인 (비회원인 경우 false)
-                    boolean isLiked = command.userId() != null && collectionLikeRepository.existsByUserIdAndCollectionId(command.userId(), collection.getId());
-                    
-                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl, likeCount, commentCount, isLiked);
+                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl, likeCount, commentCount, isLikedByMe);
                 })
                 .toList();
         // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도

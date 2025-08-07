@@ -17,12 +17,12 @@ public class CollectionImageUrlService {
     private final CollectionImageSelector collectionImageSelector;
     private final ImageDomainService imageDomainService;
 
-    public Optional<String> getImageUrlFor(UserBirdCollection collection) {
+    public Optional<String> getPrimaryImageUrlFor(UserBirdCollection collection) {
         return collectionImageSelector.selectPrimaryImageKey(collection)
                 .map(imageDomainService::toUploadImageUrl);
     }
 
-    public Map<Long, String> getImageUrlMap(List<UserBirdCollection> collections) {
+    public Map<Long, String> getPrimaryImageUrlsFor(List<UserBirdCollection> collections) {
         Map<Long, String> result = new LinkedHashMap<>();
         Map<Long, String> objectKeyMap = collectionImageSelector.selectPrimaryImageKeyMap(collections);
 

@@ -48,7 +48,6 @@ class UserCommandServiceTest {
                 userRepository,
                 userProfileUpdateService,
                 userSignupStatusService,
-                userProfileImageRepository,
                 imageDomainService,
                 imageService
         );
