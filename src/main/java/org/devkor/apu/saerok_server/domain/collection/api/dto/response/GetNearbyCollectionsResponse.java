@@ -49,5 +49,21 @@ public class GetNearbyCollectionsResponse {
 
         @Schema(description = "내가 좋아요 눌렀는지 여부", example = "true")
         private Boolean isLiked;
+
+        @Schema(description = "컬렉션 소유자 정보")
+        private UserInfo user;
+    }
+
+    @Data
+    @Schema(description = "소유자 정보")
+    public static class UserInfo {
+        @Schema(description = "소유자 ID", example = "10")
+        private Long userId;
+
+        @Schema(description = "소유자 닉네임", example = "안암동새록마스터")
+        private String nickname;
+
+        @Schema(description = "소유자 프로필 이미지 URL", example = "https://cdn.example.com/user-profile-images/10.jpg")
+        private String profileImageUrl;
     }
 }
