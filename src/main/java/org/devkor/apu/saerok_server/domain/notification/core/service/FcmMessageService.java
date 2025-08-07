@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.notification.application;
+package org.devkor.apu.saerok_server.domain.notification.core.service;
 
 import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +59,7 @@ public class FcmMessageService {
 
         if (!invalidTokens.isEmpty()) {
             deviceTokenRepository.deleteByTokens(invalidTokens);
+            log.info("무효한 FCM 토큰 {} 개 삭제 완료", invalidTokens.size());
         }
     }
     
@@ -78,23 +79,27 @@ public class FcmMessageService {
                         .setBody(messageCommand.body())
                         .build());
 
-        // 추가 데이터가 있는 경우 설정
+        // data 필드 구성
         Map<String, String> data = new HashMap<>();
         if (messageCommand.notificationType() != null) {
             data.put("type", messageCommand.notificationType());
         }
         if (messageCommand.data() != null) {
-            data.putAll(messageCommand.data());
+            messageCommand.data().forEach((key, value) -> {
+                if ("relatedId".equals(key) || "deeplink".equals(key) || "birdName".equals(key)) {
+                    data.put(key, value);
+                }
+            });
         }
         if (messageCommand.deepLink() != null) {
-            data.put("deepLink", messageCommand.deepLink());
+            data.put("deeplink", messageCommand.deepLink());
         }
         
         if (!data.isEmpty()) {
             messageBuilder.putAllData(data);
         }
 
-        // iOS 설정
+        // iOS APNS 전용 설정
         messageBuilder.setApnsConfig(ApnsConfig.builder()
                 .setAps(Aps.builder()
                         .setAlert(ApsAlert.builder()
@@ -108,6 +113,4 @@ public class FcmMessageService {
 
         return messageBuilder.build();
     }
-
-
 }
