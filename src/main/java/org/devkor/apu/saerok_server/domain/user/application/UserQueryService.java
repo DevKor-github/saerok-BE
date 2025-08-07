@@ -5,12 +5,10 @@ import org.devkor.apu.saerok_server.domain.user.api.response.CheckNicknameRespon
 import org.devkor.apu.saerok_server.domain.user.api.response.GetMyUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.dto.NicknameValidationResult;
 import org.devkor.apu.saerok_server.domain.user.core.service.NicknamePolicy;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

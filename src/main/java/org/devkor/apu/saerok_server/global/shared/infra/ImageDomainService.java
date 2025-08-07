@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.global.shared.util;
+package org.devkor.apu.saerok_server.global.shared.infra;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
