@@ -2,22 +2,21 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
+import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,10 +25,10 @@ public class BirdIdSuggestionQueryService {
 
     private final BirdIdSuggestionRepository suggestionRepo;
     private final CollectionRepository       collectionRepo;
-    private final CollectionImageRepository  collectionImageRepo;
     private final ImageDomainService         imageDomainService;
     private final UserRepository userRepo;
     private final UserProfileImageUrlService userProfileImageUrlService;
+    private final CollectionImageUrlService collectionImageUrlService;
 
     /* 전체 PUBLIC + pending 컬렉션 조회 */
     public GetPendingCollectionsResponse getPendingCollections() {
@@ -39,12 +38,7 @@ public class BirdIdSuggestionQueryService {
                 collectionRepo.findPublicPendingCollections();
 
         // ── 2단계: 썸네일 한 방
-        List<Long> ids = collections.stream()
-                .map(UserBirdCollection::getId)
-                .toList();
-        Map<Long, String> thumbMap =
-                ids.isEmpty() ? Map.of() :
-                collectionImageRepo.findThumbKeysByCollectionIds(ids);
+        Map<Long, String> thumbMap = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
 
         // ── 3단계: 사용자 프로필 이미지 URL 일괄 조회
         List<User> users = collections.stream()

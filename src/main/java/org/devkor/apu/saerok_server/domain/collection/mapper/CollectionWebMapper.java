@@ -62,7 +62,10 @@ public interface CollectionWebMapper {
     @Mapping(target = "likeCount", source = "likeCount")
     @Mapping(target = "commentCount", source = "commentCount")
     @Mapping(target = "isLiked", source = "isLiked")
-    GetNearbyCollectionsResponse.Item toGetNearbyCollectionsResponseItem(UserBirdCollection collection, String imageUrl, long likeCount, long commentCount, boolean isLiked);
+    @Mapping(target = "user.userId", source = "collection.user.id")
+    @Mapping(target = "user.nickname", source = "collection.user.nickname")
+    @Mapping(target = "user.profileImageUrl", source = "userProfileImageUrl")
+    GetNearbyCollectionsResponse.Item toGetNearbyCollectionsResponseItem(UserBirdCollection collection, String imageUrl, String userProfileImageUrl, long likeCount, long commentCount, boolean isLiked);
 
     @Named("getBirdId")
     default Long getBirdId(UserBirdCollection collection) {

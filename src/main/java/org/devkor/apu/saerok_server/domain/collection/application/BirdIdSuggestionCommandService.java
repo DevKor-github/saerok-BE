@@ -82,10 +82,10 @@ public class BirdIdSuggestionCommandService {
         // 최초 제안인 경우에만 알림 발송
         if (!birdAlreadySuggested) {
             pushNotificationService.sendBirdIdSuggestionNotification(
-                collection.getUser().getId(), // 컬렉션 소유자에게
-                userId, // 제안한 사용자 ID
-                collectionId, // 컬렉션 ID
-                bird.getName().getKoreanName() // 제안된 새 이름
+                    collection.getUser().getId(), // 컬렉션 소유자에게
+                    userId, // 제안한 사용자 ID
+                    collectionId, // 컬렉션 ID
+                    bird.getName().getKoreanName() // 제안된 새 이름
             );
         }
 

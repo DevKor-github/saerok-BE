@@ -12,7 +12,7 @@ import org.devkor.apu.saerok_server.domain.user.core.service.UserSignupStatusSer
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
-import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +26,6 @@ public class UserCommandService {
     private final UserRepository userRepository;
     private final UserProfileUpdateService userProfileUpdateService;
     private final UserSignupStatusService userSignupStatusService;
-    private final UserProfileImageRepository userProfileImageRepository;
     private final ImageDomainService imageDomainService;
     private final ImageService imageService;
 
