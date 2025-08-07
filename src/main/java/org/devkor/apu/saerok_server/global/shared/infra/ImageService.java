@@ -1,5 +1,7 @@
 package org.devkor.apu.saerok_server.global.shared.infra;
 
+import java.util.List;
+
 /**
  * 이미지 업로드/삭제/조회 기능을 제공하는 서비스
  */
@@ -18,6 +20,12 @@ public interface ImageService {
      * @param objectKey 삭제할 경로
      */
     void delete(String objectKey);
+
+    /**
+     * 주어진 objectKey List를 S3에서 삭제
+     * @param objectKeys 삭제할 경로들
+     */
+    void deleteAll(List<String> objectKeys);
 
     /**
      * 객체가 S3에 존재하는지 확인
