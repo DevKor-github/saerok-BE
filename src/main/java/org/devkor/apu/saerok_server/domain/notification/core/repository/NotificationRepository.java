@@ -59,10 +59,9 @@ public class NotificationRepository {
     }
 
     // 사용자의 모든 알림을 읽음 처리
-    public int markAllAsReadByUserId(Long userId) {
-        return em.createQuery(
-                "UPDATE Notification n SET n.isRead = true " +
-                "WHERE n.user.id = :userId AND n.isRead = false")
+    public void markAllAsReadByUserId(Long userId) {
+        em.createQuery("UPDATE Notification n SET n.isRead = true " +
+                        "WHERE n.user.id = :userId AND n.isRead = false")
                 .setParameter("userId", userId)
                 .executeUpdate();
     }

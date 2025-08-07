@@ -13,7 +13,7 @@ public record NotificationSettingsResponse(
         @Schema(description = "댓글 알림 활성화 여부", example = "true")
         Boolean commentEnabled,
 
-        @Schema(description = "새 종 식별 제안 알림 활성화 여부", example = "true")
+        @Schema(description = "동정 제안 알림 활성화 여부", example = "true")
         Boolean birdIdSuggestionEnabled,
 
         @Schema(description = "시스템 알림 활성화 여부", example = "true")
