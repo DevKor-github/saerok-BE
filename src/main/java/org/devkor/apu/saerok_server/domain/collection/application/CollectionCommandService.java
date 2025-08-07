@@ -28,6 +28,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -89,9 +91,10 @@ public class CollectionCommandService {
         }
 
         List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId());
-        imageService.deleteAll(objectKeys);
+
         collectionImageRepository.removeByCollectionId(command.collectionId());
         collectionRepository.remove(collection);
+        runAfterCommitOrNow(() -> imageService.deleteAll(objectKeys));
     }
 
     public UpdateCollectionResponse updateCollection(UpdateCollectionCommand command) {
