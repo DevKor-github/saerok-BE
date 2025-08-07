@@ -10,7 +10,6 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
-import org.devkor.apu.saerok_server.domain.collection.infra.S3CollectionImageRemover;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
@@ -20,11 +19,14 @@ import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -34,10 +36,10 @@ public class CollectionCommandService {
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
     private final BirdRepository birdRepository;
-    private final S3CollectionImageRemover s3CollectionImageRemover;
     private final CollectionImageRepository collectionImageRepository;
     private final ImageDomainService imageDomainService;
     private final CollectionWebMapper collectionWebMapper;
+    private final ImageService imageService;
 
     public Long createCollection(CreateCollectionCommand command) {
         User user = userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
@@ -86,7 +88,8 @@ public class CollectionCommandService {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
         }
 
-        s3CollectionImageRemover.removeFromS3(command.collectionId());
+        List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId());
+        imageService.deleteAll(objectKeys);
         collectionImageRepository.removeByCollectionId(command.collectionId());
         collectionRepository.remove(collection);
     }

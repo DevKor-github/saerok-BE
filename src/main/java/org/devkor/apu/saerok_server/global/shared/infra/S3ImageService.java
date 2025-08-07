@@ -4,15 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * S3의 업로드 이미지 버킷과 통신해 이미지 업로드/삭제/조회 기능을 제공하는 서비스
@@ -54,6 +52,22 @@ public class S3ImageService implements ImageService {
             s3Client.deleteObject(deleteRequest);
         } catch (S3Exception e) {
             throw new RuntimeException("S3 이미지 삭제 실패: key=" + key, e);
+        }
+    }
+
+    @Override
+    public void deleteAll(List<String> objectKeys) {
+        if (!objectKeys.isEmpty()) {
+            List<ObjectIdentifier> objectsToDelete = objectKeys.stream()
+                    .map(key -> ObjectIdentifier.builder().key(key).build())
+                    .toList();
+            DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder()
+                    .bucket(bucket)
+                    .delete(Delete.builder().objects(objectsToDelete).build())
+                    .build();
+            s3Client.deleteObjects(deleteRequest);
+
+            // TODO: 추후 운영/고도화 단계에서 S3 이미지 삭제 실패 감지 및 후처리
         }
     }
 
