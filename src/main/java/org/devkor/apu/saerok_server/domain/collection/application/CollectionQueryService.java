@@ -140,8 +140,9 @@ public class CollectionQueryService {
                     long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
                     long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
                     boolean isLikedByMe = command.userId() != null && collectionLikeRepository.existsByUserIdAndCollectionId(command.userId(), collection.getId());
-                    
-                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl, likeCount, commentCount, isLikedByMe);
+                    String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
+
+                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLikedByMe);
                 })
                 .toList();
         // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도
