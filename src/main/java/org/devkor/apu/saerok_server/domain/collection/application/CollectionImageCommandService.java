@@ -11,38 +11,23 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.shared.exception.S3DeleteException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-import java.time.Duration;
 import java.util.UUID;
+
+import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class CollectionImageCommandService {
 
-    private static final Logger log = LoggerFactory.getLogger(CollectionImageCommandService.class);
-
-    private final S3Presigner s3Presigner;
     private final CollectionRepository collectionRepository;
     private final CollectionImageRepository collectionImageRepository;
     private final ImageDomainService imageDomainService;
-    private final S3Client s3Client;
-
-    @Value("${aws.s3.upload-image-bucket}")
-    private String bucket;
+    private final ImageService imageService;
 
     public PresignResponse generatePresignedUploadUrl(Long userId, Long collectionId, String contentType) {
 
@@ -53,21 +38,8 @@ public class CollectionImageCommandService {
 
         String objectKey = "collection-images/" + collectionId + "/" + UUID.randomUUID();
 
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(objectKey)
-                .contentType(contentType)
-                .build();
-
-        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .putObjectRequest(putObjectRequest)
-                .signatureDuration(Duration.ofMinutes(10))
-                .build();
-
-        PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
-
         return new PresignResponse(
-                presignedRequest.url().toString(),
+                imageService.generateUploadUrl(objectKey, contentType, 10),
                 objectKey
         );
     }
@@ -103,17 +75,7 @@ public class CollectionImageCommandService {
 
         String objectKey = image.getObjectKey();
 
-        try {
-            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(objectKey)
-                    .build();
-            s3Client.deleteObject(deleteRequest);
-        } catch (S3Exception e) {
-            log.error("S3 이미지 삭제 실패: objectKey={}, bucket={}, error={}", objectKey, bucket, e.getMessage());
-            throw new S3DeleteException("S3 이미지 삭제에 실패했습니다.");
-        }
-
         collectionImageRepository.remove(image);
+        runAfterCommitOrNow(() -> imageService.delete(objectKey));
     }
 }
