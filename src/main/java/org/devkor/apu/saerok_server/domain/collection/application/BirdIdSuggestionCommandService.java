@@ -7,7 +7,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.*;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.core.service.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -79,23 +79,11 @@ public class BirdIdSuggestionCommandService {
             BirdIdSuggestion agree = new BirdIdSuggestion(user, collection, bird, BirdIdSuggestion.SuggestionType.AGREE);
             suggestionRepo.save(agree);
         }
-        BirdIdSuggestion suggestion = new BirdIdSuggestion(
-                user,
-                collection,
-                bird
-        );
-        suggestionRepo.save(suggestion);
-
-        // 해당 새에 대한 기존 제안이 있었는지 확인
-        long suggestionCountForThisBird = suggestionRepo.findByCollectionId(collectionId).stream()
-                .filter(s -> s.getBird().getId().equals(birdId))
-                .count();
-
         // 최초 제안인 경우에만 알림 발송
-        if (suggestionCountForThisBird == 1) {
+        if (!birdAlreadySuggested) {
             pushNotificationService.sendBirdIdSuggestionNotification(
                 collection.getUser().getId(), // 컬렉션 소유자에게
-                user.getNickname(), // 제안한 사용자의 닉네임
+                userId, // 제안한 사용자 ID
                 collectionId, // 컬렉션 ID
                 bird.getName().getKoreanName() // 제안된 새 이름
             );

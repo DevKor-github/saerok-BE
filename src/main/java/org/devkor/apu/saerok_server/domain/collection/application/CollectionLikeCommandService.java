@@ -6,7 +6,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.core.service.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -52,7 +52,7 @@ public class CollectionLikeCommandService {
             if (!collection.getUser().getId().equals(userId)) {
                 pushNotificationService.sendCollectionLikeNotification(
                     collection.getUser().getId(), // 컬렉션 소유자에게
-                    user.getNickname(), // 좋아요를 누른 사용자의 닉네임
+                    userId, // 좋아요를 누른 사용자 ID
                     collectionId // 컬렉션 ID
                 );
             }

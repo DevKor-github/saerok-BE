@@ -10,7 +10,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.core.service.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
@@ -46,7 +46,7 @@ public class CollectionCommentCommandService {
         if (!collection.getUser().getId().equals(userId)) {
             pushNotificationService.sendCollectionCommentNotification(
                 collection.getUser().getId(), // 컬렉션 소유자에게
-                user.getNickname(), // 댓글을 달은 사용자의 닉네임
+                userId, // 댓글을 달은 사용자 ID
                 collectionId, // 컬렉션 ID
                 req.content() // 댓글 내용
             );

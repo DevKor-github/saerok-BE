@@ -23,7 +23,7 @@ public class NotificationController {
     @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "알림 목록 조회",
-            description = "사용자의 알림 목록을 페이지네이션으로 조회합니다.",
+            description = "사용자의 알림 목록을 조회합니다.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content),
@@ -32,10 +32,7 @@ public class NotificationController {
             }
     )
     public void getNotifications(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "읽지 않은 알림만 조회") @RequestParam(defaultValue = "false") boolean unreadOnly
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         return;
     }
