@@ -39,16 +39,6 @@ public class NotificationRepository {
                 .getResultList();
     }
 
-    // 사용자의 읽지 않은 알림 목록 조회
-    public List<Notification> findUnreadByUserId(Long userId) {
-        return em.createQuery(
-                "SELECT n FROM Notification n " +
-                "WHERE n.user.id = :userId AND n.isRead = false " +
-                "ORDER BY n.createdAt DESC", Notification.class)
-                .setParameter("userId", userId)
-                .getResultList();
-    }
-
     // 사용자의 읽지 않은 알림 개수 조회
     public Long countUnreadByUserId(Long userId) {
         return em.createQuery(

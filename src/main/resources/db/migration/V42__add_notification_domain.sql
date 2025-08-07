@@ -35,7 +35,7 @@ CREATE TABLE notifications (
 
 -- 외래키 제약조건 추가
 ALTER TABLE notification_settings
-    ADD CONSTRAINT fk_notification_settings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_notification_settings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_notification_settings_device FOREIGN KEY (device_id) REFERENCES device_token(device_id) ON DELETE CASCADE;
 
 ALTER TABLE notifications
@@ -49,6 +49,3 @@ CREATE INDEX idx_notification_settings_user_device ON notification_settings(user
 -- 사용자별 알림 조회에 이용 (읽지 않은 알림, 최신순 정렬 등)
 CREATE INDEX idx_notifications_user ON notifications(user_id);
 CREATE INDEX idx_notifications_user_read ON notifications(user_id, is_read);
-CREATE INDEX idx_notifications_user_created ON notifications(user_id, created_at);
--- 특정 컬렉션 관련 알림 조회에 이용
-CREATE INDEX idx_notifications_type_related ON notifications(type, related_id);
