@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper(
         componentModel = MappingConstants.ComponentModel.SPRING
@@ -31,19 +32,19 @@ public interface CollectionLikeWebMapper {
     GetLikedCollectionsResponse.Item toLikedCollectionItem(UserBirdCollection collection);
 
     // 컬렉션을 좋아요한 사용자 목록 조회
-    default GetCollectionLikersResponse toGetCollectionLikersResponse(List<User> users) {
+    default GetCollectionLikersResponse toGetCollectionLikersResponse(List<User> users, Map<Long, String> profileImageUrls) {
         if (users == null || users.isEmpty()) {
             return new GetCollectionLikersResponse(List.of());
         }
         
-        List<GetCollectionLikersResponse.Item> items = toCollectionLikerItems(users);
+        List<GetCollectionLikersResponse.Item> items = users.stream()
+                .map(user -> new GetCollectionLikersResponse.Item(
+                    user.getId(),
+                    user.getNickname(),
+                    profileImageUrls.get(user.getId())
+                ))
+                .toList();
         return new GetCollectionLikersResponse(items);
     }
-
-    List<GetCollectionLikersResponse.Item> toCollectionLikerItems(List<User> users);
-
-    @Mapping(target = "userId", source = "id")
-    @Mapping(target = "nickname", source = "nickname")
-    GetCollectionLikersResponse.Item toCollectionLikerItem(User user);
 
 }

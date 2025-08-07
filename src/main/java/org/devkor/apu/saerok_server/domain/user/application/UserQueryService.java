@@ -5,9 +5,12 @@ import org.devkor.apu.saerok_server.domain.user.api.response.CheckNicknameRespon
 import org.devkor.apu.saerok_server.domain.user.api.response.GetMyUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.dto.NicknameValidationResult;
-import org.devkor.apu.saerok_server.domain.user.core.service.UserProfilePolicy;
+import org.devkor.apu.saerok_server.domain.user.core.service.NicknamePolicy;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserQueryService {
 
     private final UserRepository userRepository;
-    private final UserProfilePolicy userProfilePolicy;
+    private final NicknamePolicy nicknamePolicy;
+    private final UserProfileImageUrlService userProfileImageUrlService;
 
     public GetMyUserProfileResponse getMyUserProfile(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 id의 사용자가 존재하지 않아요"));
@@ -26,13 +30,14 @@ public class UserQueryService {
         return new GetMyUserProfileResponse(
                 user.getNickname(),
                 user.getEmail(),
-                OffsetDateTimeLocalizer.toSeoulLocalDate(user.getJoinedAt())
+                OffsetDateTimeLocalizer.toSeoulLocalDate(user.getJoinedAt()),
+                userProfileImageUrlService.getProfileImageUrlFor(user)
         );
     }
 
     public CheckNicknameResponse checkNickname(String nickname) {
         // 1. 유효성 검사 (길이, 형식, 금칙어 등)
-        NicknameValidationResult validationResult = userProfilePolicy.validateNicknameWithReason(nickname);
+        NicknameValidationResult validationResult = nicknamePolicy.validateNicknameWithReason(nickname);
         if (!validationResult.isValid()) {
             return new CheckNicknameResponse(false, validationResult.reason());
         }

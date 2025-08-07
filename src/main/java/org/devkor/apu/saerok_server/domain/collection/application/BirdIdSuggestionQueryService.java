@@ -5,7 +5,10 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
+import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.util.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -25,6 +29,7 @@ public class BirdIdSuggestionQueryService {
     private final CollectionImageRepository  collectionImageRepo;
     private final ImageDomainService         imageDomainService;
     private final UserRepository userRepo;
+    private final UserProfileImageUrlService userProfileImageUrlService;
 
     /* 전체 PUBLIC + pending 컬렉션 조회 */
     public GetPendingCollectionsResponse getPendingCollections() {
@@ -41,7 +46,14 @@ public class BirdIdSuggestionQueryService {
                 ids.isEmpty() ? Map.of() :
                 collectionImageRepo.findThumbKeysByCollectionIds(ids);
 
-        // ── 3단계: DTO 조립
+        // ── 3단계: 사용자 프로필 이미지 URL 일괄 조회
+        List<User> users = collections.stream()
+                .map(UserBirdCollection::getUser)
+                .distinct()
+                .toList();
+        Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
+
+        // ── 4단계: DTO 조립
         List<GetPendingCollectionsResponse.Item> items = collections.stream()
                 .map(c -> new GetPendingCollectionsResponse.Item(
                         c.getId(),
@@ -50,6 +62,7 @@ public class BirdIdSuggestionQueryService {
                                 : imageDomainService.toUploadImageUrl(thumbMap.get(c.getId())),
                         c.getNote(),
                         c.getUser().getNickname(),
+                        profileImageUrls.get(c.getUser().getId()),
                         OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getBirdIdSuggestionRequestedAt())
                 ))
                 .toList();
@@ -79,7 +92,9 @@ public class BirdIdSuggestionQueryService {
                         s.birdScientificName(),
                         imageDomainService.toDexImageUrl(s.birdThumbImageObjectKey()),
                         s.agreeCount(),
-                        s.isAgreedByMe()
+                        s.disagreeCount(),
+                        s.isAgreedByMe(),
+                        s.isDisagreedByMe()
                 ))
                 .toList();
 

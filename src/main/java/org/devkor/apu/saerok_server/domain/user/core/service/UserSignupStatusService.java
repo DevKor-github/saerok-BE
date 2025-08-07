@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.user.core.service;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.core.entity.SignupStatusType;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.global.shared.util.RegexMatchUtils;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,14 +13,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserSignupStatusService {
 
-    private final UserProfilePolicy userProfilePolicy;
+    private final NicknamePolicy nicknamePolicy;
 
     public void tryCompleteSignup(User user) {
 
         if (user.getSignupStatus() == SignupStatusType.COMPLETED) return;
 
-        if (userProfilePolicy.isNicknameValid(user.getNickname())
-                && userProfilePolicy.isEmailValid(user.getEmail())
+        if (nicknamePolicy.isNicknameValid(user.getNickname())
+                && RegexMatchUtils.isEmailValid(user.getEmail())
         ) {
             user.setSignupStatus(SignupStatusType.COMPLETED);
         }
