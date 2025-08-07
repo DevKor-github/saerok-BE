@@ -50,50 +50,6 @@ public class NotificationSettingsRepository {
     }
 
     /**
-     * 좋아요 알림이 활성화된 모든 설정 조회
-     */
-    public List<NotificationSettings> findAllWithLikeNotificationEnabled() {
-        return em.createQuery(
-                "SELECT ns FROM NotificationSettings ns " +
-                "JOIN FETCH ns.user u " +
-                "WHERE ns.likeEnabled = true", NotificationSettings.class)
-                .getResultList();
-    }
-
-    /**
-     * 댓글 알림이 활성화된 모든 설정 조회
-     */
-    public List<NotificationSettings> findAllWithCommentNotificationEnabled() {
-        return em.createQuery(
-                "SELECT ns FROM NotificationSettings ns " +
-                "JOIN FETCH ns.user u " +
-                "WHERE ns.commentEnabled = true", NotificationSettings.class)
-                .getResultList();
-    }
-
-    /**
-     * 동정 제안 알림이 활성화된 모든 설정 조회
-     */
-    public List<NotificationSettings> findAllWithBirdIdSuggestionNotificationEnabled() {
-        return em.createQuery(
-                "SELECT ns FROM NotificationSettings ns " +
-                "JOIN FETCH ns.user u " +
-                "WHERE ns.birdIdSuggestionEnabled = true", NotificationSettings.class)
-                .getResultList();
-    }
-
-    /**
-     * 시스템 알림이 활성화된 모든 설정 조회
-     */
-    public List<NotificationSettings> findAllWithSystemNotificationEnabled() {
-        return em.createQuery(
-                "SELECT ns FROM NotificationSettings ns " +
-                "JOIN FETCH ns.user u " +
-                "WHERE ns.systemEnabled = true", NotificationSettings.class)
-                .getResultList();
-    }
-
-    /**
      * 좋아요 알림이 활성화된 특정 사용자 설정 조회
      */
     public List<NotificationSettings> findByUserIdWithLikeNotificationEnabled(Long userId) {
@@ -139,18 +95,6 @@ public class NotificationSettingsRepository {
                                 "AND ns.systemEnabled = true", NotificationSettings.class)
                 .setParameter("userId", userId)
                 .getResultList();
-    }
-
-    /**
-     * 특정 알림 유형이 활성화된 모든 설정 조회 (발송용)
-     */
-    public List<NotificationSettings> findSettingsWithNotificationEnabled(NotificationType type) {
-        return switch (type) {
-            case LIKE -> findAllWithLikeNotificationEnabled();
-            case COMMENT -> findAllWithCommentNotificationEnabled();
-            case BIRD_ID_SUGGESTION -> findAllWithBirdIdSuggestionNotificationEnabled();
-            case SYSTEM -> findAllWithSystemNotificationEnabled();
-        };
     }
 
     /**

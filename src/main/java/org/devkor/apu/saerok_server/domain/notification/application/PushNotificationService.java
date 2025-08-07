@@ -65,30 +65,6 @@ public class PushNotificationService {
         fcmMessageService.sendToDevices(fcmTokens, message);
     }
 
-    @Async("pushNotificationExecutor")
-    public void sendBroadcast(SendBroadcastPushCommand command) {
-        List<NotificationSettings> settings = notificationSettingsRepository
-                .findSettingsWithNotificationEnabled(NotificationType.SYSTEM);
-
-        if (settings.isEmpty()) {
-            return;
-        }
-
-        Map<Long, List<String>> userDeviceMap = settings.stream()
-                .collect(Collectors.groupingBy(
-                        s -> s.getUser().getId(),
-                        Collectors.mapping(NotificationSettings::getDeviceId, Collectors.toList())
-                ));
-
-        userDeviceMap.forEach((userId, deviceIds) -> {
-            List<DeviceToken> deviceTokens = deviceTokenRepository.findByUserIdAndDeviceIds(userId, deviceIds);
-            if (!deviceTokens.isEmpty()) {
-                List<String> fcmTokens = deviceTokens.stream().map(DeviceToken::getToken).toList();
-                fcmMessageService.sendToDevices(fcmTokens, command.message());
-            }
-        });
-    }
-
     public void sendCollectionLikeNotification(Long targetUserId, String likerNickname, Long collectionId) {
         if (notificationSettingsRepository.findByUserIdWithNotificationEnabled(targetUserId, NotificationType.LIKE).isEmpty()) {
             return;
