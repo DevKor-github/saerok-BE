@@ -18,38 +18,38 @@ public class NotificationCommandService {
     private final UserRepository userRepository;
 
     public void readNotification(Long userId, Long notificationId) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new NotFoundException("알림을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("알림을 찾을 수 없어요"));
 
         if (!notification.getUser().getId().equals(userId)) {
-            throw new ForbiddenException("해당 알림에 대한 권한이 없습니다.");
+            throw new ForbiddenException("해당 알림에 대한 권한이 없어요");
         }
 
         notification.markAsRead();
     }
 
     public void readAllNotifications(Long userId) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         notificationRepository.markAllAsReadByUserId(userId);
     }
 
     public void deleteNotification(Long userId, Long notificationId) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new NotFoundException("알림을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("알림을 찾을 수 없어요"));
 
         if (!notification.getUser().getId().equals(userId)) {
-            throw new ForbiddenException("해당 알림에 대한 권한이 없습니다.");
+            throw new ForbiddenException("해당 알림에 대한 권한이 없어요");
         }
 
         notificationRepository.remove(notification);
     }
 
     public void deleteAllNotifications(Long userId) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         notificationRepository.deleteAllByUserId(userId);
     }
 }

@@ -20,12 +20,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Tag(name = "Notification Settings API", description = "알림 설정 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api_prefix}/notifications/settings/")
+@RequestMapping("${api_prefix}/notifications/settings")
 public class NotificationSettingsController {
 
     private final NotificationSettingsCommandService notificationSettingsCommandService;
@@ -49,12 +47,10 @@ public class NotificationSettingsController {
             @Parameter(description = "디바이스 ID", required = true, example = "device-123")
             @RequestParam String deviceId
     ) {
-        return notificationSettingsQueryService.getNotificationSettings(
-                notificationSettingsWebMapper.toGetNotificationSettingsCommand(userPrincipal.getId(), deviceId)
-        );
+        return notificationSettingsQueryService.getNotificationSettings(userPrincipal.getId(), deviceId);
     }
 
-    @PatchMapping("toggle")
+    @PatchMapping("/toggle")
     @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "특정 알림 유형 토글",
@@ -65,7 +61,7 @@ public class NotificationSettingsController {
                     @ApiResponse(responseCode = "200", description = "토글 성공",
                             content = @Content(schema = @Schema(implementation = ToggleNotificationResponse.class))),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음", content = @Content)
+                    @ApiResponse(responseCode = "404", description = "알림 설정을 찾을 수 없음", content = @Content)
             }
     )
     public ToggleNotificationResponse toggleNotificationSetting(

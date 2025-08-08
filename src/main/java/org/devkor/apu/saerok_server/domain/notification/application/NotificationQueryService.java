@@ -23,14 +23,14 @@ public class NotificationQueryService {
     private final NotificationWebMapper notificationWebMapper;
 
     public GetNotificationsResponse getNotifications(Long userId) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         
         List<Notification> notifications = notificationRepository.findByUserId(userId);
         return notificationWebMapper.toGetNotificationsResponse(notifications);
     }
 
     public GetUnreadCountResponse getUnreadCount(Long userId) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         
         Long unreadCount = notificationRepository.countUnreadByUserId(userId);
         return notificationWebMapper.toGetUnreadCountResponse(unreadCount);
