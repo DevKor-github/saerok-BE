@@ -8,10 +8,10 @@ import java.util.List;
 @Schema(description = "알림 목록 조회 응답")
 public record GetNotificationsResponse(
     @Schema(description = "알림 목록")
-    List<NotificationDto> notifications
+    List<Item> items
 ) {
     @Schema(description = "알림 정보")
-    public record NotificationDto(
+    public record Item(
         @Schema(description = "알림 ID")
         Long id,
         

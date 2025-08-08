@@ -14,11 +14,16 @@ import java.util.List;
 )
 public interface NotificationWebMapper {
 
-    GetNotificationsResponse toGetNotificationsResponse(List<Notification> notifications);
+    default GetNotificationsResponse toGetNotificationsResponse(List<Notification> notifications) {
+        List<GetNotificationsResponse.Item> items = notifications.stream()
+                .map(this::toItem)
+                .toList();
+        return new GetNotificationsResponse(items);
+    }
 
     GetUnreadCountResponse toGetUnreadCountResponse(Long unreadCount);
 
     @Mapping(target = "senderId", source = "sender.id")
     @Mapping(target = "senderNickname", source = "sender.nickname")
-    GetNotificationsResponse.NotificationDto toNotificationDto(Notification notification);
+    GetNotificationsResponse.Item toItem(Notification notification);
 }
