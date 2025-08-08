@@ -10,7 +10,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSugg
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.core.service.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -125,6 +125,7 @@ class BirdIdSuggestionCommandServiceTest {
 
             assertThat(res.suggestionId()).isEqualTo(999L);
             verify(suggestionRepo, times(2)).save(any(BirdIdSuggestion.class));
+            verify(pushNotificationService).sendBirdIdSuggestionNotification(2L, 1L, 100L, "Kor5");
             System.out.println("[suggestOrAgree.success] ✔︎ id=" + res.suggestionId());
         }
 
@@ -153,6 +154,8 @@ class BirdIdSuggestionCommandServiceTest {
             sut.suggest(1L, 100L, 5L);
 
             verify(suggestionRepo, times(1)).save(any(BirdIdSuggestion.class));
+            // 이미 제안된 새에 동의하는 경우에는 푸시 알림 없음
+            verifyNoInteractions(pushNotificationService);
         }
 
         @Test @DisplayName("사용자 없음 → NotFoundException")

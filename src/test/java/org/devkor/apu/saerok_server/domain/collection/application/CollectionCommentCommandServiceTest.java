@@ -6,7 +6,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.core.service.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
@@ -88,7 +88,7 @@ class CollectionCommentCommandServiceTest {
             assertThat(res.commentId()).isEqualTo(COMMENT_ID);
             verify(commentRepo).save(any());
             // 푸시 알림 호출 검증 (댓글 작성자와 컬렉션 소유자가 다른 경우)
-            verify(pushNotificationService).sendCollectionCommentNotification(OTHER_ID, "commenterNick", COLL_ID);
+            verify(pushNotificationService).sendCollectionCommentNotification(OTHER_ID, OWNER_ID, COLL_ID, "Nice");
         }
 
         @Test @DisplayName("사용자 없음 → NotFoundException")

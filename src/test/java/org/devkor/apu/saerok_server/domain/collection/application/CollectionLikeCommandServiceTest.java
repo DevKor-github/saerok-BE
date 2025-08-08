@@ -5,7 +5,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.core.service.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
@@ -54,9 +54,8 @@ class CollectionLikeCommandServiceTest {
         User collectionOwner = new User();
         UserBirdCollection collection = new UserBirdCollection();
         
-        // User와 Collection의 ID와 nickname 설정
+        // User와 Collection의 ID 설정
         ReflectionTestUtils.setField(user, "id", userId);
-        ReflectionTestUtils.setField(user, "nickname", "liker");
         ReflectionTestUtils.setField(collectionOwner, "id", 999L);
         ReflectionTestUtils.setField(collection, "user", collectionOwner);
         
@@ -71,7 +70,7 @@ class CollectionLikeCommandServiceTest {
         assertTrue(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
         // 푸시 알림 호출 검증
-        verify(pushNotificationService).sendCollectionLikeNotification(999L, "liker", collectionId);
+        verify(pushNotificationService).sendCollectionLikeNotification(999L, 1L, collectionId);
     }
 
     @Test
