@@ -75,6 +75,7 @@ jobs:
             APPLE_KEY_ID="${{ secrets.APPLE_KEY_ID }}" \
             APPLE_PRIVATE_KEY="${{ secrets.APPLE_PRIVATE_KEY }}" \
             JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            KAKAO_ADMIN_KEY="${{ secrets.KAKAO_ADMIN_KEY }}" \
             KAKAO_CLIENT_ID="${{ secrets.KAKAO_CLIENT_ID }}" \
             KAKAO_REDIRECT_URI="${{ secrets.KAKAO_REDIRECT_URI }}" \
             KAKAO_CLIENT_SECRET="${{ secrets.KAKAO_CLIENT_SECRET }}" \
