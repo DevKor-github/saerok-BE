@@ -101,23 +101,17 @@ public class UserCommandService {
                     .revoke(link);
         }
 
-        // 2) Full Delete
-        // 2-1) user_profile_image(+S3)
+        // 2) Hard Delete
         userProfileImageRepository.findByUserId(userId).ifPresent(img -> {
             String oldKey = img.getObjectKey();
             userProfileImageRepository.remove(img);
             runAfterCommitOrNow(() -> imageService.delete(oldKey));
         });
-        // 2-2) user_role
         userRoleRepository.deleteByUserId(userId);
-        // 2-3) user_refresh_token
         userRefreshTokenRepository.deleteByUserId(userId);
-        // 2-4) social_auth (Keep)
-        // - 내부 소셜 연동 정보는 보관합니다. (재가입 분석/감사를 위해)
-        // 2-5) user_bird_bookmark
         bookmarkRepository.deleteByUserId(userId);
 
-        // 3) Partial Delete (users)
+        // 3) Soft Delete
         user.anonymizeForWithdrawal();
     }
 }
