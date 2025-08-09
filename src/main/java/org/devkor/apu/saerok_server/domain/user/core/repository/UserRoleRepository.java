@@ -23,4 +23,10 @@ public class UserRoleRepository {
                 .setParameter("user", user)
                 .getResultList();
     }
+
+    public void deleteByUserId(Long userId) {
+        em.createQuery("DELETE FROM UserRole ur WHERE ur.user.id = :userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+    }
 }

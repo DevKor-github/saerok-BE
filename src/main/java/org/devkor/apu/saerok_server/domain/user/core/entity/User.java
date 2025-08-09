@@ -46,6 +46,17 @@ public class User extends SoftDeletableAuditable {
     @Column(name = "default_profile_image_variant")
     private Short defaultProfileImageVariant;
 
+    public void anonymizeForWithdrawal() {
+        this.setNickname(null);
+        this.email = null;
+        this.phone = null;
+        this.gender = null;
+        this.birthDate = null;
+        this.setDefaultProfileImageVariant(null);
+        this.setSignupStatus(SignupStatusType.WITHDRAWN);
+        this.softDelete();
+    }
+
     public static User createUser(String email) {
         User user = new User();
         user.email = email;

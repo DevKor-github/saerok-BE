@@ -35,4 +35,10 @@ public class SocialAuthRepository {
                 .setParameter("userId", userId)
                 .getResultList();
     }
+
+    public void deleteByUserId(Long userId) {
+        em.createQuery("DELETE FROM SocialAuth s WHERE s.user.id = :userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+    }
 }

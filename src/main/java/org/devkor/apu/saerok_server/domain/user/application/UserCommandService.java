@@ -1,12 +1,18 @@
+// file: src/main/java/org/devkor/apu/saerok_server/domain/user/application/UserCommandService.java
 package org.devkor.apu.saerok_server.domain.user.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
+import org.devkor.apu.saerok_server.domain.auth.infra.SocialRevoker;
+import org.devkor.apu.saerok_server.domain.dex.bookmark.core.repository.BookmarkRepository;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileUpdateService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserSignupStatusService;
@@ -16,7 +22,10 @@ import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
+
+import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
 
 @Service
 @Transactional
@@ -28,7 +37,13 @@ public class UserCommandService {
     private final UserSignupStatusService userSignupStatusService;
     private final ImageService imageService;
     private final UserProfileImageUrlService userProfileImageUrlService;
+
     private final SocialAuthRepository socialAuthRepository;
+    private final UserProfileImageRepository userProfileImageRepository;
+    private final UserRefreshTokenRepository userRefreshTokenRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final List<SocialRevoker> socialRevokers;
+    private final BookmarkRepository bookmarkRepository;
 
     public UpdateUserProfileResponse updateUserProfile(UpdateUserProfileCommand command) {
 
@@ -73,21 +88,36 @@ public class UserCommandService {
     }
 
     public void deleteUserAccount(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("이미 탈퇴했거나 존재하지 않는 사용자 id예요"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("이미 탈퇴했거나 존재하지 않는 사용자 id예요"));
 
-        socialAuthRepository.findByUserId(userId)
-                .forEach(socialAuth -> {
-                    /*
-                    socialAuth.getProvider()로 적절한 SocialRevoker를 만들어서, revoke 요청
-                    그럴려면 먼저 socialAuth에 accessToken, refreshToken 칼럼을 만들어야 함
-                     */
-                });
-        // 이 시점에서 각 소셜 공급자 쪽에서 사용자 연결 해제 완료. -> 덕분에 나중에 재가입할 때 다시 각 소셜 공급자별로 동의 다시 해야 함
-        // 이렇게 해야 애플 쪽에서도 이메일 주소를 다시 주는 게 보장됨
+        // 1) 소셜 연동 해제
+        var links = socialAuthRepository.findByUserId(userId);
+        for (var link : links) {
+            socialRevokers.stream()
+                    .filter(r -> r.provider() == link.getProvider())
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Revoker 미구현: " + link.getProvider()))
+                    .revoke(link);
+        }
 
-        // 그 다음에는 user 테이블에서 이메일 주소를 지우고 deleted_at을 기록.
-        // 그 다음에는 user_bird_bookmark 테이블에서 해당 유저의 모든 북마크 내역을 삭제
-        // user_refresh_token 테이블에서 해당 유저의 모든 리프레시 토큰을 revoke
+        // 2) Full Delete
+        // 2-1) user_profile_image(+S3)
+        userProfileImageRepository.findByUserId(userId).ifPresent(img -> {
+            String oldKey = img.getObjectKey();
+            userProfileImageRepository.remove(img);
+            runAfterCommitOrNow(() -> imageService.delete(oldKey));
+        });
+        // 2-2) user_role
+        userRoleRepository.deleteByUserId(userId);
+        // 2-3) user_refresh_token
+        userRefreshTokenRepository.deleteByUserId(userId);
+        // 2-4) social_auth (Keep)
+        // - 내부 소셜 연동 정보는 보관합니다. (재가입 분석/감사를 위해)
+        // 2-5) user_bird_bookmark
+        bookmarkRepository.deleteByUserId(userId);
 
+        // 3) Partial Delete (users)
+        user.anonymizeForWithdrawal();
     }
 }
