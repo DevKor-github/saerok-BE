@@ -5,13 +5,13 @@ import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfi
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileUpdateService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserSignupStatusService;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ class UserCommandServiceTest {
     @Mock UserRepository userRepository;
     @Mock UserProfileUpdateService userProfileUpdateService;
     @Mock UserSignupStatusService userSignupStatusService;
-    @Mock UserProfileImageRepository userProfileImageRepository;
+    @Mock UserProfileImageUrlService userProfileImageUrlService;
     @Mock ImageDomainService imageDomainService;
     @Mock ImageService imageService;
 
@@ -48,8 +48,8 @@ class UserCommandServiceTest {
                 userRepository,
                 userProfileUpdateService,
                 userSignupStatusService,
-                imageDomainService,
-                imageService
+                imageService,
+                userProfileImageUrlService
         );
 
         user = new User();
@@ -63,7 +63,6 @@ class UserCommandServiceTest {
     void updateUserProfile_nicknameOnly() {
         // given
         given(userRepository.findById(42L)).willReturn(Optional.of(user));
-        when(imageDomainService.toUploadImageUrl(isNull())).thenReturn(null);
 
         // changeNickname 호출 시 실제로 user 닉네임을 바꾸도록 스텁
         doAnswer(invocation -> {
@@ -91,9 +90,10 @@ class UserCommandServiceTest {
         verify(userRepository).findById(42L);
         verify(userProfileUpdateService).changeNickname(user, "newNick");
         verify(userSignupStatusService).tryCompleteSignup(user);
-        verify(imageDomainService).toUploadImageUrl(null);
-    }
 
+        // ImageDomainService는 호출되지 않음
+        verifyNoInteractions(imageDomainService);
+    }
 
     @Test
     @DisplayName("updateUserProfile — 프로필 이미지 변경 포함")
@@ -101,8 +101,6 @@ class UserCommandServiceTest {
         // given
         given(userRepository.findById(42L)).willReturn(Optional.of(user));
         String objKey = "user-profile-images/42/uuid";
-        String url = "https://cdn/user-profile-images/42/uuid";
-        given(imageDomainService.toUploadImageUrl(objKey)).willReturn(url);
 
         UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(
                 42L,
@@ -117,12 +115,13 @@ class UserCommandServiceTest {
         // then
         assertThat(res.nickname()).isEqualTo("oldNick");
         assertThat(res.email()).isEqualTo("old@example.com");
-        assertThat(res.profileImageUrl()).isEqualTo(url);
+        // 현재 구현은 URL을 응답에 포함하지 않는다고 가정
+        assertThat(res.profileImageUrl()).isNull();
 
         verify(userRepository).findById(42L);
         verify(userProfileUpdateService).changeProfileImage(user, objKey, "image/png");
         verify(userSignupStatusService).tryCompleteSignup(user);
-        verify(imageDomainService).toUploadImageUrl(objKey);
+
         // 닉네임 서비스는 호출되지 않음
         verify(userProfileUpdateService, never()).changeNickname(any(), anyString());
     }

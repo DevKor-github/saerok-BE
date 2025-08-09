@@ -6,13 +6,12 @@ import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfi
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileUpdateService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserSignupStatusService;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
-import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +25,8 @@ public class UserCommandService {
     private final UserRepository userRepository;
     private final UserProfileUpdateService userProfileUpdateService;
     private final UserSignupStatusService userSignupStatusService;
-    private final ImageDomainService imageDomainService;
     private final ImageService imageService;
+    private final UserProfileImageUrlService userProfileImageUrlService;
 
     public UpdateUserProfileResponse updateUserProfile(UpdateUserProfileCommand command) {
 
@@ -41,6 +40,8 @@ public class UserCommandService {
 
         if (command.profileImageContentType() != null && command.profileImageObjectKey() != null) {
             userProfileUpdateService.changeProfileImage(user, command.profileImageObjectKey(), command.profileImageContentType());
+        } else if (!(command.profileImageContentType() == null && command.profileImageObjectKey() == null)) {
+            throw new BadRequestException("프로필 사진 변경 시, profileImageContentType과 profileImageObjectKey 둘 다 있어야 합니다");
         }
 
         userSignupStatusService.tryCompleteSignup(user);
@@ -48,7 +49,7 @@ public class UserCommandService {
         return new UpdateUserProfileResponse(
                 user.getNickname(),
                 user.getEmail(),
-                imageDomainService.toUploadImageUrl(command.profileImageObjectKey())
+                userProfileImageUrlService.getProfileImageUrlFor(user)
         );
     }
 

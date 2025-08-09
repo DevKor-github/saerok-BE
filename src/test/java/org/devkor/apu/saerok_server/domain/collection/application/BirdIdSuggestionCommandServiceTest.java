@@ -107,7 +107,7 @@ class BirdIdSuggestionCommandServiceTest {
             when(userRepo.findById(1L)).thenReturn(Optional.of(u));
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
             when(birdRepo.findById(5L)).thenReturn(Optional.of(b));
-            
+
             when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST))
                     .thenReturn(false);
             when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE))
@@ -138,7 +138,7 @@ class BirdIdSuggestionCommandServiceTest {
             given(userRepo.findById(1L)).willReturn(Optional.of(u));
             given(collectionRepo.findById(100L)).willReturn(Optional.of(col));
             given(birdRepo.findById(5L)).willReturn(Optional.of(b));
-            
+
             // 서비스 로직에 맞게 모든 체크 목킹
             given(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST))
                     .willReturn(false);
@@ -146,7 +146,7 @@ class BirdIdSuggestionCommandServiceTest {
                     .willReturn(false);
             given(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST))
                     .willReturn(true); // 이미 다른 사람이 제안한 상황
-            
+
             // DISAGREE 제거 체크
             given(suggestionRepo.findByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.DISAGREE))
                     .willReturn(Optional.empty());
@@ -224,7 +224,7 @@ class BirdIdSuggestionCommandServiceTest {
                     .isExactlyInstanceOf(BadRequestException.class)
                     .hasMessage("이미 내가 제안한 항목이에요");
         }
-        
+
         @Test @DisplayName("이미 내가 동의한 bird → BadRequestException")
         void duplicateMyOwnAgree() {
             UserBirdCollection col = collection(100L, user(2L));
@@ -273,7 +273,7 @@ class BirdIdSuggestionCommandServiceTest {
         @DisplayName("성공 - 동의 취소")
         void cancelAgree() {
             BirdIdSuggestion existingAgree = suggestion(999L, user(1L), collection(100L, user(2L)), bird(5L), SuggestionType.AGREE);
-            
+
             given(userRepo.findById(1L)).willReturn(Optional.of(user(1L)));
             given(collectionRepo.findById(100L)).willReturn(Optional.of(collection(100L, user(2L))));
             given(birdRepo.findById(5L)).willReturn(Optional.of(bird(5L)));
@@ -325,7 +325,7 @@ class BirdIdSuggestionCommandServiceTest {
         @DisplayName("성공 - 비동의 취소")
         void cancelDisagree() {
             BirdIdSuggestion existingDisagree = suggestion(999L, user(1L), collection(100L, user(2L)), bird(5L), SuggestionType.DISAGREE);
-            
+
             given(userRepo.findById(1L)).willReturn(Optional.of(user(1L)));
             given(collectionRepo.findById(100L)).willReturn(Optional.of(collection(100L, user(2L))));
             given(birdRepo.findById(5L)).willReturn(Optional.of(bird(5L)));

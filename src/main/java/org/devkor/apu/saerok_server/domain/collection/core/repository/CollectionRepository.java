@@ -37,6 +37,19 @@ public class CollectionRepository {
                 .getResultList();
     }
 
+    /** 특정 사용자의 컬렉션 중 accessLevel 이 일치하는 목록만 반환 */
+    public List<UserBirdCollection> findByUserIdAndAccessLevel(
+            Long userId,
+            AccessLevelType accessLevel
+    ) {
+        return em.createQuery(
+                        "SELECT c FROM UserBirdCollection c " +
+                                "WHERE c.user.id = :userId AND c.accessLevel = :access", UserBirdCollection.class)
+                .setParameter("userId", userId)
+                .setParameter("access", accessLevel)
+                .getResultList();
+    }
+
     @SuppressWarnings("unchecked")
     public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId, boolean isMineOnly) {
 
