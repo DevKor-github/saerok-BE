@@ -10,7 +10,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.core.service.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;

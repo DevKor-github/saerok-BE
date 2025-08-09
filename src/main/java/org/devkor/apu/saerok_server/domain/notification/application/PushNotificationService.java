@@ -1,8 +1,9 @@
-package org.devkor.apu.saerok_server.domain.notification.core.service;
+package org.devkor.apu.saerok_server.domain.notification.application;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
+import org.devkor.apu.saerok_server.domain.notification.core.service.FcmMessageService;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.*;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.DeviceTokenRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
