@@ -1,18 +1,14 @@
-// file: src/main/java/org/devkor/apu/saerok_server/domain/user/application/UserCommandService.java
 package org.devkor.apu.saerok_server.domain.user.application;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
 import org.devkor.apu.saerok_server.domain.auth.infra.SocialRevoker;
-import org.devkor.apu.saerok_server.domain.dex.bookmark.core.repository.BookmarkRepository;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
+import org.devkor.apu.saerok_server.domain.user.application.helper.UserHardDeleteHelper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileUpdateService;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserSignupStatusService;
@@ -24,8 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-
-import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
 
 @Service
 @Transactional
@@ -39,11 +33,8 @@ public class UserCommandService {
     private final UserProfileImageUrlService userProfileImageUrlService;
 
     private final SocialAuthRepository socialAuthRepository;
-    private final UserProfileImageRepository userProfileImageRepository;
-    private final UserRefreshTokenRepository userRefreshTokenRepository;
-    private final UserRoleRepository userRoleRepository;
     private final List<SocialRevoker> socialRevokers;
-    private final BookmarkRepository bookmarkRepository;
+    private final UserHardDeleteHelper userHardDeleteHelper;
 
     public UpdateUserProfileResponse updateUserProfile(UpdateUserProfileCommand command) {
 
@@ -102,14 +93,7 @@ public class UserCommandService {
         }
 
         // 2) Hard Delete
-        userProfileImageRepository.findByUserId(userId).ifPresent(img -> {
-            String oldKey = img.getObjectKey();
-            userProfileImageRepository.remove(img);
-            runAfterCommitOrNow(() -> imageService.delete(oldKey));
-        });
-        userRoleRepository.deleteByUserId(userId);
-        userRefreshTokenRepository.deleteByUserId(userId);
-        bookmarkRepository.deleteByUserId(userId);
+        userHardDeleteHelper.purgeAll(userId);
 
         // 3) Soft Delete
         user.anonymizeForWithdrawal();

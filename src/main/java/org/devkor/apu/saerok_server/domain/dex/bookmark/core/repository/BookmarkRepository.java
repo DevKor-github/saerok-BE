@@ -85,8 +85,8 @@ public class BookmarkRepository {
         em.remove(bookmark);
     }
 
-    public void deleteByUserId(Long userId) {
-        em.createQuery(
+    public int deleteByUserId(Long userId) {
+        return em.createQuery(
                         "DELETE FROM UserBirdBookmark b WHERE b.user.id = :userId"
                 )
                 .setParameter("userId", userId)
