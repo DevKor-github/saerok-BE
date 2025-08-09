@@ -31,14 +31,11 @@ public class DeviceTokenRepository {
                 .setParameter("userId", userId)
                 .executeUpdate();
     }
-    
-    // 무효한 토큰들 일괄 삭제
-    public void deleteByTokens(List<String> tokens) {
-        if (tokens.isEmpty()) {
-            return;
-        }
-        em.createQuery("DELETE FROM DeviceToken dt WHERE dt.token IN :tokens")
-                .setParameter("tokens", tokens)
+
+    // 개별 토큰 삭제
+    public void deleteByToken(String token) {
+        em.createQuery("DELETE FROM DeviceToken dt WHERE dt.token = :token")
+                .setParameter("token", token)
                 .executeUpdate();
     }
 

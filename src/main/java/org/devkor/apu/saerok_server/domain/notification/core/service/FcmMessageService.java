@@ -25,26 +25,26 @@ public class FcmMessageService {
             return;
         }
 
-        MulticastMessage message = buildMulticastMessage(fcmTokens, messageCommand);
-        try {
-            BatchResponse response = firebaseMessaging.sendEachForMulticast(message);
-            
-            // 실패한 토큰들 처리
-            if (response.getFailureCount() > 0) {
-                log.info("FCM 전송 일부 실패 - 전체: {}, 실패: {}", response.getResponses().size(), response.getFailureCount());
-                fcmTokenCleanupService.handleFailedTokens(fcmTokens, response);
-            } else {
-                log.debug("FCM 전송 성공 - {} 개 토큰", fcmTokens.size());
+        for (String fcmToken : fcmTokens) {
+            try {
+                Message message = buildMessage(fcmToken, messageCommand);
+                firebaseMessaging.send(message);
+            } catch (FirebaseMessagingException e) {
+                log.warn("FCM 메시지 전송 실패 - 오류코드: {}, 메시지: {}", 
+                        e.getErrorCode(), e.getMessage());
+                
+                if (fcmTokenCleanupService.isInvalidToken(e)) {
+                    fcmTokenCleanupService.handleInvalidToken(fcmToken);
+                }
+            } catch (Exception e) {
+                log.error("FCM 메시지 전송 중 예상치 못한 오류: {}", e.getMessage());
             }
-        } catch (FirebaseMessagingException e) {
-            log.error("FCM 서비스 전체 오류 - 토큰 수: {}, 오류: {}", fcmTokens.size(), e.getMessage(), e);
         }
     }
 
-    // 멀티캐스트 FCM 메시지 생성
-    private MulticastMessage buildMulticastMessage(List<String> fcmTokens, PushMessageCommand messageCommand) {
-        MulticastMessage.Builder messageBuilder = MulticastMessage.builder()
-                .addAllTokens(fcmTokens)
+    private Message buildMessage(String fcmToken, PushMessageCommand messageCommand) {
+        Message.Builder messageBuilder = Message.builder()
+                .setToken(fcmToken)
                 .setNotification(Notification.builder()
                         .setTitle(messageCommand.title())
                         .setBody(messageCommand.body())
@@ -56,11 +56,9 @@ public class FcmMessageService {
             data.put("type", messageCommand.notificationType());
         }
         if (messageCommand.data() != null) {
-            messageCommand.data().forEach((key, value) -> {
-                if ("relatedId".equals(key) || "deeplink".equals(key) || "birdName".equals(key)) {
-                    data.put(key, value);
-                }
-            });
+            messageCommand.data().entrySet().stream()
+                    .filter(entry -> "relatedId".equals(entry.getKey()) || "birdName".equals(entry.getKey()))
+                    .forEach(entry -> data.put(entry.getKey(), entry.getValue()));
         }
         if (messageCommand.deepLink() != null) {
             data.put("deeplink", messageCommand.deepLink());

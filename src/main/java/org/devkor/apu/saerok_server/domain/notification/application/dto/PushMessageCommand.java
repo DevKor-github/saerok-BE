@@ -21,10 +21,6 @@ public record PushMessageCommand(
         @Schema(description = "딥링크 URL", example = "saerok://collection/123")
         String deepLink
 ) {
-    public static PushMessageCommand createWithData(String title, String body, String notificationType, Map<String, String> data) {
-        return new PushMessageCommand(title, body, notificationType, data, null);
-    }
-    
     public static PushMessageCommand createWithDataAndDeepLink(String title, String body, String notificationType, Map<String, String> data, String deepLink) {
         return new PushMessageCommand(title, body, notificationType, data, deepLink);
     }
