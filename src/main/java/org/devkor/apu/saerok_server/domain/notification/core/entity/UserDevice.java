@@ -14,7 +14,7 @@ import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class DeviceToken extends Auditable {
+public class UserDevice extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -30,12 +30,12 @@ public class DeviceToken extends Auditable {
     @Column(name = "token", nullable = false, length = 512)
     private String token;
 
-    public static DeviceToken create(User user, String deviceId, String token) {
-        DeviceToken deviceToken = new DeviceToken();
-        deviceToken.user = user;
-        deviceToken.deviceId = deviceId;
-        deviceToken.token = token;
-        return deviceToken;
+    public static UserDevice create(User user, String deviceId, String token) {
+        UserDevice userDevice = new UserDevice();
+        userDevice.user = user;
+        userDevice.deviceId = deviceId;
+        userDevice.token = token;
+        return userDevice;
     }
 
     public void updateToken(String newToken) { this.token = newToken; }

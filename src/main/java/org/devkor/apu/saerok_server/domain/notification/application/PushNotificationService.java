@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
 import org.devkor.apu.saerok_server.domain.notification.core.service.FcmMessageService;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.*;
-import org.devkor.apu.saerok_server.domain.notification.core.repository.DeviceTokenRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -22,7 +22,7 @@ import java.util.function.Function;
 public class PushNotificationService {
 
     private final FcmMessageService fcmMessageService;
-    private final DeviceTokenRepository deviceTokenRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final NotificationSettingRepository notificationSettingRepository;
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -40,14 +40,14 @@ public class PushNotificationService {
                 .map(NotificationSetting::getDeviceId)
                 .toList();
 
-        List<DeviceToken> foundDeviceTokens = deviceTokenRepository.findByUserIdAndDeviceIds(userId, expectedDeviceIds);
+        List<UserDevice> foundUserDevices = userDeviceRepository.findByUserIdAndDeviceIds(userId, expectedDeviceIds);
 
-        if (foundDeviceTokens.isEmpty()) {
+        if (foundUserDevices.isEmpty()) {
             return;
         }
 
-        List<String> fcmTokens = foundDeviceTokens.stream()
-                .map(DeviceToken::getToken)
+        List<String> fcmTokens = foundUserDevices.stream()
+                .map(UserDevice::getToken)
                 .toList();
 
         fcmMessageService.sendToDevices(fcmTokens, message);

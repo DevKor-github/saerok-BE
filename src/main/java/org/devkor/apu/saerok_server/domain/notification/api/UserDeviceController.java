@@ -11,8 +11,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.request.RegisterTokenRequest;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.RegisterTokenResponse;
-import org.devkor.apu.saerok_server.domain.notification.application.DeviceTokenCommandService;
-import org.devkor.apu.saerok_server.domain.notification.mapper.DeviceTokenWebMapper;
+import org.devkor.apu.saerok_server.domain.notification.application.UserDeviceCommandService;
+import org.devkor.apu.saerok_server.domain.notification.mapper.UserDeviceWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +23,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/notifications/tokens")
-public class DeviceTokenController {
+public class UserDeviceController {
 
-    private final DeviceTokenCommandService deviceTokenCommandService;
-    private final DeviceTokenWebMapper deviceTokenWebMapper;
+    private final UserDeviceCommandService userDeviceCommandService;
+    private final UserDeviceWebMapper userDeviceWebMapper;
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
@@ -48,8 +48,8 @@ public class DeviceTokenController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody RegisterTokenRequest request
     ) {
-        return deviceTokenCommandService.registerToken(
-                deviceTokenWebMapper.toRegisterTokenCommand(request, userPrincipal.getId())
+        return userDeviceCommandService.registerToken(
+                userDeviceWebMapper.toRegisterTokenCommand(request, userPrincipal.getId())
         );
     }
 
@@ -74,7 +74,7 @@ public class DeviceTokenController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable String deviceId
     ) {
-        deviceTokenCommandService.deleteDevice(userPrincipal.getId(), deviceId);
+        userDeviceCommandService.deleteDevice(userPrincipal.getId(), deviceId);
     }
 
     @Hidden
@@ -96,6 +96,6 @@ public class DeviceTokenController {
     public void deleteAllTokens(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        deviceTokenCommandService.deleteAllTokens(userPrincipal.getId());
+        userDeviceCommandService.deleteAllTokens(userPrincipal.getId());
     }
 }

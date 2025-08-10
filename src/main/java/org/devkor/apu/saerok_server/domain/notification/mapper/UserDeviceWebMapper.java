@@ -10,7 +10,7 @@ import org.mapstruct.MappingConstants;
 @Mapper(
         componentModel = MappingConstants.ComponentModel.SPRING
 )
-public interface DeviceTokenWebMapper {
+public interface UserDeviceWebMapper {
 
     @Mapping(target = "userId", source = "userId")
     RegisterTokenCommand toRegisterTokenCommand(RegisterTokenRequest request, Long userId);
