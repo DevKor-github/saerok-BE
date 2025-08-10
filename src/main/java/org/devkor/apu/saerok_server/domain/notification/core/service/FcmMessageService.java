@@ -68,18 +68,24 @@ public class FcmMessageService {
             messageBuilder.putAllData(data);
         }
 
-        // iOS APNS 전용 설정
-        messageBuilder.setApnsConfig(ApnsConfig.builder()
-                .setAps(Aps.builder()
-                        .setAlert(ApsAlert.builder()
-                                .setTitle(messageCommand.title())
-                                .setBody(messageCommand.body())
-                                .build())
-                        .setBadge(1)
-                        .setSound("default")
-                        .build())
-                .build());
+        int badge = Math.min(messageCommand.unreadCount(), 999); // 최대 999개로 제한
+        messageBuilder.setApnsConfig(buildApnsConfig(badge, messageCommand));
 
         return messageBuilder.build();
+    }
+
+    // IOS APNs 전용 설정
+    private ApnsConfig buildApnsConfig(int badge, PushMessageCommand cmd) {
+        int safe = Math.max(0, badge); // 음수 방지
+        return ApnsConfig.builder()
+                .setAps(Aps.builder()
+                        .setAlert(ApsAlert.builder()
+                                .setTitle(cmd.title())
+                                .setBody(cmd.body())
+                                .build())
+                        .setBadge(safe)
+                        .setSound("default")
+                        .build())
+                .build();
     }
 }

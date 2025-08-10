@@ -19,9 +19,12 @@ public record PushMessageCommand(
         Map<String, String> data,
 
         @Schema(description = "딥링크 URL", example = "saerok://collection/123")
-        String deepLink
+        String deepLink,
+
+        @Schema(description = "읽지 않은 알림 수 (APNs 배지용)", example = "5")
+        int unreadCount
 ) {
-    public static PushMessageCommand createWithDataAndDeepLink(String title, String body, String notificationType, Map<String, String> data, String deepLink) {
-        return new PushMessageCommand(title, body, notificationType, data, deepLink);
+    public static PushMessageCommand createWithDataAndDeepLink(String title, String body, String notificationType, Map<String, String> data, String deepLink, int unreadCount) {
+        return new PushMessageCommand(title, body, notificationType, data, deepLink, unreadCount);
     }
 }

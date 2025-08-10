@@ -19,7 +19,6 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class PushNotificationService {
 
@@ -55,6 +54,11 @@ public class PushNotificationService {
         fcmMessageService.sendToDevices(fcmTokens, message);
     }
 
+    private int getUnreadCount(Long userId) {
+        long unreadCount = notificationRepository.countUnreadByUserId(userId);
+        return (int) Math.min(unreadCount, 999);
+    }
+
     public void sendCollectionLikeNotification(Long targetUserId, Long likerUserId, Long collectionId) {
         User targetUser = userRepository.findById(targetUserId).orElse(null);
         User likerUser = userRepository.findById(likerUserId).orElse(null);
@@ -77,9 +81,10 @@ public class PushNotificationService {
         // 푸시 알림 전송
         String pushTitle = likerUser.getNickname() + "님이 좋아요를 눌렀어요!";
         String pushBody = "나의 새록을 좋아해요";
+        long unreadCount = notificationRepository.countUnreadByUserId(targetUserId);
         
         PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(pushTitle, pushBody, "LIKE",
-                Map.of("relatedId", collectionId.toString()), deepLink);
+                Map.of("relatedId", collectionId.toString()), deepLink, (int)unreadCount);
 
         sendToUser(targetUserId, NotificationType.LIKE, message);
     }
@@ -106,9 +111,10 @@ public class PushNotificationService {
 
         // 푸시 알림 전송
         String pushTitle = commenterUser.getNickname() + "님이 댓글을 남겼어요!";
+        long unreadCount = notificationRepository.countUnreadByUserId(targetUserId);
         
         PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(pushTitle, inAppBody, "COMMENT",
-                Map.of("relatedId", collectionId.toString()), deepLink);
+                Map.of("relatedId", collectionId.toString()), deepLink, (int)unreadCount);
 
         sendToUser(targetUserId, NotificationType.COMMENT, message);
     }
@@ -138,8 +144,9 @@ public class PushNotificationService {
                 "relatedId", collectionId.toString(),
                 "birdName", birdName
         );
+        long unreadCount = notificationRepository.countUnreadByUserId(targetUserId);
         
-        PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(title, body, "BIRD_ID_SUGGESTION", data, deepLink);
+        PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(title, body, "BIRD_ID_SUGGESTION", data, deepLink, (int)unreadCount);
 
         sendToUser(targetUserId, NotificationType.BIRD_ID_SUGGESTION, message);
     }
