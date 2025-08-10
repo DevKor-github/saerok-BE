@@ -65,7 +65,7 @@ public class NotificationController {
         return notificationQueryService.getUnreadCount(userPrincipal.getId());
     }
 
-    @PutMapping("/{notificationId}/read")
+    @PatchMapping("/{notificationId}/read")
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
@@ -86,7 +86,7 @@ public class NotificationController {
         notificationCommandService.readNotification(userPrincipal.getId(), notificationId);
     }
 
-    @PutMapping("/read-all")
+    @PatchMapping("/read-all")
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
@@ -126,7 +126,7 @@ public class NotificationController {
         notificationCommandService.deleteNotification(userPrincipal.getId(), notificationId);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/all")
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(

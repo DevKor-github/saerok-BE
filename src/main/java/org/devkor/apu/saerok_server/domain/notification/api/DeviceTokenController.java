@@ -1,5 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.api;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -52,6 +53,7 @@ public class DeviceTokenController {
         );
     }
 
+    @Hidden
     @DeleteMapping("/{deviceId}")
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -75,7 +77,8 @@ public class DeviceTokenController {
         deviceTokenCommandService.deleteDevice(userPrincipal.getId(), deviceId);
     }
 
-    @DeleteMapping
+    @Hidden
+    @DeleteMapping("/all")
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(

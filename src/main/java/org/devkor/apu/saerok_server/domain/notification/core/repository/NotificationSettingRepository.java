@@ -25,15 +25,6 @@ public class NotificationSettingRepository {
         }
     }
 
-    // 특정 사용자와 기기의 모든 알림 설정을 삭제합니다
-    public void deleteByUserIdAndDeviceId(Long userId, String deviceId) {
-        em.createQuery("DELETE FROM NotificationSetting ns " +
-                        "WHERE ns.user.id = :userId AND ns.deviceId = :deviceId")
-                .setParameter("userId", userId)
-                .setParameter("deviceId", deviceId)
-                .executeUpdate();
-    }
-
     // 사용자의 모든 알림 설정 삭제
     public void deleteByUserId(Long userId) {
         em.createQuery("DELETE FROM NotificationSetting ns WHERE ns.user.id = :userId")

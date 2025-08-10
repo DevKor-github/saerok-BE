@@ -61,7 +61,6 @@ public class DeviceTokenCommandService {
         deviceTokenRepository.findByUserIdAndDeviceId(userId, deviceId).orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
 
         deviceTokenRepository.deleteByUserIdAndDeviceId(userId, deviceId);
-        notificationSettingRepository.deleteByUserIdAndDeviceId(userId, deviceId);
     }
 
     public void deleteAllTokens(Long userId) {
