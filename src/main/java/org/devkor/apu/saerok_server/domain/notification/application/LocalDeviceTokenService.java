@@ -12,6 +12,8 @@ import org.devkor.apu.saerok_server.domain.notification.mapper.DeviceTokenWebMap
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -50,17 +52,14 @@ public class LocalDeviceTokenService {
                 });
 
         // 알림 설정 확인 및 생성
-        notificationSettingsRepository
-                .findByUserIdAndDeviceId(dummyUser.getId(), dummyDeviceId)
-                .orElseGet(() -> {
-                    // 기존 알림 설정이 없으면 기본 설정으로 생성
-                    NotificationSettings newSettings = NotificationSettings.createDefault(
-                            dummyUser,
-                            dummyDeviceId
-                    );
-                    notificationSettingsRepository.save(newSettings);
-                    return newSettings;
-                });
+        List<NotificationSettings> existingSettings = notificationSettingsRepository
+                .findByUserIdAndDeviceId(dummyUser.getId(), dummyDeviceId);
+
+        if(existingSettings.isEmpty()) {
+            // 기존 알림 설정이 없으면 기본 설정으로 생성
+            List<NotificationSettings> newSettings = NotificationSettings.createDefaultSettings(dummyUser, dummyDeviceId);
+            notificationSettingsRepository.saveAll(newSettings);
+        }
 
         return deviceTokenWebMapper.toLocalDeviceTokenResponse(deviceToken);
     }

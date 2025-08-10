@@ -10,6 +10,8 @@ import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -23,9 +25,10 @@ public class NotificationSettingsQueryService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
-        NotificationSettings settings = notificationSettingsRepository
-                .findByUserIdAndDeviceId(userId, deviceId)
-                .orElseThrow(() -> new NotFoundException("해당 디바이스의 알림 설정을 찾을 수 없어요"));
+        List<NotificationSettings> settings = notificationSettingsRepository.findByUserIdAndDeviceId(userId, deviceId);
+        if (settings.isEmpty()) {
+            throw new NotFoundException("해당 디바이스의 알림 설정을 찾을 수 없어요");
+        }
 
         return notificationSettingsWebMapper.toNotificationSettingsResponse(settings);
     }

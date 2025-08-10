@@ -24,12 +24,12 @@ public class NotificationSettingsCommandService {
         userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
         NotificationSettings settings = notificationSettingsRepository
-                .findByUserIdAndDeviceId(command.userId(), command.deviceId())
+                .findByUserIdAndDeviceIdAndType(command.userId(), command.deviceId(), command.notificationType())
                 .orElseThrow(() -> new NotFoundException("해당 디바이스의 알림 설정을 찾을 수 없어요"));
 
-        settings.toggleNotification(command.notificationType());
+        settings.toggleNotificationSetting();
 
-        boolean isEnabled = settings.isNotificationEnabled(command.notificationType());
+        boolean isEnabled = settings.isNotificationEnabled();
 
         return notificationSettingsWebMapper.toToggleNotificationResponse(command, isEnabled);
     }

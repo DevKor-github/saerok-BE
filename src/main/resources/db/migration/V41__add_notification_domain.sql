@@ -6,18 +6,16 @@ CREATE SEQUENCE notifications_seq START WITH 1 INCREMENT BY 50;
 
 -- 알림 설정 테이블 생성
 CREATE TABLE notification_settings (
-    id                         BIGINT        NOT NULL PRIMARY KEY,
-    user_id                    BIGINT        NOT NULL,
-    device_id                  VARCHAR(256)  NOT NULL,
-    like_enabled               BOOLEAN       NOT NULL DEFAULT true,
-    comment_enabled            BOOLEAN       NOT NULL DEFAULT true,
-    bird_id_suggestion_enabled BOOLEAN       NOT NULL DEFAULT true,
-    system_enabled             BOOLEAN       NOT NULL DEFAULT true,
-    created_at                 TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                 TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id          BIGINT        NOT NULL PRIMARY KEY,
+    user_id     BIGINT        NOT NULL,
+    device_id   VARCHAR(256)  NOT NULL,
+    type        VARCHAR(50)   NOT NULL,
+    enabled     BOOLEAN       NOT NULL DEFAULT true,
+    created_at  TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- 사용자당 디바이스별로 고유한 설정
-    CONSTRAINT uq_notification_settings_user_device UNIQUE (user_id, device_id)
+    CONSTRAINT uq_notification_settings_user_device_type UNIQUE (user_id, device_id, type)
 );
 -- 알림 테이블 생성
 CREATE TABLE notifications (
@@ -43,8 +41,9 @@ ALTER TABLE notifications
     ADD CONSTRAINT fk_notifications_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL;
 
 -- 인덱스 생성
-CREATE INDEX idx_notification_settings_user ON notification_settings(user_id);
-CREATE INDEX idx_notification_settings_user_device ON notification_settings(user_id, device_id);
+CREATE INDEX idx_notification_settings_user_device ON notification_settings(user_id, device_id),
+CREATE INDEX idx_notification_settings_user_type ON notification_settings(user_id, type);
+
 
 -- 사용자별 알림 조회에 이용 (읽지 않은 알림, 최신순 정렬 등)
 CREATE INDEX idx_notifications_user ON notifications(user_id);

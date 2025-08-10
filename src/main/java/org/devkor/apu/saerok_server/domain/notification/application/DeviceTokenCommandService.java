@@ -14,6 +14,7 @@ import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,12 +44,12 @@ public class DeviceTokenCommandService {
             deviceTokenRepository.save(newToken);
 
             // 새 디바이스에 대한 기본 알림 설정 생성
-            Optional<NotificationSettings> existingSettings = notificationSettingsRepository
+            List<NotificationSettings> existingSettings = notificationSettingsRepository
                     .findByUserIdAndDeviceId(command.userId(), command.deviceId());
             
             if (existingSettings.isEmpty()) {
-                NotificationSettings defaultSettings = NotificationSettings.createDefault(user, command.deviceId());
-                notificationSettingsRepository.save(defaultSettings);
+                List<NotificationSettings> defaultSettings = NotificationSettings.createDefaultSettings(user, command.deviceId());
+                notificationSettingsRepository.saveAll(defaultSettings);
             }
         }
 

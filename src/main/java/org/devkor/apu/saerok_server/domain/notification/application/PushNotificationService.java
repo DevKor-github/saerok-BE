@@ -32,7 +32,7 @@ public class PushNotificationService {
     @Async("pushNotificationExecutor")
     public void sendToUser(Long userId, NotificationType notificationType, PushMessageCommand message) {
         List<NotificationSettings> settings = notificationSettingsRepository
-                .findByUserIdWithNotificationEnabled(userId, notificationType);
+                .findByUserIdAndTypeAndEnabledTrue(userId, notificationType);
 
         if (settings.isEmpty()) {
             return;
@@ -64,7 +64,7 @@ public class PushNotificationService {
             return;
         }
 
-        if (notificationSettingsRepository.findByUserIdWithNotificationEnabled(targetUserId, NotificationType.LIKE).isEmpty()) {
+        if (notificationSettingsRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, NotificationType.LIKE).isEmpty()) {
             return;
         }
 
@@ -78,7 +78,7 @@ public class PushNotificationService {
         String pushTitle = likerUser.getNickname() + "님이 좋아요를 눌렀어요!";
         String pushBody = "나의 새록을 좋아해요";
         
-        PushMessageCommand message = createPushMessage(pushTitle, pushBody, "LIKE", 
+        PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(pushTitle, pushBody, "LIKE",
                 Map.of("relatedId", collectionId.toString()), deepLink);
 
         sendToUser(targetUserId, NotificationType.LIKE, message);
@@ -93,7 +93,7 @@ public class PushNotificationService {
             return;
         }
 
-        if (notificationSettingsRepository.findByUserIdWithNotificationEnabled(targetUserId, NotificationType.COMMENT).isEmpty()) {
+        if (notificationSettingsRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, NotificationType.COMMENT).isEmpty()) {
             return;
         }
 
@@ -107,7 +107,7 @@ public class PushNotificationService {
         // 푸시 알림 전송
         String pushTitle = commenterUser.getNickname() + "님이 댓글을 남겼어요!";
         
-        PushMessageCommand message = createPushMessage(pushTitle, inAppBody, "COMMENT", 
+        PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(pushTitle, inAppBody, "COMMENT",
                 Map.of("relatedId", collectionId.toString()), deepLink);
 
         sendToUser(targetUserId, NotificationType.COMMENT, message);
@@ -122,7 +122,7 @@ public class PushNotificationService {
             return;
         }
 
-        if (notificationSettingsRepository.findByUserIdWithNotificationEnabled(targetUserId, NotificationType.BIRD_ID_SUGGESTION).isEmpty()) {
+        if (notificationSettingsRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, NotificationType.BIRD_ID_SUGGESTION).isEmpty()) {
             return;
         }
 
@@ -139,7 +139,7 @@ public class PushNotificationService {
                 "birdName", birdName
         );
         
-        PushMessageCommand message = createPushMessage(title, body, "BIRD_ID_SUGGESTION", data, deepLink);
+        PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(title, body, "BIRD_ID_SUGGESTION", data, deepLink);
 
         sendToUser(targetUserId, NotificationType.BIRD_ID_SUGGESTION, message);
     }
@@ -161,11 +161,5 @@ public class PushNotificationService {
                 .build();
         
         notificationRepository.save(notification);
-    }
-
-    // 푸시 메시지 커맨드를 생성합니다.
-    private PushMessageCommand createPushMessage(String title, String body, String type, 
-                                                  Map<String, String> data, String deepLink) {
-        return PushMessageCommand.createWithDataAndDeepLink(title, body, type, data, deepLink);
     }
 }
