@@ -12,10 +12,9 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
+import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -30,7 +29,7 @@ public class PushNotificationService {
 
     @Async("pushNotificationExecutor")
     public void sendToUser(Long userId, NotificationType notificationType, PushMessageCommand message) {
-        List<NotificationSettings> settings = notificationSettingsRepository
+        List<NotificationSetting> settings = notificationSettingsRepository
                 .findByUserIdAndTypeAndEnabledTrue(userId, notificationType);
 
         if (settings.isEmpty()) {
@@ -38,7 +37,7 @@ public class PushNotificationService {
         }
 
         List<String> expectedDeviceIds = settings.stream()
-                .map(NotificationSettings::getDeviceId)
+                .map(NotificationSetting::getDeviceId)
                 .toList();
 
         List<DeviceToken> foundDeviceTokens = deviceTokenRepository.findByUserIdAndDeviceIds(userId, expectedDeviceIds);
@@ -54,104 +53,65 @@ public class PushNotificationService {
         fcmMessageService.sendToDevices(fcmTokens, message);
     }
 
-    private int getUnreadCount(Long userId) {
-        long unreadCount = notificationRepository.countUnreadByUserId(userId);
-        return (int) Math.min(unreadCount, 999);
-    }
-
     public void sendCollectionLikeNotification(Long targetUserId, Long likerUserId, Long collectionId) {
-        User targetUser = userRepository.findById(targetUserId).orElse(null);
-        User likerUser = userRepository.findById(likerUserId).orElse(null);
-        
-        if (targetUser == null || likerUser == null) {
-            log.warn("사용자를 찾을 수 없음: targetUserId={}, likerUserId={}", targetUserId, likerUserId);
-            return;
-        }
-
-        if (notificationSettingsRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, NotificationType.LIKE).isEmpty()) {
-            return;
-        }
-
-        String deepLink = "saerok://collection/" + collectionId;
-        
-        // 인앱 알림 저장
-        saveInAppNotification(targetUser, likerUser, NotificationType.LIKE, collectionId, deepLink,
-                likerUser.getNickname(), "나의 새록을 좋아해요.");
-
-        // 푸시 알림 전송
-        String pushTitle = likerUser.getNickname() + "님이 좋아요를 눌렀어요!";
-        String pushBody = "나의 새록을 좋아해요";
-        long unreadCount = notificationRepository.countUnreadByUserId(targetUserId);
-        
-        PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(pushTitle, pushBody, "LIKE",
-                Map.of("relatedId", collectionId.toString()), deepLink, (int)unreadCount);
-
-        sendToUser(targetUserId, NotificationType.LIKE, message);
+        notifyCollectionEvent(targetUserId, likerUserId, collectionId, NotificationType.LIKE,
+                actor -> actor.getNickname() + "님이 좋아요를 눌렀어요!",
+                actor -> "나의 새록을 좋아해요",
+                actor -> "님이 나의 새록을 좋아해요."
+        );
     }
 
     public void sendCollectionCommentNotification(Long targetUserId, Long commenterUserId, Long collectionId, String commentContent) {
-        User targetUser = userRepository.findById(targetUserId).orElse(null);
-        User commenterUser = userRepository.findById(commenterUserId).orElse(null);
-        
-        if (targetUser == null || commenterUser == null) {
-            log.warn("사용자를 찾을 수 없음: targetUserId={}, commenterUserId={}", targetUserId, commenterUserId);
-            return;
-        }
-
-        if (notificationSettingsRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, NotificationType.COMMENT).isEmpty()) {
-            return;
-        }
-
-        String deepLink = "saerok://collection/" + collectionId;
-        String inAppBody = "나의 새록에 댓글을 남겼어요. \"" + commentContent + "\"";
-        
-        // 인앱 알림 저장
-        saveInAppNotification(targetUser, commenterUser, NotificationType.COMMENT, collectionId, deepLink,
-                commenterUser.getNickname(), inAppBody);
-
-        // 푸시 알림 전송
-        String pushTitle = commenterUser.getNickname() + "님이 댓글을 남겼어요!";
-        long unreadCount = notificationRepository.countUnreadByUserId(targetUserId);
-        
-        PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(pushTitle, inAppBody, "COMMENT",
-                Map.of("relatedId", collectionId.toString()), deepLink, (int)unreadCount);
-
-        sendToUser(targetUserId, NotificationType.COMMENT, message);
+        notifyCollectionEvent(targetUserId, commenterUserId, collectionId, NotificationType.COMMENT,
+                actor -> actor.getNickname() + "님이 댓글을 남겼어요!",
+                actor -> "나의 새록에 댓글을 남겼어요. \"" + commentContent + "\"",
+                actor -> "님이 나의 새록에 댓글을 남겼어요. \"" + commentContent + "\""
+        );
     }
 
-    public void sendBirdIdSuggestionNotification(Long targetUserId, Long suggesterUserId, Long collectionId, String birdName) {
-        User targetUser = userRepository.findById(targetUserId).orElse(null);
-        User suggesterUser = userRepository.findById(suggesterUserId).orElse(null);
-        
-        if (targetUser == null || suggesterUser == null) {
-            log.warn("사용자를 찾을 수 없음: targetUserId={}, suggesterUserId={}", targetUserId, suggesterUserId);
-            return;
-        }
-
-        if (notificationSettingsRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, NotificationType.BIRD_ID_SUGGESTION).isEmpty()) {
-            return;
-        }
-
-        String deepLink = "saerok://collection/" + collectionId;
-        String title = "동정 의견 공유";
-        String body = "두근두근! 새로운 의견이 공유됐어요. 확인해볼까요?";
-        
-        // 인앱 알림 저장
-        saveInAppNotification(targetUser, suggesterUser, NotificationType.BIRD_ID_SUGGESTION, collectionId, deepLink, title, body);
-
-        // 푸시 알림 전송
-        Map<String, String> data = Map.of(
-                "relatedId", collectionId.toString(),
-                "birdName", birdName
+    public void sendBirdIdSuggestionNotification(Long targetUserId, Long suggesterUserId, Long collectionId) {
+        notifyCollectionEvent(targetUserId, suggesterUserId, collectionId, NotificationType.BIRD_ID_SUGGESTION,
+                actor -> "동정 의견 공유",
+                actor -> "두근두근! 새로운 의견이 공유됐어요. 확인해볼까요?",
+                actor -> "두근두근! 새로운 의견이 공유됐어요. 확인해볼까요?"
         );
-        long unreadCount = notificationRepository.countUnreadByUserId(targetUserId);
-        
-        PushMessageCommand message = PushMessageCommand.createWithDataAndDeepLink(title, body, "BIRD_ID_SUGGESTION", data, deepLink, (int)unreadCount);
-
-        sendToUser(targetUserId, NotificationType.BIRD_ID_SUGGESTION, message);
     }
 
     // === Private Helper Methods ===
+
+    private void notifyCollectionEvent(Long targetUserId, Long actorUserId, Long collectionId, NotificationType type,
+                                       Function<User, String> titleFn,   // actor -> pushTitle
+                                       Function<User, String> bodyFn,    // actor -> pushBody
+                                       Function<User, String> inAppBodyFn // actor -> in-app body
+    ) {
+        User target = userRepository.findById(targetUserId).orElse(null);
+        User actor  = userRepository.findById(actorUserId).orElse(null);
+        if (target == null || actor == null) {
+            log.warn("사용자를 찾을 수 없음: targetUserId={}, actorUserId={}", targetUserId, actorUserId);
+            return;
+        }
+
+        if (notificationSettingsRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, type).isEmpty()) {
+            return;
+        }
+
+        String deepLink = "saerok://collection/" + collectionId;
+        long unreadCount = notificationRepository.countUnreadByUserId(targetUserId);
+        PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
+                titleFn.apply(actor),
+                bodyFn.apply(actor),
+                type.name(),
+                collectionId,
+                deepLink,
+                (int) unreadCount
+        );
+
+        // 인앱
+        saveInAppNotification(target, actor, type, collectionId, deepLink, titleFn.apply(actor), inAppBodyFn.apply(actor));
+
+        // 푸쉬
+        sendToUser(targetUserId, type, cmd);
+    }
 
     // 인앱 알림을 저장합니다.
     private void saveInAppNotification(User targetUser, User sender, NotificationType type, 

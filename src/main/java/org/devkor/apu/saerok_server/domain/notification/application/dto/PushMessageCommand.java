@@ -1,7 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Map;
 
 @Schema(description = "푸시 알림 메시지 커맨드")
 public record PushMessageCommand(
@@ -15,8 +14,8 @@ public record PushMessageCommand(
         @Schema(description = "알림 타입", example = "COLLECTION_LIKE")
         String notificationType,
 
-        @Schema(description = "추가 데이터 (Key-Value 형태)", example = "{\"collectionId\": \"123\", \"userId\": \"456\"}")
-        Map<String, String> data,
+        @Schema(description = "이벤트 발생지 id", example = "123")
+        Long relatedId,
 
         @Schema(description = "딥링크 URL", example = "saerok://collection/123")
         String deepLink,
@@ -24,7 +23,7 @@ public record PushMessageCommand(
         @Schema(description = "읽지 않은 알림 수 (APNs 배지용)", example = "5")
         int unreadCount
 ) {
-    public static PushMessageCommand createWithDataAndDeepLink(String title, String body, String notificationType, Map<String, String> data, String deepLink, int unreadCount) {
-        return new PushMessageCommand(title, body, notificationType, data, deepLink, unreadCount);
+    public static PushMessageCommand createPushMessageCommand(String title, String body, String notificationType, Long relatedId, String deepLink, int unreadCount) {
+        return new PushMessageCommand(title, body, notificationType, relatedId, deepLink, unreadCount);
     }
 }

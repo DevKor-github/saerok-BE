@@ -84,8 +84,7 @@ public class BirdIdSuggestionCommandService {
             pushNotificationService.sendBirdIdSuggestionNotification(
                     collection.getUser().getId(), // 컬렉션 소유자에게
                     userId, // 제안한 사용자 ID
-                    collectionId, // 컬렉션 ID
-                    bird.getName().getKoreanName() // 제안된 새 이름
+                    collectionId // 컬렉션 ID
             );
         }
 

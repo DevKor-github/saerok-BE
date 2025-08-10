@@ -55,10 +55,8 @@ public class FcmMessageService {
         if (messageCommand.notificationType() != null) {
             data.put("type", messageCommand.notificationType());
         }
-        if (messageCommand.data() != null) {
-            messageCommand.data().entrySet().stream()
-                    .filter(entry -> "relatedId".equals(entry.getKey()) || "birdName".equals(entry.getKey()))
-                    .forEach(entry -> data.put(entry.getKey(), entry.getValue()));
+        if (messageCommand.relatedId() != null) {
+            data.put("relatedId", messageCommand.relatedId().toString());
         }
         if (messageCommand.deepLink() != null) {
             data.put("deeplink", messageCommand.deepLink());

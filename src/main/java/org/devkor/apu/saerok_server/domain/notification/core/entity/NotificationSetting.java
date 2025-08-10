@@ -12,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(
-            name = "uq_notification_settings_user_device_type", columnNames = {"user_id", "device_id", "type"}
+            name = "uq_notification_setting_user_device_type", columnNames = {"user_id", "device_id", "type"}
         )
 )
 @NoArgsConstructor

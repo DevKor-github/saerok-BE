@@ -125,7 +125,7 @@ class BirdIdSuggestionCommandServiceTest {
 
             assertThat(res.suggestionId()).isEqualTo(999L);
             verify(suggestionRepo, times(2)).save(any(BirdIdSuggestion.class));
-            verify(pushNotificationService).sendBirdIdSuggestionNotification(2L, 1L, 100L, "Kor5");
+            verify(pushNotificationService).sendBirdIdSuggestionNotification(2L, 1L, 100L);
             System.out.println("[suggestOrAgree.success] ✔︎ id=" + res.suggestionId());
         }
 
