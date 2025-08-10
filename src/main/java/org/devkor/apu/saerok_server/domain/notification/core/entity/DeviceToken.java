@@ -9,7 +9,7 @@ import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
 @Entity
 @Table(
-        uniqueConstraints = @UniqueConstraint(columnNames = {"device_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "device_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter

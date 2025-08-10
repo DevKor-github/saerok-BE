@@ -9,7 +9,7 @@ CREATE TABLE device_token (
     created_at TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT uq_device_token_device UNIQUE (device_id)
+    CONSTRAINT uq_device_token_device UNIQUE (user_id, device_id)
 
 );
 
@@ -20,6 +20,5 @@ ALTER TABLE device_token
 -- 인덱스 생성
 -- 사용자별 디바이스 토큰 조회에 이용
 CREATE INDEX idx_device_token_user ON device_token(user_id);
-CREATE INDEX idx_device_token_user_device ON device_token(user_id, device_id);
 -- 토큰 중복 확인 및 검색에 이용
 CREATE INDEX idx_device_token_token ON device_token(token);
