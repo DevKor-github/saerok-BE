@@ -32,7 +32,7 @@ jwt:
 
 firebase:
   admin:
-    key-path: classpath:config/firebase-admin-key.json
+    key-base64: ${FIREBASE_ADMIN_KEY}
 
 app:
   cookie:

@@ -9,25 +9,28 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Base64;
 
 @Configuration
 @RequiredArgsConstructor
 public class FirebaseConfig {
 
-    @Value("${firebase.admin.key-path}")
-    private String keyPath;
+    @Value("${firebase.admin.key-base64}")
+    private String keyBase64;
 
     @PostConstruct
     public void initializeFirebase() {
         try {
             if (FirebaseApp.getApps().isEmpty()) {
-                ClassPathResource resource = new ClassPathResource(keyPath.replace("classpath:", ""));
+                // Base64로 인코딩된 키를 디코딩하여 JSON으로 변환
+                byte[] decodedKey = Base64.getDecoder().decode(keyBase64);
+                ByteArrayInputStream keyStream = new ByteArrayInputStream(decodedKey);
                 
                 FirebaseOptions options = FirebaseOptions.builder()
-                        .setCredentials(GoogleCredentials.fromStream(resource.getInputStream()))
+                        .setCredentials(GoogleCredentials.fromStream(keyStream))
                         .build();
 
                 FirebaseApp.initializeApp(options);
