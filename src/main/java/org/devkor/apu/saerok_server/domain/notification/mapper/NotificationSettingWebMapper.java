@@ -10,7 +10,7 @@ import org.mapstruct.MappingConstants;
 @Mapper(
         componentModel = MappingConstants.ComponentModel.SPRING
 )
-public interface NotificationSettingsWebMapper {
+public interface NotificationSettingWebMapper {
 
 
     @Mapping(target = "userId", source = "userId")

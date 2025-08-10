@@ -7,7 +7,7 @@ import org.devkor.apu.saerok_server.domain.notification.core.service.FcmMessageS
 import org.devkor.apu.saerok_server.domain.notification.core.entity.*;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.DeviceTokenRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
-import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingsRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.scheduling.annotation.Async;
@@ -23,13 +23,13 @@ public class PushNotificationService {
 
     private final FcmMessageService fcmMessageService;
     private final DeviceTokenRepository deviceTokenRepository;
-    private final NotificationSettingsRepository notificationSettingsRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
     @Async("pushNotificationExecutor")
     public void sendToUser(Long userId, NotificationType notificationType, PushMessageCommand message) {
-        List<NotificationSetting> settings = notificationSettingsRepository
+        List<NotificationSetting> settings = notificationSettingRepository
                 .findByUserIdAndTypeAndEnabledTrue(userId, notificationType);
 
         if (settings.isEmpty()) {
@@ -91,7 +91,7 @@ public class PushNotificationService {
             return;
         }
 
-        if (notificationSettingsRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, type).isEmpty()) {
+        if (notificationSettingRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, type).isEmpty()) {
             return;
         }
 

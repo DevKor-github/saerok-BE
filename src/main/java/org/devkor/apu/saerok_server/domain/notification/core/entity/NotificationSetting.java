@@ -17,7 +17,7 @@ import java.util.List;
 )
 @NoArgsConstructor
 @Getter
-public class NotificationSettings extends Auditable {
+public class NotificationSetting extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -38,7 +38,7 @@ public class NotificationSettings extends Auditable {
     private Boolean enabled;
 
     @Builder
-    public NotificationSettings(User user, String deviceId, NotificationType type, Boolean enabled) {
+    public NotificationSetting(User user, String deviceId, NotificationType type, Boolean enabled) {
         if (user == null) throw new IllegalArgumentException("user는 null일 수 없습니다.");
         if (deviceId == null || deviceId.trim().isEmpty()) throw new IllegalArgumentException("deviceId는 비어있을 수 없습니다.");
         if (type == null) throw new IllegalArgumentException("type은 null일 수 없습니다.");
@@ -50,9 +50,9 @@ public class NotificationSettings extends Auditable {
     }
 
     // 기본 설정으로 모든 알림 유형을 활성화하여 생성합니다
-    public static List<NotificationSettings> createDefaultSettings(User user, String deviceId) {
+    public static List<NotificationSetting> createDefaultSetting(User user, String deviceId) {
         return Arrays.stream(NotificationType.values())
-                .map(type -> NotificationSettings.builder()
+                .map(type -> NotificationSetting.builder()
                         .user(user)
                         .deviceId(deviceId)
                         .type(type)

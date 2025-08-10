@@ -12,9 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.request.ToggleNotificationRequest;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.NotificationSettingsResponse;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.ToggleNotificationResponse;
-import org.devkor.apu.saerok_server.domain.notification.application.NotificationSettingsCommandService;
-import org.devkor.apu.saerok_server.domain.notification.application.NotificationSettingsQueryService;
-import org.devkor.apu.saerok_server.domain.notification.mapper.NotificationSettingsWebMapper;
+import org.devkor.apu.saerok_server.domain.notification.application.NotificationSettingCommandService;
+import org.devkor.apu.saerok_server.domain.notification.application.NotificationSettingQueryService;
+import org.devkor.apu.saerok_server.domain.notification.mapper.NotificationSettingWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,9 +26,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${api_prefix}/notifications/settings")
 public class NotificationSettingsController {
 
-    private final NotificationSettingsCommandService notificationSettingsCommandService;
-    private final NotificationSettingsQueryService notificationSettingsQueryService;
-    private final NotificationSettingsWebMapper notificationSettingsWebMapper;
+    private final NotificationSettingCommandService notificationSettingCommandService;
+    private final NotificationSettingQueryService notificationSettingQueryService;
+    private final NotificationSettingWebMapper notificationSettingWebMapper;
 
     @GetMapping
     @PreAuthorize("hasRole('USER')")
@@ -47,7 +47,7 @@ public class NotificationSettingsController {
             @Parameter(description = "디바이스 ID", required = true, example = "device-123")
             @RequestParam String deviceId
     ) {
-        return notificationSettingsQueryService.getNotificationSettings(userPrincipal.getId(), deviceId);
+        return notificationSettingQueryService.getNotificationSettings(userPrincipal.getId(), deviceId);
     }
 
     @PatchMapping("/toggle")
@@ -68,8 +68,8 @@ public class NotificationSettingsController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody ToggleNotificationRequest request
     ) {
-        return notificationSettingsCommandService.toggleNotificationSetting(
-                notificationSettingsWebMapper.toToggleNotificationSettingCommand(request, userPrincipal.getId())
+        return notificationSettingCommandService.toggleNotificationSetting(
+                notificationSettingWebMapper.toToggleNotificationSettingCommand(request, userPrincipal.getId())
         );
     }
 }

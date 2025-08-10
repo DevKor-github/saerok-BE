@@ -3,11 +3,11 @@ package org.devkor.apu.saerok_server.domain.notification.application;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.LocalDeviceTokenResponse;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.DeviceToken;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSetting;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.DeviceTokenRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSettings;
-import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingsRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.notification.mapper.DeviceTokenWebMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,7 @@ public class LocalDeviceTokenService {
 
     private final DeviceTokenRepository deviceTokenRepository;
     private final UserRepository userRepository;
-    private final NotificationSettingsRepository notificationSettingsRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
     private final DeviceTokenWebMapper deviceTokenWebMapper;
 
     public LocalDeviceTokenResponse createLocalDummyDeviceToken() {
@@ -52,13 +52,13 @@ public class LocalDeviceTokenService {
                 });
 
         // 알림 설정 확인 및 생성
-        List<NotificationSettings> existingSettings = notificationSettingsRepository
+        List<NotificationSetting> existingSettings = notificationSettingRepository
                 .findByUserIdAndDeviceId(dummyUser.getId(), dummyDeviceId);
 
         if(existingSettings.isEmpty()) {
             // 기존 알림 설정이 없으면 기본 설정으로 생성
-            List<NotificationSettings> newSettings = NotificationSettings.createDefaultSettings(dummyUser, dummyDeviceId);
-            notificationSettingsRepository.saveAll(newSettings);
+            List<NotificationSetting> newSettings = NotificationSetting.createDefaultSetting(dummyUser, dummyDeviceId);
+            notificationSettingRepository.saveAll(newSettings);
         }
 
         return deviceTokenWebMapper.toLocalDeviceTokenResponse(deviceToken);

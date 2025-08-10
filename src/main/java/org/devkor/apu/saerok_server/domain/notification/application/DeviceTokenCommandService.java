@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.RegisterTokenResponse;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.RegisterTokenCommand;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.DeviceToken;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSettings;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSetting;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.DeviceTokenRepository;
-import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingsRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.notification.mapper.DeviceTokenWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
@@ -23,7 +23,7 @@ import java.util.Optional;
 public class DeviceTokenCommandService {
 
     private final DeviceTokenRepository deviceTokenRepository;
-    private final NotificationSettingsRepository notificationSettingsRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
     private final UserRepository userRepository;
     private final DeviceTokenWebMapper deviceTokenWebMapper;
 
@@ -44,12 +44,12 @@ public class DeviceTokenCommandService {
             deviceTokenRepository.save(newToken);
 
             // 새 디바이스에 대한 기본 알림 설정 생성
-            List<NotificationSettings> existingSettings = notificationSettingsRepository
+            List<NotificationSetting> existingSettings = notificationSettingRepository
                     .findByUserIdAndDeviceId(command.userId(), command.deviceId());
             
             if (existingSettings.isEmpty()) {
-                List<NotificationSettings> defaultSettings = NotificationSettings.createDefaultSettings(user, command.deviceId());
-                notificationSettingsRepository.saveAll(defaultSettings);
+                List<NotificationSetting> defaultSettings = NotificationSetting.createDefaultSetting(user, command.deviceId());
+                notificationSettingRepository.saveAll(defaultSettings);
             }
         }
 
@@ -61,13 +61,13 @@ public class DeviceTokenCommandService {
         deviceTokenRepository.findByUserIdAndDeviceId(userId, deviceId).orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
 
         deviceTokenRepository.deleteByUserIdAndDeviceId(userId, deviceId);
-        notificationSettingsRepository.deleteByUserIdAndDeviceId(userId, deviceId);
+        notificationSettingRepository.deleteByUserIdAndDeviceId(userId, deviceId);
     }
 
     public void deleteAllTokens(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
         deviceTokenRepository.deleteAllByUserId(userId);
-        notificationSettingsRepository.deleteByUserId(userId);
+        notificationSettingRepository.deleteByUserId(userId);
     }
 }

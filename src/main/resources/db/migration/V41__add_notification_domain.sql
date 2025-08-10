@@ -1,11 +1,11 @@
 -- 알림 설정 시퀀스 생성
-CREATE SEQUENCE notification_settings_seq START WITH 1 INCREMENT BY 50;
+CREATE SEQUENCE notification_setting_seq START WITH 1 INCREMENT BY 50;
 -- 알림 시퀀스 생성
-CREATE SEQUENCE notifications_seq START WITH 1 INCREMENT BY 50;
+CREATE SEQUENCE notification_seq START WITH 1 INCREMENT BY 50;
 
 
 -- 알림 설정 테이블 생성
-CREATE TABLE notification_settings (
+CREATE TABLE notification_setting (
     id          BIGINT        NOT NULL PRIMARY KEY,
     user_id     BIGINT        NOT NULL,
     device_id   VARCHAR(256)  NOT NULL,
@@ -15,10 +15,10 @@ CREATE TABLE notification_settings (
     updated_at  TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- 사용자당 디바이스별로 고유한 설정
-    CONSTRAINT uq_notification_settings_user_device_type UNIQUE (user_id, device_id, type)
+    CONSTRAINT uq_notification_setting_user_device_type UNIQUE (user_id, device_id, type)
 );
 -- 알림 테이블 생성
-CREATE TABLE notifications (
+CREATE TABLE notification (
     id         BIGINT       NOT NULL PRIMARY KEY,
     user_id    BIGINT       NOT NULL,
     title      VARCHAR(255) NOT NULL,
@@ -32,19 +32,17 @@ CREATE TABLE notifications (
 );
 
 -- 외래키 제약조건 추가
-ALTER TABLE notification_settings
-    ADD CONSTRAINT fk_notification_settings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    ADD CONSTRAINT fk_notification_settings_device FOREIGN KEY (device_id) REFERENCES device_token(device_id) ON DELETE CASCADE;
+ALTER TABLE notification_setting
+    ADD CONSTRAINT fk_notification_setting_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
-ALTER TABLE notifications
-    ADD CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    ADD CONSTRAINT fk_notifications_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE notification
+    ADD CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    ADD CONSTRAINT fk_notification_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL;
 
 -- 인덱스 생성
-CREATE INDEX idx_notification_settings_user_device ON notification_settings(user_id, device_id);
-CREATE INDEX idx_notification_settings_user_type ON notification_settings(user_id, type);
+CREATE INDEX idx_notification_setting_user_type ON notification_setting (user_id, type);
 
 
 -- 사용자별 알림 조회에 이용 (읽지 않은 알림, 최신순 정렬 등)
-CREATE INDEX idx_notifications_user ON notifications(user_id);
-CREATE INDEX idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX idx_notification_user ON notification (user_id);
+CREATE INDEX idx_notification_user_read ON notification (user_id, is_read);
