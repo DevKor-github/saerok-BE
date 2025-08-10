@@ -14,7 +14,7 @@ public class FcmTokenCleanupService {
 
     private final DeviceTokenRepository deviceTokenRepository;
 
-    public void handleInvalidToken(String token) {
+    public void cleanupInvalidToken(String token) {
         try {
             deviceTokenRepository.deleteByToken(token);
         } catch (Exception e) {

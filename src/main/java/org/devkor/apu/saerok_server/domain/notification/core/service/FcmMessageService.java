@@ -34,7 +34,7 @@ public class FcmMessageService {
                         e.getErrorCode(), e.getMessage());
                 
                 if (fcmTokenCleanupService.isInvalidToken(e)) {
-                    fcmTokenCleanupService.handleInvalidToken(fcmToken);
+                    fcmTokenCleanupService.cleanupInvalidToken(fcmToken);
                 }
             } catch (Exception e) {
                 log.error("FCM 메시지 전송 중 예상치 못한 오류: {}", e.getMessage());
