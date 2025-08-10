@@ -8,15 +8,15 @@ public record NotificationSettingsResponse(
         String deviceId,
 
         @Schema(description = "좋아요 알림 활성화 여부", example = "true")
-        Boolean likeEnabled,
+        Boolean LIKE,
 
         @Schema(description = "댓글 알림 활성화 여부", example = "true")
-        Boolean commentEnabled,
+        Boolean COMMENT,
 
         @Schema(description = "동정 제안 알림 활성화 여부", example = "true")
-        Boolean birdIdSuggestionEnabled,
+        Boolean BIRD_ID_SUGGESTION,
 
         @Schema(description = "시스템 알림 활성화 여부", example = "true")
-        Boolean systemEnabled
+        Boolean SYSTEM
 ) {
 }

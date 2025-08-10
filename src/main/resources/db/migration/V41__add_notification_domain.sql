@@ -41,7 +41,7 @@ ALTER TABLE notifications
     ADD CONSTRAINT fk_notifications_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL;
 
 -- 인덱스 생성
-CREATE INDEX idx_notification_settings_user_device ON notification_settings(user_id, device_id),
+CREATE INDEX idx_notification_settings_user_device ON notification_settings(user_id, device_id);
 CREATE INDEX idx_notification_settings_user_type ON notification_settings(user_id, type);
 
 
