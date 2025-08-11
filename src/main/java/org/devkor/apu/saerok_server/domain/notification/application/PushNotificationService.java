@@ -3,16 +3,15 @@ package org.devkor.apu.saerok_server.domain.notification.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
-import org.devkor.apu.saerok_server.domain.notification.core.service.FcmMessageService;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.*;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.function.Function;
 
 @Slf4j
@@ -20,27 +19,12 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class PushNotificationService {
 
-    private final FcmMessageService fcmMessageService;
+    private final PushDispatchService pushDispatchService;
     private final NotificationSettingRepository notificationSettingRepository;
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-    @Async("pushNotificationExecutor")
-    public void sendToUser(Long userId, NotificationType notificationType, PushMessageCommand message) {
-        List<NotificationSetting> settings = notificationSettingRepository
-                .findByUserIdAndTypeAndEnabledTrue(userId, notificationType);
-
-        if (settings.isEmpty()) {
-            return;
-        }
-
-        List<String> fcmTokens = settings.stream()
-                .map(setting -> setting.getUserDevice().getToken())
-                .toList();
-
-        fcmMessageService.sendToDevices(fcmTokens, message);
-    }
-
+    @Transactional(readOnly = true)
     public void sendCollectionLikeNotification(Long targetUserId, Long likerUserId, Long collectionId) {
         notifyCollectionEvent(targetUserId, likerUserId, collectionId, NotificationType.LIKE,
                 actor -> actor.getNickname() + "님이 좋아요를 눌렀어요!",
@@ -49,6 +33,7 @@ public class PushNotificationService {
         );
     }
 
+    @Transactional(readOnly = true)
     public void sendCollectionCommentNotification(Long targetUserId, Long commenterUserId, Long collectionId, String commentContent) {
         notifyCollectionEvent(targetUserId, commenterUserId, collectionId, NotificationType.COMMENT,
                 actor -> actor.getNickname() + "님이 댓글을 남겼어요!",
@@ -57,6 +42,7 @@ public class PushNotificationService {
         );
     }
 
+    @Transactional(readOnly = true)
     public void sendBirdIdSuggestionNotification(Long targetUserId, Long suggesterUserId, Long collectionId) {
         notifyCollectionEvent(targetUserId, suggesterUserId, collectionId, NotificationType.BIRD_ID_SUGGESTION,
                 actor -> "동정 의견 공유",
@@ -98,7 +84,7 @@ public class PushNotificationService {
         saveInAppNotification(target, actor, type, collectionId, deepLink, titleFn.apply(actor), inAppBodyFn.apply(actor));
 
         // 푸쉬
-        sendToUser(targetUserId, type, cmd);
+        pushDispatchService.sendToUser(targetUserId, type, cmd);
     }
 
     // 인앱 알림을 저장합니다.

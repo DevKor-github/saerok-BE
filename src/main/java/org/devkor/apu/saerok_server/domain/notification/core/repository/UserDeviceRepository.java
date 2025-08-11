@@ -62,4 +62,15 @@ public class UserDeviceRepository {
         
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
     }
+    
+    // UserDevice ID 목록으로 FCM 토큰 목록 조회
+    public List<String> findTokensByUserDeviceIds(List<Long> userDeviceIds) {
+        if (userDeviceIds.isEmpty()) {
+            return List.of();
+        }
+        
+        return em.createQuery("SELECT ud.token FROM UserDevice ud WHERE ud.id IN :userDeviceIds", String.class)
+                .setParameter("userDeviceIds", userDeviceIds)
+                .getResultList();
+    }
 }
