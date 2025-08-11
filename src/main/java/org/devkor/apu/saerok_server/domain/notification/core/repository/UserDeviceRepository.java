@@ -16,6 +16,7 @@ public class UserDeviceRepository {
 
     // 디바이스 토큰 저장
     public void save(UserDevice userDevice) { em.persist(userDevice); }
+    public void flush() { em.flush(); }
 
     // 특정 토큰 삭제
     public void deleteByUserIdAndDeviceId(Long userId, String deviceId) {
@@ -39,6 +40,16 @@ public class UserDeviceRepository {
                 .executeUpdate();
     }
 
+    // ID로 디바이스 조회
+    public Optional<UserDevice> findById(Long id) {
+        List<UserDevice> results = em.createQuery("SELECT ud FROM UserDevice ud WHERE ud.id = :id", UserDevice.class)
+                .setParameter("id", id)
+                .setMaxResults(1)
+                .getResultList();
+        
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
+    }
+
     // 사용자 ID와 device_id로 디바이스 토큰 조회
     public Optional<UserDevice> findByUserIdAndDeviceId(Long userId, String deviceId) {
         List<UserDevice> results = em.createQuery(
@@ -50,19 +61,5 @@ public class UserDeviceRepository {
                 .getResultList();
         
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
-    }
-
-    // 특정 사용자의 특정 디바이스들의 토큰 조회
-    public List<UserDevice> findByUserIdAndDeviceIds(Long userId, List<String> deviceIds) {
-        if (deviceIds.isEmpty()) {
-            return List.of();
-        }
-        return em.createQuery(
-                "SELECT ud FROM UserDevice ud " +
-                "WHERE ud.user.id = :userId AND ud.deviceId IN :deviceIds " +
-                "ORDER BY ud.createdAt DESC", UserDevice.class)
-                .setParameter("userId", userId)
-                .setParameter("deviceIds", deviceIds)
-                .getResultList();
     }
 }
