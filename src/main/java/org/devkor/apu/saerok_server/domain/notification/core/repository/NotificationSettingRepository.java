@@ -27,7 +27,7 @@ public class NotificationSettingRepository {
 
     // 사용자의 모든 알림 설정 삭제
     public void deleteByUserId(Long userId) {
-        em.createQuery("DELETE FROM NotificationSetting ns WHERE ns.user.id = :userId")
+        em.createQuery("DELETE FROM NotificationSetting ns WHERE ns.userDevice.user.id = :userId")
                 .setParameter("userId", userId)
                 .executeUpdate();
     }
@@ -36,7 +36,7 @@ public class NotificationSettingRepository {
     public Optional<NotificationSetting> findByUserIdAndDeviceIdAndType(Long userId, String deviceId, NotificationType type) {
         List<NotificationSetting> results = em.createQuery(
                 "SELECT ns FROM NotificationSetting ns " +
-                "WHERE ns.user.id = :userId AND ns.deviceId = :deviceId AND ns.type = :type", 
+                "WHERE ns.userDevice.user.id = :userId AND ns.userDevice.deviceId = :deviceId AND ns.type = :type", 
                 NotificationSetting.class)
                 .setParameter("userId", userId)
                 .setParameter("deviceId", deviceId)
@@ -47,11 +47,21 @@ public class NotificationSettingRepository {
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
     }
 
+    // 특정 UserDevice의 모든 알림 설정을 조회합니다
+    public List<NotificationSetting> findByUserDeviceId(Long userDeviceId) {
+        return em.createQuery(
+                "SELECT ns FROM NotificationSetting ns " +
+                "WHERE ns.userDevice.id = :userDeviceId", 
+                NotificationSetting.class)
+                .setParameter("userDeviceId", userDeviceId)
+                .getResultList();
+    }
+
     // 특정 사용자와 기기의 모든 알림 설정을 조회합니다
     public List<NotificationSetting> findByUserIdAndDeviceId(Long userId, String deviceId) {
         return em.createQuery(
                 "SELECT ns FROM NotificationSetting ns " +
-                "WHERE ns.user.id = :userId AND ns.deviceId = :deviceId", 
+                "WHERE ns.userDevice.user.id = :userId AND ns.userDevice.deviceId = :deviceId", 
                 NotificationSetting.class)
                 .setParameter("userId", userId)
                 .setParameter("deviceId", deviceId)
@@ -63,7 +73,7 @@ public class NotificationSettingRepository {
     public List<NotificationSetting> findByUserIdAndTypeAndEnabledTrue(Long userId, NotificationType type) {
         return em.createQuery(
                 "SELECT ns FROM NotificationSetting ns " +
-                "WHERE ns.user.id = :userId AND ns.type = :type AND ns.enabled = true", 
+                "WHERE ns.userDevice.user.id = :userId AND ns.type = :type AND ns.enabled = true", 
                 NotificationSetting.class)
                 .setParameter("userId", userId)
                 .setParameter("type", type)

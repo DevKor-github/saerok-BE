@@ -22,7 +22,6 @@ public class NotificationSettingQueryService {
 
     private final NotificationSettingRepository notificationSettingRepository;
     private final UserRepository userRepository;
-    private final NotificationSettingWebMapper notificationSettingWebMapper;
 
     public NotificationSettingsResponse getNotificationSettings(Long userId, String deviceId) {
         userRepository.findById(userId)

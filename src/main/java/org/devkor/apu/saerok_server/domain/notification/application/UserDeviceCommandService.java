@@ -34,21 +34,22 @@ public class UserDeviceCommandService {
         Optional<UserDevice> existingToken = userDeviceRepository
                 .findByUserIdAndDeviceId(command.userId(), command.deviceId());
 
+        UserDevice userDevice;
         if (existingToken.isPresent()) {
             // 기존 토큰이 있으면 갱신
-            UserDevice userDevice = existingToken.get();
+            userDevice = existingToken.get();
             userDevice.updateToken(command.token());
         } else {
             // 새로운 토큰 등록
-            UserDevice newToken = UserDevice.create(user, command.deviceId(), command.token());
-            userDeviceRepository.save(newToken);
+            userDevice = UserDevice.create(user, command.deviceId(), command.token());
+            userDeviceRepository.save(userDevice);
 
             // 새 디바이스에 대한 기본 알림 설정 생성
             List<NotificationSetting> existingSettings = notificationSettingRepository
-                    .findByUserIdAndDeviceId(command.userId(), command.deviceId());
+                    .findByUserDeviceId(userDevice.getId());
             
             if (existingSettings.isEmpty()) {
-                List<NotificationSetting> defaultSettings = NotificationSetting.createDefaultSetting(user, command.deviceId());
+                List<NotificationSetting> defaultSettings = NotificationSetting.createDefaultSetting(userDevice);
                 notificationSettingRepository.saveAll(defaultSettings);
             }
         }
@@ -66,7 +67,7 @@ public class UserDeviceCommandService {
     public void deleteAllTokens(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
-        userDeviceRepository.deleteAllByUserId(userId);
         notificationSettingRepository.deleteByUserId(userId);
+        userDeviceRepository.deleteAllByUserId(userId);
     }
 }

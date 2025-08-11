@@ -19,7 +19,7 @@ public class UserDeviceRepository {
 
     // 특정 토큰 삭제
     public void deleteByUserIdAndDeviceId(Long userId, String deviceId) {
-        em.createQuery("DELETE FROM UserDevice dt WHERE dt.user.id = :userId AND dt.deviceId = :deviceId")
+        em.createQuery("DELETE FROM UserDevice ud WHERE ud.user.id = :userId AND ud.deviceId = :deviceId")
                 .setParameter("userId", userId)
                 .setParameter("deviceId", deviceId)
                 .executeUpdate();
@@ -27,14 +27,14 @@ public class UserDeviceRepository {
 
     // 모든 토큰 삭제
     public void deleteAllByUserId(Long userId) {
-        em.createQuery("DELETE FROM UserDevice dt WHERE dt.user.id = :userId")
+        em.createQuery("DELETE FROM UserDevice ud WHERE ud.user.id = :userId")
                 .setParameter("userId", userId)
                 .executeUpdate();
     }
 
     // 개별 토큰 삭제
     public void deleteByToken(String token) {
-        em.createQuery("DELETE FROM UserDevice dt WHERE dt.token = :token")
+        em.createQuery("DELETE FROM UserDevice ud WHERE ud.token = :token")
                 .setParameter("token", token)
                 .executeUpdate();
     }
@@ -42,8 +42,8 @@ public class UserDeviceRepository {
     // 사용자 ID와 device_id로 디바이스 토큰 조회
     public Optional<UserDevice> findByUserIdAndDeviceId(Long userId, String deviceId) {
         List<UserDevice> results = em.createQuery(
-                "SELECT dt FROM UserDevice dt " +
-                "WHERE dt.user.id = :userId AND dt.deviceId = :deviceId", UserDevice.class)
+                "SELECT ud FROM UserDevice ud " +
+                "WHERE ud.user.id = :userId AND ud.deviceId = :deviceId", UserDevice.class)
                 .setParameter("userId", userId)
                 .setParameter("deviceId", deviceId)
                 .setMaxResults(1)
@@ -58,9 +58,9 @@ public class UserDeviceRepository {
             return List.of();
         }
         return em.createQuery(
-                "SELECT dt FROM UserDevice dt " +
-                "WHERE dt.user.id = :userId AND dt.deviceId IN :deviceIds " +
-                "ORDER BY dt.createdAt DESC", UserDevice.class)
+                "SELECT ud FROM UserDevice ud " +
+                "WHERE ud.user.id = :userId AND ud.deviceId IN :deviceIds " +
+                "ORDER BY ud.createdAt DESC", UserDevice.class)
                 .setParameter("userId", userId)
                 .setParameter("deviceIds", deviceIds)
                 .getResultList();
