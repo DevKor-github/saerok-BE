@@ -1,8 +1,8 @@
 package org.devkor.apu.saerok_server.domain.notification.application;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.api.dto.response.RegisterTokenResponse;
-import org.devkor.apu.saerok_server.domain.notification.application.dto.RegisterTokenCommand;
+import org.devkor.apu.saerok_server.domain.notification.api.dto.response.RegisterUserDeviceResponse;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.RegisterUserDeviceCommand;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
@@ -10,6 +10,7 @@ import org.devkor.apu.saerok_server.domain.notification.core.service.Notificatio
 import org.devkor.apu.saerok_server.domain.notification.mapper.UserDeviceWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +28,13 @@ public class UserDeviceCommandService {
     private final UserDeviceWebMapper userDeviceWebMapper;
     private final NotificationSettingInitService notificationSettingInitService;
 
-    public RegisterTokenResponse registerToken(RegisterTokenCommand command) {
+    public RegisterUserDeviceResponse registerUserDevice(RegisterUserDeviceCommand command) {
         User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
+
+        if (command.deviceId() == null || command.deviceId().isEmpty() || command.token() == null || command.token().isEmpty()) {
+            throw new BadRequestException("deviceId와 token은 필수입니다");
+        }
 
         Optional<UserDevice> existingToken = userDeviceRepository
                 .findByUserIdAndDeviceId(command.userId(), command.deviceId());
@@ -49,7 +54,7 @@ public class UserDeviceCommandService {
             notificationSettingInitService.createDefaultSettingsForDevice(userDevice.getId());
         }
 
-        return userDeviceWebMapper.toRegisterTokenResponse(command, true);
+        return userDeviceWebMapper.toRegisterUserDeviceResponse(command, true);
     }
 
     public void deleteDevice(Long userId, String deviceId) {
