@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.notification.application.payload;
+package org.devkor.apu.saerok_server.domain.notification.application.model.payload;
 
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 

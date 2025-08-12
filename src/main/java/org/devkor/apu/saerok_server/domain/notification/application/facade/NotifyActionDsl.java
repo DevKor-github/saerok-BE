@@ -1,8 +1,10 @@
-package org.devkor.apu.saerok_server.domain.notification.application.dsl;
+package org.devkor.apu.saerok_server.domain.notification.application.facade;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.application.NotificationPublisher;
-import org.devkor.apu.saerok_server.domain.notification.application.payload.ActionNotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.springframework.stereotype.Component;
 

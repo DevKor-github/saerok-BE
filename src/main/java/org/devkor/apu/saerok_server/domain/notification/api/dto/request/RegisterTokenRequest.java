@@ -1,7 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.api.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "사용자 디바이스 등록/갱신 요청 DTO")
 public record RegisterTokenRequest(

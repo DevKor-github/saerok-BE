@@ -8,11 +8,11 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSugg
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.NotificationPublisher;
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.Target;
-import org.devkor.apu.saerok_server.domain.notification.application.payload.ActionNotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.application.payload.NotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
+import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;

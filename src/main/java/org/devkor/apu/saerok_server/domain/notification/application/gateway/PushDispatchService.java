@@ -1,4 +1,4 @@
-package org.devkor.apu.saerok_server.domain.notification.application;
+package org.devkor.apu.saerok_server.domain.notification.application.gateway;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

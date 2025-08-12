@@ -1,9 +1,9 @@
-package org.devkor.apu.saerok_server.domain.notification.application;
+package org.devkor.apu.saerok_server.domain.notification.application.assembly.store;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.application.payload.ActionNotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.application.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.application.render.NotificationRenderer.RenderedNotification;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer.RenderedNotification;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;

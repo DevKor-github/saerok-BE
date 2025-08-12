@@ -6,10 +6,10 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.ActionKind;
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.Actor;
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
+import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;

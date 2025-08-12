@@ -1,7 +1,6 @@
-package org.devkor.apu.saerok_server.domain.notification.application.deeplink;
+package org.devkor.apu.saerok_server.domain.notification.application.assembly.deeplink;
 
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.Target;
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.TargetType;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.springframework.stereotype.Component;
 
 @Component

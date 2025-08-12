@@ -1,11 +1,13 @@
-package org.devkor.apu.saerok_server.domain.notification.application;
+package org.devkor.apu.saerok_server.domain.notification.application.facade;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.application.deeplink.DeepLinkResolver;
-import org.devkor.apu.saerok_server.domain.notification.application.dsl.Target;
-import org.devkor.apu.saerok_server.domain.notification.application.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.application.render.NotificationRenderer;
-import org.devkor.apu.saerok_server.domain.notification.application.render.NotificationRenderer.RenderedNotification;
+import org.devkor.apu.saerok_server.domain.notification.application.assembly.store.InAppNotificationWriter;
+import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushDispatchService;
+import org.devkor.apu.saerok_server.domain.notification.application.assembly.deeplink.DeepLinkResolver;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer;
+import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer.RenderedNotification;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,7 @@
-package org.devkor.apu.saerok_server.domain.notification.application.render;
+package org.devkor.apu.saerok_server.domain.notification.application.assembly.render;
 
-import org.devkor.apu.saerok_server.domain.notification.application.payload.ActionNotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.application.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.springframework.stereotype.Component;
 
 @Component
