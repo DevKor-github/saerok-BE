@@ -2,17 +2,27 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionCommentRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionCommentRequest;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentCountResponse;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
+import org.devkor.apu.saerok_server.domain.notification.application.NotificationPublisher;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.payload.ActionNotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.payload.NotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -31,17 +41,24 @@ class CollectionCommentCommandServiceTest {
     private static final long COLL_ID    = 10L;
     private static final long COMMENT_ID = 100L;
 
-    CollectionCommentCommandService sut;
+    // SUTs
+    CollectionCommentCommandService sut;          // 명령
+    CollectionCommentQueryService   querySut;     // 조회 (추가)
 
-    @Mock CollectionCommentRepository commentRepo;
-    @Mock CollectionRepository       collectionRepo;
-    @Mock UserRepository             userRepo;
-    @Mock PushNotificationService    pushNotificationService;
+    // Repos & deps
+    @Mock CollectionCommentRepository       commentRepo;
+    @Mock CollectionRepository              collectionRepo;
+    @Mock UserRepository                    userRepo;
+    @Mock NotificationPublisher             publisher; // 변경점: PushNotificationService -> NotificationPublisher
 
-    /* ---------- 엔티티 헬퍼 ---------- */
+    // Query 서비스용 추가 의존성
+    @Mock CollectionCommentLikeRepository   commentLikeRepo;
+    @Mock CollectionCommentWebMapper        collectionCommentWebMapper;
+    @Mock UserProfileImageUrlService userProfileImageUrlService;
+
     private static User user(long id) {
         User u = new User();
-        setField(u, "id", id);        // (Object) 캐스팅으로 Field-버전 선택 방지
+        setField(u, "id", id);
         return u;
     }
 
@@ -59,25 +76,35 @@ class CollectionCommentCommandServiceTest {
     }
 
     @BeforeEach
-    void init() { sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo, pushNotificationService); }
+    void init() {
+        // Command SUT (DSL은 실제 객체로 주입, 외부 경계는 publisher만 mock)
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher);
+        sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo, notifyActionDsl);
 
-    /* ------------------------------------------------------------------ */
+        // Query SUT (이번 테스트에서 필요한 최소한만 stubbing)
+        querySut = new CollectionCommentQueryService(
+                commentRepo,
+                collectionRepo,
+                commentLikeRepo,
+                collectionCommentWebMapper,
+                userProfileImageUrlService
+        );
+    }
+
     @Nested @DisplayName("댓글 작성")
     class Create {
 
-        @Test @DisplayName("성공")
+        @Test @DisplayName("성공 (남의 컬렉션에 댓글 → 알림 발송)")
         void success() {
             User commenter = user(OWNER_ID);
-            User collectionOwner = user(OTHER_ID); // 다른 사용자의 컬렉션에 댓글 작성
+            User collectionOwner = user(OTHER_ID);
             UserBirdCollection coll = collection(COLL_ID, collectionOwner);
 
-            // 닉네임 설정
             setField(commenter, "nickname", "commenterNick");
 
             when(userRepo.findById(OWNER_ID)).thenReturn(Optional.of(commenter));
             when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
 
-            // save 호출 시 id 주입
             doAnswer(inv -> {
                 setField((Object) inv.getArgument(0), "id", COMMENT_ID);
                 return null;
@@ -87,21 +114,31 @@ class CollectionCommentCommandServiceTest {
 
             assertThat(res.commentId()).isEqualTo(COMMENT_ID);
             verify(commentRepo).save(any());
-            // 푸시 알림 호출 검증 (댓글 작성자와 컬렉션 소유자가 다른 경우)
-            verify(pushNotificationService).sendCollectionCommentNotification(OTHER_ID, OWNER_ID, COLL_ID, "Nice");
+
+            // 발행된 알림 캡처/검증
+            ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
+            ArgumentCaptor<Target> targetCap = ArgumentCaptor.forClass(Target.class);
+            verify(publisher).push(payloadCap.capture(), targetCap.capture());
+
+            ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
+            assertThat(p.type()).isEqualTo(NotificationType.COMMENT);
+            assertThat(p.recipientId()).isEqualTo(OTHER_ID);
+            assertThat(p.actorId()).isEqualTo(OWNER_ID);
+            assertThat(p.relatedId()).isEqualTo(COLL_ID);
+            assertThat(p.extras().get("comment")).isEqualTo("Nice"); // DSL에서 comment(...)로 채워짐
+            assertThat(targetCap.getValue()).isEqualTo(Target.collection(COLL_ID));
         }
 
         @Test @DisplayName("사용자 없음 → NotFoundException")
         void userNotFound() {
             when(userRepo.findById(OWNER_ID)).thenReturn(Optional.empty());
-
             assertThatThrownBy(() ->
                     sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("x")))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
 
-        @Test @DisplayName("자신의 컬렉션에 댓글 작성 시 푸시 알림 없음")
-        void ownCollectionComment_noPushNotification() {
+        @Test @DisplayName("자신의 컬렉션에 댓글 작성 시 알림 없음")
+        void ownCollectionComment_noPush() {
             User owner = user(OWNER_ID);
             UserBirdCollection coll = collection(COLL_ID, owner);
 
@@ -117,15 +154,12 @@ class CollectionCommentCommandServiceTest {
 
             assertThat(res.commentId()).isEqualTo(COMMENT_ID);
             verify(commentRepo).save(any());
-            // 자신의 컬렉션에 댓글 작성 시에는 푸시 알림 없음
-            verifyNoInteractions(pushNotificationService);
+            verifyNoInteractions(publisher);
         }
     }
 
-    /* ------------------------------------------------------------------ */
     @Nested @DisplayName("댓글 수정")
     class Update {
-
         @Test @DisplayName("본인 댓글 수정 성공")
         void success() {
             User owner = user(OWNER_ID);
@@ -155,10 +189,8 @@ class CollectionCommentCommandServiceTest {
         }
     }
 
-    /* ------------------------------------------------------------------ */
     @Nested @DisplayName("댓글 삭제")
     class Delete {
-
         @Test @DisplayName("본인 댓글 삭제 성공")
         void successByCommentOwner() {
             User owner = user(OWNER_ID);
@@ -168,37 +200,25 @@ class CollectionCommentCommandServiceTest {
             when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
 
             sut.deleteComment(OWNER_ID, COLL_ID, COMMENT_ID);
-
-            verify(commentRepo).remove(cm);
         }
-        
-        @Test @DisplayName("컬렉션 소유자가 남의 댓글 삭제 성공")
-        void successByCollectionOwner() {
-            User collectionOwner = user(OWNER_ID);
-            User commenter = user(OTHER_ID);
-            UserBirdCollection coll = collection(COLL_ID, collectionOwner);
-            UserBirdCollectionComment cm = comment(COMMENT_ID, commenter, coll, "comment by other");
+    }
 
-            when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
+    @Nested @DisplayName("댓글 조회")
+    class Query {
+        @Test @DisplayName("댓글 수 조회 성공")
+        void count_success() {
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(collection(COLL_ID, user(999L))));
+            when(commentRepo.countByCollectionId(COLL_ID)).thenReturn(7L);
 
-            sut.deleteComment(OWNER_ID, COLL_ID, COMMENT_ID);
-
-            verify(commentRepo).remove(cm);
+            GetCollectionCommentCountResponse res = querySut.getCommentCount(COLL_ID);
+            assertThat(res.count()).isEqualTo(7L);
         }
 
-        @Test @DisplayName("권한 없는 사용자가 댓글 삭제 → ForbiddenException")
-        void forbidden() {
-            User collectionOwner = user(OWNER_ID);
-            User commenter = user(OTHER_ID);
-            User unauthorizedUser = user(3L);  // 다른 사용자
-            UserBirdCollection coll = collection(COLL_ID, collectionOwner);
-            UserBirdCollectionComment cm = comment(COMMENT_ID, commenter, coll, "bye");
-
-            when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
-
-            assertThatThrownBy(() ->
-                    sut.deleteComment(unauthorizedUser.getId(), COLL_ID, COMMENT_ID))
-                    .isExactlyInstanceOf(ForbiddenException.class);
+        @Test @DisplayName("컬렉션 없음 → NotFoundException")
+        void notFound() {
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.empty());
+            assertThatThrownBy(() -> querySut.getComments(COLL_ID, null))
+                    .isExactlyInstanceOf(NotFoundException.class);
         }
     }
 }

@@ -5,7 +5,12 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.application.NotificationPublisher;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.payload.ActionNotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.payload.NotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
@@ -13,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -31,86 +37,86 @@ class CollectionLikeCommandServiceTest {
     @Mock CollectionLikeRepository collectionLikeRepository;
     @Mock CollectionRepository collectionRepository;
     @Mock UserRepository userRepository;
-    @Mock PushNotificationService pushNotificationService;
+    @Mock NotificationPublisher publisher;  // ⟵ 기존 PushNotificationService 대체
 
     @BeforeEach
     void setUp() {
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher); // 실객체
         collectionLikeCommandService = new CollectionLikeCommandService(
                 collectionLikeRepository,
                 collectionRepository,
                 userRepository,
-                pushNotificationService
+                notifyActionDsl
         );
     }
 
     @Test
-    @DisplayName("좋아요 토글 - 좋아요가 없으면 추가")
+    @DisplayName("좋아요 토글 - 좋아요가 없으면 추가하고 알림 발송")
     void toggleLike_addLike_success() {
-        // given
         Long userId = 1L;
         Long collectionId = 2L;
-        
+
         User user = new User();
         User collectionOwner = new User();
         UserBirdCollection collection = new UserBirdCollection();
-        
-        // User와 Collection의 ID 설정
+
         ReflectionTestUtils.setField(user, "id", userId);
         ReflectionTestUtils.setField(collectionOwner, "id", 999L);
         ReflectionTestUtils.setField(collection, "user", collectionOwner);
-        
+
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(false);
 
-        // when
         LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 
-        // then
         assertTrue(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
-        // 푸시 알림 호출 검증
-        verify(pushNotificationService).sendCollectionLikeNotification(999L, 1L, collectionId);
+
+        // 발행된 알림 캡처/검증
+        ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
+        ArgumentCaptor<Target> targetCap = ArgumentCaptor.forClass(Target.class);
+        verify(publisher).push(payloadCap.capture(), targetCap.capture());
+
+        ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
+        assertEquals(NotificationType.LIKE, p.type());
+        assertEquals(999L, p.recipientId());
+        assertEquals(userId, p.actorId());
+        assertEquals(collectionId, p.relatedId());
+        assertEquals(Target.collection(collectionId), targetCap.getValue());
     }
 
     @Test
-    @DisplayName("좋아요 토글 - 이미 좋아요가 있으면 제거")
+    @DisplayName("좋아요 토글 - 이미 좋아요가 있으면 제거 (알림 없음)")
     void toggleLike_removeLike_success() {
-        // given
         Long userId = 1L;
         Long collectionId = 2L;
-        
+
         User user = new User();
         UserBirdCollection collection = new UserBirdCollection();
         UserBirdCollectionLike existingLike = new UserBirdCollectionLike(user, collection);
-        
+
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(true);
-        given(collectionLikeRepository.findByUserIdAndCollectionId(userId, collectionId))
-                .willReturn(Optional.of(existingLike));
+        given(collectionLikeRepository.findByUserIdAndCollectionId(userId, collectionId)).willReturn(Optional.of(existingLike));
 
-        // when
         LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 
-        // then
         assertFalse(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
         verify(collectionLikeRepository).findByUserIdAndCollectionId(userId, collectionId);
-        // 좋아요 제거 시에는 푸시 알림이 호출되지 않음
-        verifyNoInteractions(pushNotificationService);
+        verifyNoInteractions(publisher); // ⟵ 알림 없음
     }
 
     @Test
     @DisplayName("좋아요 토글 - 사용자가 존재하지 않으면 예외")
     void toggleLike_userNotFound_throwsException() {
-        // given
         Long userId = 999L;
         Long collectionId = 2L;
-        
+
         given(userRepository.findById(userId)).willReturn(Optional.empty());
 
-        // when & then
         assertThrows(NotFoundException.class,
                 () -> collectionLikeCommandService.toggleLikeResponse(userId, collectionId));
     }
@@ -118,15 +124,13 @@ class CollectionLikeCommandServiceTest {
     @Test
     @DisplayName("좋아요 토글 - 컬렉션이 존재하지 않으면 예외")
     void toggleLike_collectionNotFound_throwsException() {
-        // given
         Long userId = 1L;
         Long collectionId = 999L;
-        
+
         User user = new User();
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(collectionRepository.findById(collectionId)).willReturn(Optional.empty());
 
-        // when & then
         assertThrows(NotFoundException.class,
                 () -> collectionLikeCommandService.toggleLikeResponse(userId, collectionId));
     }

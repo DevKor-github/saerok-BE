@@ -10,7 +10,10 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.ActionKind;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.Actor;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.Target;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
@@ -25,7 +28,7 @@ public class CollectionCommentCommandService {
     private final CollectionCommentRepository commentRepository;
     private final CollectionRepository       collectionRepository;
     private final UserRepository             userRepository;
-    private final PushNotificationService    pushNotificationService;
+    private final NotifyActionDsl notifyAction;
 
     /* 댓글 작성 */
     public CreateCollectionCommentResponse createComment(Long userId,
@@ -44,12 +47,12 @@ public class CollectionCommentCommandService {
         
         // 자신의 컬렉션이 아닌 경우에만 푸시 알림 발송
         if (!collection.getUser().getId().equals(userId)) {
-            pushNotificationService.sendCollectionCommentNotification(
-                collection.getUser().getId(), // 컬렉션 소유자에게
-                userId, // 댓글을 달은 사용자 ID
-                collectionId, // 컬렉션 ID
-                req.content() // 댓글 내용
-            );
+            notifyAction
+                    .by(Actor.of(userId, user.getNickname()))
+                    .on(Target.collection(collectionId))
+                    .did(ActionKind.COMMENT)
+                    .comment(req.content())
+                    .to(collection.getUser().getId());
         }
         
         return new CreateCollectionCommentResponse(comment.getId());

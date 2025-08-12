@@ -6,7 +6,10 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.ActionKind;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.Actor;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.dsl.Target;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -22,7 +25,7 @@ public class CollectionLikeCommandService {
     private final CollectionLikeRepository collectionLikeRepository;
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
-    private final PushNotificationService pushNotificationService;
+    private final NotifyActionDsl notifyAction;
 
     /**
      * 좋아요 토글 (추가/제거)
@@ -50,11 +53,11 @@ public class CollectionLikeCommandService {
             
             // 자신의 컬렉션이 아닌 경우에만 푸시 알림 발송
             if (!collection.getUser().getId().equals(userId)) {
-                pushNotificationService.sendCollectionLikeNotification(
-                    collection.getUser().getId(), // 컬렉션 소유자에게
-                    userId, // 좋아요를 누른 사용자 ID
-                    collectionId // 컬렉션 ID
-                );
+                notifyAction
+                        .by(Actor.of(userId, user.getNickname()))
+                        .on(Target.collection(collectionId))
+                        .did(ActionKind.LIKE)
+                        .to(collection.getUser().getId());
             }
             
             return new LikeStatusResponse(true);
