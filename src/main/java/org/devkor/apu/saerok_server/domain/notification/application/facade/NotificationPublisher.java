@@ -2,7 +2,7 @@ package org.devkor.apu.saerok_server.domain.notification.application.facade;
 
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.store.InAppNotificationWriter;
-import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushDispatchService;
+import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.deeplink.DeepLinkResolver;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
@@ -20,7 +20,7 @@ public class NotificationPublisher {
     private final NotificationRenderer renderer;
     private final InAppNotificationWriter inAppWriter;
     private final NotificationRepository notificationRepository;
-    private final PushDispatchService pushDispatchService;
+    private final PushGateway pushGateway;
     private final DeepLinkResolver deepLinkResolver;
 
     @Transactional
@@ -43,6 +43,6 @@ public class NotificationPublisher {
         );
 
         // 실제 디바이스/설정 필터링 + FCM 전송
-        pushDispatchService.sendToUser(payload.recipientId(), payload.type(), cmd);
+        pushGateway.sendToUser(payload.recipientId(), payload.type(), cmd);
     }
 }
