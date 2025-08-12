@@ -24,7 +24,7 @@ public class PushNotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public void sendCollectionLikeNotification(Long targetUserId, Long likerUserId, Long collectionId) {
         notifyCollectionEvent(targetUserId, likerUserId, collectionId, NotificationType.LIKE,
                 actor -> actor.getNickname() + "님이 좋아요를 눌렀어요!",
@@ -33,7 +33,7 @@ public class PushNotificationService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public void sendCollectionCommentNotification(Long targetUserId, Long commenterUserId, Long collectionId, String commentContent) {
         notifyCollectionEvent(targetUserId, commenterUserId, collectionId, NotificationType.COMMENT,
                 actor -> actor.getNickname() + "님이 댓글을 남겼어요!",
@@ -42,7 +42,7 @@ public class PushNotificationService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public void sendBirdIdSuggestionNotification(Long targetUserId, Long suggesterUserId, Long collectionId) {
         notifyCollectionEvent(targetUserId, suggesterUserId, collectionId, NotificationType.BIRD_ID_SUGGESTION,
                 actor -> "동정 의견 공유",
