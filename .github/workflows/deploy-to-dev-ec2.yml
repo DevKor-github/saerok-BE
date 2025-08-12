@@ -79,6 +79,7 @@ jobs:
             KAKAO_REDIRECT_URI="${{ secrets.KAKAO_REDIRECT_URI }}" \
             KAKAO_CLIENT_SECRET="${{ secrets.KAKAO_CLIENT_SECRET }}" \
             KMS_KEY_ID="${{ secrets.KMS_KEY_ID }}" \
+            FIREBASE_ADMIN_KEY="${{ secrets.FIREBASE_ADMIN_KEY }}" \
             nohup java -Duser.timezone=Asia/Seoul -jar $JAR_NAME --spring.profiles.active=dev > app.log 2>&1 &
             
             echo "✅ 배포 완료"
