@@ -1,0 +1,106 @@
+package org.devkor.apu.saerok_server.domain.notification.application;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.*;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
+import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.function.Function;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PushNotificationService {
+
+    private final PushDispatchService pushDispatchService;
+    private final NotificationSettingRepository notificationSettingRepository;
+    private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
+
+    @Transactional
+    public void sendCollectionLikeNotification(Long targetUserId, Long likerUserId, Long collectionId) {
+        notifyCollectionEvent(targetUserId, likerUserId, collectionId, NotificationType.LIKE,
+                actor -> actor.getNickname() + "님이 좋아요를 눌렀어요!",
+                actor -> "나의 새록을 좋아해요",
+                actor -> "님이 나의 새록을 좋아해요."
+        );
+    }
+
+    @Transactional
+    public void sendCollectionCommentNotification(Long targetUserId, Long commenterUserId, Long collectionId, String commentContent) {
+        notifyCollectionEvent(targetUserId, commenterUserId, collectionId, NotificationType.COMMENT,
+                actor -> actor.getNickname() + "님이 댓글을 남겼어요!",
+                actor -> "나의 새록에 댓글을 남겼어요. \"" + commentContent + "\"",
+                actor -> "님이 나의 새록에 댓글을 남겼어요. \"" + commentContent + "\""
+        );
+    }
+
+    @Transactional
+    public void sendBirdIdSuggestionNotification(Long targetUserId, Long suggesterUserId, Long collectionId) {
+        notifyCollectionEvent(targetUserId, suggesterUserId, collectionId, NotificationType.BIRD_ID_SUGGESTION,
+                actor -> "동정 의견 공유",
+                actor -> "두근두근! 새로운 의견이 공유됐어요. 확인해볼까요?",
+                actor -> "두근두근! 새로운 의견이 공유됐어요. 확인해볼까요?"
+        );
+    }
+
+    // === Private Helper Methods ===
+
+    private void notifyCollectionEvent(Long targetUserId, Long actorUserId, Long collectionId, NotificationType type,
+                                       Function<User, String> titleFn,   // actor -> pushTitle
+                                       Function<User, String> bodyFn,    // actor -> pushBody
+                                       Function<User, String> inAppBodyFn // actor -> in-app body
+    ) {
+        User target = userRepository.findById(targetUserId).orElse(null);
+        User actor  = userRepository.findById(actorUserId).orElse(null);
+        if (target == null || actor == null) {
+            log.warn("사용자를 찾을 수 없음: targetUserId={}, actorUserId={}", targetUserId, actorUserId);
+            return;
+        }
+
+        if (notificationSettingRepository.findByUserIdAndTypeAndEnabledTrue(targetUserId, type).isEmpty()) {
+            return;
+        }
+
+        String deepLink = "saerok://collection/" + collectionId;
+        long unreadCount = notificationRepository.countUnreadByUserId(targetUserId);
+        PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
+                titleFn.apply(actor),
+                bodyFn.apply(actor),
+                type.name(),
+                collectionId,
+                deepLink,
+                (int) unreadCount
+        );
+
+        // 인앱
+        saveInAppNotification(target, actor, type, collectionId, deepLink, titleFn.apply(actor), inAppBodyFn.apply(actor));
+
+        // 푸쉬
+        pushDispatchService.sendToUser(targetUserId, type, cmd);
+    }
+
+    // 인앱 알림을 저장합니다.
+    private void saveInAppNotification(User targetUser, User sender, NotificationType type, 
+                                       Long relatedId, String deepLink, String title, String body) {
+        Notification notification = Notification.builder()
+                .user(targetUser)
+                .title(title)
+                .body(body)
+                .type(type)
+                .relatedId(relatedId)
+                .deepLink(deepLink)
+                .sender(sender)
+                .isRead(false)
+                .build();
+        
+        notificationRepository.save(notification);
+    }
+}

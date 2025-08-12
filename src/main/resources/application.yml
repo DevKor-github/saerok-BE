@@ -30,6 +30,10 @@ api_prefix: /api/v1
 jwt:
   secret: ${JWT_SECRET}
 
+firebase:
+  admin:
+    key-base64: ${FIREBASE_ADMIN_KEY}
+
 app:
   cookie:
     secure: false

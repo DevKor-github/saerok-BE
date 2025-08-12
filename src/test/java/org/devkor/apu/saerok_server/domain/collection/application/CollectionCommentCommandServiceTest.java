@@ -6,6 +6,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
@@ -35,6 +36,7 @@ class CollectionCommentCommandServiceTest {
     @Mock CollectionCommentRepository commentRepo;
     @Mock CollectionRepository       collectionRepo;
     @Mock UserRepository             userRepo;
+    @Mock PushNotificationService    pushNotificationService;
 
     /* ---------- 엔티티 헬퍼 ---------- */
     private static User user(long id) {
@@ -57,7 +59,7 @@ class CollectionCommentCommandServiceTest {
     }
 
     @BeforeEach
-    void init() { sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo); }
+    void init() { sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo, pushNotificationService); }
 
     /* ------------------------------------------------------------------ */
     @Nested @DisplayName("댓글 작성")
@@ -65,10 +67,14 @@ class CollectionCommentCommandServiceTest {
 
         @Test @DisplayName("성공")
         void success() {
-            User owner = user(OWNER_ID);
-            UserBirdCollection coll = collection(COLL_ID, owner);
+            User commenter = user(OWNER_ID);
+            User collectionOwner = user(OTHER_ID); // 다른 사용자의 컬렉션에 댓글 작성
+            UserBirdCollection coll = collection(COLL_ID, collectionOwner);
 
-            when(userRepo.findById(OWNER_ID)).thenReturn(Optional.of(owner));
+            // 닉네임 설정
+            setField(commenter, "nickname", "commenterNick");
+
+            when(userRepo.findById(OWNER_ID)).thenReturn(Optional.of(commenter));
             when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
 
             // save 호출 시 id 주입
@@ -81,6 +87,8 @@ class CollectionCommentCommandServiceTest {
 
             assertThat(res.commentId()).isEqualTo(COMMENT_ID);
             verify(commentRepo).save(any());
+            // 푸시 알림 호출 검증 (댓글 작성자와 컬렉션 소유자가 다른 경우)
+            verify(pushNotificationService).sendCollectionCommentNotification(OTHER_ID, OWNER_ID, COLL_ID, "Nice");
         }
 
         @Test @DisplayName("사용자 없음 → NotFoundException")
@@ -90,6 +98,27 @@ class CollectionCommentCommandServiceTest {
             assertThatThrownBy(() ->
                     sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("x")))
                     .isExactlyInstanceOf(NotFoundException.class);
+        }
+
+        @Test @DisplayName("자신의 컬렉션에 댓글 작성 시 푸시 알림 없음")
+        void ownCollectionComment_noPushNotification() {
+            User owner = user(OWNER_ID);
+            UserBirdCollection coll = collection(COLL_ID, owner);
+
+            when(userRepo.findById(OWNER_ID)).thenReturn(Optional.of(owner));
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
+
+            doAnswer(inv -> {
+                setField((Object) inv.getArgument(0), "id", COMMENT_ID);
+                return null;
+            }).when(commentRepo).save(any());
+
+            var res = sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("Self comment"));
+
+            assertThat(res.commentId()).isEqualTo(COMMENT_ID);
+            verify(commentRepo).save(any());
+            // 자신의 컬렉션에 댓글 작성 시에는 푸시 알림 없음
+            verifyNoInteractions(pushNotificationService);
         }
     }
 

@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -29,13 +31,15 @@ class CollectionLikeCommandServiceTest {
     @Mock CollectionLikeRepository collectionLikeRepository;
     @Mock CollectionRepository collectionRepository;
     @Mock UserRepository userRepository;
+    @Mock PushNotificationService pushNotificationService;
 
     @BeforeEach
     void setUp() {
         collectionLikeCommandService = new CollectionLikeCommandService(
                 collectionLikeRepository,
                 collectionRepository,
-                userRepository
+                userRepository,
+                pushNotificationService
         );
     }
 
@@ -47,7 +51,13 @@ class CollectionLikeCommandServiceTest {
         Long collectionId = 2L;
         
         User user = new User();
+        User collectionOwner = new User();
         UserBirdCollection collection = new UserBirdCollection();
+        
+        // User와 Collection의 ID 설정
+        ReflectionTestUtils.setField(user, "id", userId);
+        ReflectionTestUtils.setField(collectionOwner, "id", 999L);
+        ReflectionTestUtils.setField(collection, "user", collectionOwner);
         
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
@@ -57,8 +67,10 @@ class CollectionLikeCommandServiceTest {
         LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 
         // then
-        assertTrue(response.isLiked()); // 비즈니스 로직 결과 검증
+        assertTrue(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
+        // 푸시 알림 호출 검증
+        verify(pushNotificationService).sendCollectionLikeNotification(999L, 1L, collectionId);
     }
 
     @Test
@@ -82,9 +94,11 @@ class CollectionLikeCommandServiceTest {
         LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 
         // then
-        assertFalse(response.isLiked()); // 비즈니스 로직 결과 검증
+        assertFalse(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
         verify(collectionLikeRepository).findByUserIdAndCollectionId(userId, collectionId);
+        // 좋아요 제거 시에는 푸시 알림이 호출되지 않음
+        verifyNoInteractions(pushNotificationService);
     }
 
     @Test
