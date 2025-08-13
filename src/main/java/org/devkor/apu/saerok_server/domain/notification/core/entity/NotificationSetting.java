@@ -6,12 +6,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(
-            name = "uq_notification_setting_user_device_type", columnNames = {"user_device_id", "type"}
+@Table(
+        uniqueConstraints = @UniqueConstraint(
+                name = "uq_notification_setting_user_device_subject_action",
+                columnNames = {"user_device_id", "subject", "action"}
         )
 )
 @NoArgsConstructor
@@ -27,36 +29,44 @@ public class NotificationSetting extends Auditable {
     private UserDevice userDevice;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, length = 50)
-    private NotificationType type;
+    @Column(name = "subject", nullable = false, length = 50)
+    private NotificationSubject subject;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "action", length = 50)
+    private NotificationAction action; // nullable: subject 그룹 토글 용
 
     @Column(name = "enabled", nullable = false)
     private Boolean enabled;
 
     @Builder
-    public NotificationSetting(UserDevice userDevice, NotificationType type, Boolean enabled) {
+    public NotificationSetting(UserDevice userDevice, NotificationSubject subject, NotificationAction action, Boolean enabled) {
         if (userDevice == null) throw new IllegalArgumentException("userDevice는 null일 수 없습니다.");
-        if (type == null) throw new IllegalArgumentException("type은 null일 수 없습니다.");
-        
+        if (subject == null) throw new IllegalArgumentException("subject는 null일 수 없습니다.");
         this.userDevice = userDevice;
-        this.type = type;
-        this.enabled = enabled != null ? enabled : true;
+        this.subject = subject;
+        this.action = action;
+        this.enabled = (enabled != null) ? enabled : true;
     }
 
-    // 기본 설정으로 모든 알림 유형을 활성화하여 생성합니다
-    public static List<NotificationSetting> createDefaultSetting(UserDevice userDevice) {
-        return Arrays.stream(NotificationType.values())
-                .map(type -> NotificationSetting.builder()
-                        .userDevice(userDevice)
-                        .type(type)
-                        .enabled(true)
-                        .build())
-                .toList();
+    /** 기본 설정 팩토리: subject 그룹 + 하위 action 3종 전부 ON */
+    public static List<NotificationSetting> createDefaultSetting(UserDevice device) {
+        var list = new ArrayList<NotificationSetting>();
+        // 그룹 (COLLECTION)
+        list.add(NotificationSetting.builder()
+                .userDevice(device)
+                .subject(NotificationSubject.COLLECTION)
+                .action(null)
+                .enabled(true)
+                .build());
+        // 세부 액션들
+        list.add(NotificationSetting.builder().userDevice(device).subject(NotificationSubject.COLLECTION).action(NotificationAction.LIKE).enabled(true).build());
+        list.add(NotificationSetting.builder().userDevice(device).subject(NotificationSubject.COLLECTION).action(NotificationAction.COMMENT).enabled(true).build());
+        list.add(NotificationSetting.builder().userDevice(device).subject(NotificationSubject.COLLECTION).action(NotificationAction.SUGGEST_BIRD_ID).enabled(true).build());
+        return list;
     }
 
-    // 알림 활성화 상태를 토글합니다
-    public void toggleNotificationSetting() {this.enabled = !this.enabled;}
+    public void toggle() { this.enabled = !this.enabled; }
 
-    // 알림 활성화 상태를 조회합니다
-    public boolean isNotificationEnabled() {return this.enabled;}
+    public boolean enabled() { return Boolean.TRUE.equals(this.enabled); }
 }

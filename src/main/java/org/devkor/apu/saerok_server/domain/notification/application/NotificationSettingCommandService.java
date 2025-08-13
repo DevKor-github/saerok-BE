@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.ToggleNotificationResponse;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.ToggleNotificationSettingCommand;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSetting;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationSettingBackfillService;
 import org.devkor.apu.saerok_server.domain.notification.mapper.NotificationSettingWebMapper;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,21 +18,23 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NotificationSettingCommandService {
 
+    private final UserDeviceRepository userDeviceRepository;
     private final NotificationSettingRepository notificationSettingRepository;
-    private final UserRepository userRepository;
     private final NotificationSettingWebMapper notificationSettingWebMapper;
+    private final NotificationSettingBackfillService backfillService;
 
     public ToggleNotificationResponse toggleNotificationSetting(ToggleNotificationSettingCommand command) {
-        userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
+        UserDevice userDevice = userDeviceRepository.findByUserIdAndDeviceId(command.userId(), command.deviceId())
+                .orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
 
-        NotificationSetting settings = notificationSettingRepository
-                .findByUserIdAndDeviceIdAndType(command.userId(), command.deviceId(), command.notificationType())
-                .orElseThrow(() -> new NotFoundException("해당 디바이스의 알림 설정을 찾을 수 없어요"));
+        backfillService.ensureDefaults(userDevice);
 
-        settings.toggleNotificationSetting();
+        NotificationSetting setting = notificationSettingRepository
+                .findByUserDeviceIdAndSubjectAndAction(
+                        userDevice.getId(), command.subject(), command.action()
+                ).orElseThrow(() -> new IllegalStateException("서버 오류: 해당 알림 설정 없음"));
 
-        boolean isEnabled = settings.isNotificationEnabled();
-
-        return notificationSettingWebMapper.toToggleNotificationResponse(command, isEnabled);
+        setting.toggle();
+        return notificationSettingWebMapper.toToggleNotificationResponse(command, setting.enabled());
     }
 }

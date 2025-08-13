@@ -10,7 +10,7 @@ public record GetNotificationsResponse(
         @Schema(description = "알림 목록")
         List<Item> items
 ) {
-    @Schema(description = "알림 정보")
+    @Schema(name = "GetNotificationsResponse.Item", description = "알림 정보")
     public record Item(
             @Schema(description = "알림 ID")
             Long id,

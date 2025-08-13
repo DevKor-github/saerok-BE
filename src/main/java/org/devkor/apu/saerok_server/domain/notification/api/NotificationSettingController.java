@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/notifications/settings")
-public class NotificationSettingsController {
+public class NotificationSettingController {
 
     private final NotificationSettingCommandService notificationSettingCommandService;
     private final NotificationSettingQueryService notificationSettingQueryService;
@@ -69,7 +69,7 @@ public class NotificationSettingsController {
             @Valid @RequestBody ToggleNotificationRequest request
     ) {
         return notificationSettingCommandService.toggleNotificationSetting(
-                notificationSettingWebMapper.toToggleNotificationSettingCommand(request, userPrincipal.getId())
+                notificationSettingWebMapper.toToggleNotificationSettingCommand(userPrincipal.getId(), request)
         );
     }
 }

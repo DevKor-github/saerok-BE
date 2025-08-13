@@ -1,14 +1,14 @@
 package org.devkor.apu.saerok_server.domain.notification.application.facade;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.application.assembly.store.InAppNotificationWriter;
-import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.deeplink.DeepLinkResolver;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
-import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer.RenderedMessage;
+import org.devkor.apu.saerok_server.domain.notification.application.assembly.store.InAppNotificationWriter;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
+import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
+import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,25 +24,23 @@ public class NotificationPublisher {
     private final DeepLinkResolver deepLinkResolver;
 
     @Transactional
-    public void push(NotificationPayload payload, Target target) {
-        // 1) 렌더링 (인앱/푸시 동시 생성)
+    public void push(NotificationPayload payload, org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target target) {
         RenderedMessage r = renderer.render(payload);
-
-        // 2) 딥링크
         String deepLink = deepLinkResolver.resolve(target);
-
-        // 3) 인앱 저장 (body만)
         inAppWriter.save(payload, r, deepLink);
 
-        // 4) 배지 카운트
         int unread = notificationRepository.countUnreadByUserId(payload.recipientId()).intValue();
 
-        // 5) 푸시 전송 (title/body 분리 사용)
+        if (!(payload instanceof ActionNotificationPayload a)) {
+            throw new IllegalArgumentException("Unsupported payload: " + payload.getClass());
+        }
+
+        // notificationType 자리에 action.name()을 내려 푸시 data에 담기도록 함
         PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
-                r.pushTitle(), r.pushBody(), payload.type().name(), payload.relatedId(), deepLink, unread
+                r.pushTitle(), r.pushBody(), a.action().name(), a.relatedId(), deepLink, unread
         );
 
-        // 실제 디바이스/설정 필터링 + FCM 전송
-        pushGateway.sendToUser(payload.recipientId(), payload.type(), cmd);
+        // subject/action 축으로 게이트웨이에 전달
+        pushGateway.sendToUser(a.recipientId(), a.subject(), a.action(), cmd);
     }
 }
