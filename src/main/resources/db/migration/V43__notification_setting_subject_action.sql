@@ -27,8 +27,8 @@ ALTER TABLE notification_setting
 ALTER TABLE notification_setting DROP COLUMN type;
 
 -- 6) 그룹(Subject) 토글 로우 보강: 각 디바이스에 (subject='COLLECTION', action=NULL) 없으면 생성
-INSERT INTO notification_setting (user_device_id, subject, action, enabled, created_at, updated_at)
-SELECT ud.id, 'COLLECTION', NULL, TRUE, now(), now()
+INSERT INTO notification_setting (id, user_device_id, subject, action, enabled, created_at, updated_at)
+SELECT nextval('notification_setting_seq'), ud.id, 'COLLECTION', NULL, TRUE, now(), now()
 FROM user_device ud
 WHERE NOT EXISTS (
     SELECT 1 FROM notification_setting ns
