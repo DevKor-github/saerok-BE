@@ -73,16 +73,6 @@ public class NotificationSettingRepository {
                 .executeUpdate();
     }
 
-    /** 특정 userDeviceId로 전체 설정 삭제 */
-    public void deleteByUserDeviceId(Long userDeviceId) {
-        em.createQuery("""
-                DELETE FROM NotificationSetting ns
-                WHERE ns.userDevice.id = :userDeviceId
-                """)
-                .setParameter("userDeviceId", userDeviceId)
-                .executeUpdate();
-    }
-
     public void saveAll(List<NotificationSetting> list) {
         list.forEach(em::persist);
     }

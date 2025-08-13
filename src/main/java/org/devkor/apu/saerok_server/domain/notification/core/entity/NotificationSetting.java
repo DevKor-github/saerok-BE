@@ -6,9 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(
         uniqueConstraints = @UniqueConstraint(
