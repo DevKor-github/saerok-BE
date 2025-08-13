@@ -64,7 +64,7 @@ public class FcmPushGateway implements PushGateway {
         // 세부 설정이 있으면 그것을 우선 사용
         if (s.detail != null) return s.detail;
         // 세부 설정 없으면 그룹(없으면 디폴트 true)
-        return (s.group == null) || s.group;
+        return true;
     }
 
     private static class DeviceState {

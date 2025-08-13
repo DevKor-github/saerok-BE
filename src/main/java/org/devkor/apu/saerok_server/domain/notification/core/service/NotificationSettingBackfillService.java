@@ -1,7 +1,5 @@
 package org.devkor.apu.saerok_server.domain.notification.core.service;
 
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSetting;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;

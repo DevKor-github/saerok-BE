@@ -49,23 +49,6 @@ public class NotificationSetting extends Auditable {
         this.enabled = (enabled != null) ? enabled : true;
     }
 
-    /** 기본 설정 팩토리: subject 그룹 + 하위 action 3종 전부 ON */
-    public static List<NotificationSetting> createDefaultSetting(UserDevice device) {
-        var list = new ArrayList<NotificationSetting>();
-        // 그룹 (COLLECTION)
-        list.add(NotificationSetting.builder()
-                .userDevice(device)
-                .subject(NotificationSubject.COLLECTION)
-                .action(null)
-                .enabled(true)
-                .build());
-        // 세부 액션들
-        list.add(NotificationSetting.builder().userDevice(device).subject(NotificationSubject.COLLECTION).action(NotificationAction.LIKE).enabled(true).build());
-        list.add(NotificationSetting.builder().userDevice(device).subject(NotificationSubject.COLLECTION).action(NotificationAction.COMMENT).enabled(true).build());
-        list.add(NotificationSetting.builder().userDevice(device).subject(NotificationSubject.COLLECTION).action(NotificationAction.SUGGEST_BIRD_ID).enabled(true).build());
-        return list;
-    }
-
     public void toggle() { this.enabled = !this.enabled; }
 
     public boolean enabled() { return Boolean.TRUE.equals(this.enabled); }

@@ -1,7 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.mapper;
 
 import org.devkor.apu.saerok_server.domain.notification.api.dto.request.ToggleNotificationRequest;
-import org.devkor.apu.saerok_server.domain.notification.api.dto.response.NotificationSettingsResponse;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.ToggleNotificationResponse;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.ToggleNotificationSettingCommand;
 import org.springframework.stereotype.Component;

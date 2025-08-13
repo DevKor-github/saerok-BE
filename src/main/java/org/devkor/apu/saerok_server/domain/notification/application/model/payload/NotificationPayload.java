@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.notification.application.model.paylo
 
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 
 import java.util.Map;
 
