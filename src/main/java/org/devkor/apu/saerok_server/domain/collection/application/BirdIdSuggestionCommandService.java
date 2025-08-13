@@ -7,7 +7,10 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.*;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.PushNotificationService;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
+import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -24,7 +27,7 @@ public class BirdIdSuggestionCommandService {
     private final CollectionRepository       collectionRepo;
     private final BirdRepository             birdRepo;
     private final UserRepository             userRepo;
-    private final PushNotificationService    pushNotificationService;
+    private final NotifyActionDsl notifyAction;
 
     public SuggestBirdIdResponse suggest(Long userId, Long collectionId, Long birdId) {
         User user = userRepo.findById(userId)
@@ -81,11 +84,12 @@ public class BirdIdSuggestionCommandService {
         }
         // 최초 제안인 경우에만 알림 발송
         if (!birdAlreadySuggested) {
-            pushNotificationService.sendBirdIdSuggestionNotification(
-                    collection.getUser().getId(), // 컬렉션 소유자에게
-                    userId, // 제안한 사용자 ID
-                    collectionId // 컬렉션 ID
-            );
+            notifyAction
+                    .by(Actor.of(userId, user.getNickname()))
+                    .on(Target.collection(collectionId))
+                    .did(ActionKind.BIRD_ID_SUGGESTION)
+                    .suggestedName(bird.getName().getKoreanName())
+                    .to(collection.getUser().getId());
         }
 
         return new SuggestBirdIdResponse(suggestionId);
