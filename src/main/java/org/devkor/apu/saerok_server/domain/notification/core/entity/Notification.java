@@ -21,9 +21,6 @@ public class Notification extends CreatedAtOnly {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "title", nullable = false, length = 255)
-    private String title;
-
     @Column(name = "body", nullable = false, columnDefinition = "TEXT")
     private String body;
 
@@ -45,15 +42,18 @@ public class Notification extends CreatedAtOnly {
     private Boolean isRead;
 
     @Builder
-    public Notification(User user, String title, String body, NotificationType type, 
-                       Long relatedId, String deepLink, User sender, Boolean isRead) {
-        if (user == null) {throw new IllegalArgumentException("user는 null일 수 없습니다.");}
-        if (title == null || title.trim().isEmpty()) {throw new IllegalArgumentException("title은 비어있을 수 없습니다.");}
-        if (body == null || body.trim().isEmpty()) {throw new IllegalArgumentException("body는 비어있을 수 없습니다.");}
-        if (type == null) {throw new IllegalArgumentException("type은 null일 수 없습니다.");}
+    public Notification(User user,
+                        String body,
+                        NotificationType type,
+                        Long relatedId,
+                        String deepLink,
+                        User sender,
+                        Boolean isRead) {
+        if (user == null) { throw new IllegalArgumentException("user는 null일 수 없습니다."); }
+        if (body == null || body.trim().isEmpty()) { throw new IllegalArgumentException("body는 비어있을 수 없습니다."); }
+        if (type == null) { throw new IllegalArgumentException("type은 null일 수 없습니다."); }
 
         this.user = user;
-        this.title = title;
         this.body = body;
         this.type = type;
         this.relatedId = relatedId;
@@ -62,13 +62,9 @@ public class Notification extends CreatedAtOnly {
         this.isRead = isRead != null ? isRead : false;
     }
 
-    // 알림을 읽음 처리합니다.
-    public void markAsRead() {
-        this.isRead = true;
-    }
+    // 알림을 읽음 처리
+    public void markAsRead() { this.isRead = true; }
 
-    // 알림이 읽지 않은 상태인지 확인합니다.
-    public boolean isUnread() {
-        return !this.isRead;
-    }
+    // 미읽음 여부
+    public boolean isUnread() { return !this.isRead; }
 }

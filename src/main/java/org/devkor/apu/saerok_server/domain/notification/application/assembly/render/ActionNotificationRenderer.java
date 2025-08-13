@@ -8,25 +8,38 @@ import org.springframework.stereotype.Component;
 public class ActionNotificationRenderer implements NotificationRenderer {
 
     @Override
-    public RenderedNotification render(NotificationPayload p) {
+    public RenderedMessage render(NotificationPayload p) {
         if (!(p instanceof ActionNotificationPayload a)) {
             throw new IllegalArgumentException("Unsupported payload: " + p.getClass());
         }
 
         return switch (a.type()) {
-            case LIKE -> new RenderedNotification(
-                    a.actorName() + "님이 좋아요를 눌렀어요!",
-                    "나의 새록을 좋아해요"
+            case LIKE -> new RenderedMessage(
+                    a.actorName() + "님이 좋아요를 눌렀어요!",     // inAppBody
+                    a.actorName() + "님이 좋아요를 눌렀어요!",     // pushTitle (짧고 즉각적인 정보)
+                    "나의 새록을 좋아해요"                          // pushBody  (보조 설명)
             );
-            case COMMENT -> new RenderedNotification(
-                    a.actorName() + "님이 댓글을 남겼어요!",
-                    String.valueOf(a.extras().getOrDefault("comment", ""))
+            case COMMENT -> {
+                String comment = String.valueOf(a.extras().getOrDefault("comment", ""));
+                yield new RenderedMessage(
+                        a.actorName() + "님이 댓글을 남겼어요: " + comment, // inAppBody
+                        a.actorName() + "님이 댓글을 남겼어요!",             // pushTitle
+                        comment                                              // pushBody
+                );
+            }
+            case BIRD_ID_SUGGESTION -> {
+                String suggested = String.valueOf(a.extras().getOrDefault("suggestedName", ""));
+                yield new RenderedMessage(
+                        a.actorName() + "님이 동정 의견을 제안했어요: " + suggested, // inAppBody
+                        a.actorName() + "님이 동정 의견을 제안했어요!",              // pushTitle
+                        suggested                                                    // pushBody
+                );
+            }
+            case SYSTEM -> new RenderedMessage(
+                    "시스템 알림",   // inAppBody
+                    "시스템 알림",   // pushTitle
+                    ""               // pushBody
             );
-            case BIRD_ID_SUGGESTION -> new RenderedNotification(
-                    a.actorName() + "님이 동정 의견을 제안했어요!",
-                    String.valueOf(a.extras().getOrDefault("suggestedName", ""))
-            );
-            case SYSTEM -> new RenderedNotification("시스템 알림", "");
         };
     }
 }
