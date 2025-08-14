@@ -31,7 +31,7 @@ public class NotificationSettingQueryService {
                 .orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
 
         // 읽기 흐름 유지 + 누락 기본값은 독립 트랜잭션으로 보정
-        backfillService.ensureDefaults(userDevice);
+        backfillService.ensureDefaultsNewTx(userDevice);
 
         List<NotificationSetting> list = notificationSettingRepository.findByUserDeviceId(userDevice.getId());
 

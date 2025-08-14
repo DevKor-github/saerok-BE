@@ -44,10 +44,11 @@ public class UserDeviceCommandService {
                 .orElseGet(() -> {
                     UserDevice newDevice = UserDevice.create(user, command.deviceId(), command.token());
                     userDeviceRepository.save(newDevice);
+                    userDeviceRepository.flush();
                     return newDevice;
                 });
 
-        backfillService.ensureDefaults(userDevice);
+        backfillService.ensureDefaultsSameTx(userDevice);
 
         return userDeviceWebMapper.toRegisterUserDeviceResponse(command, true);
     }

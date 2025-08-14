@@ -27,7 +27,17 @@ public class NotificationSettingBackfillService {
      * - 동시성: UNIQUE(user_device_id, subject, action)에 의해 보호됨
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void ensureDefaults(UserDevice userDevice) {
+    public void ensureDefaultsNewTx(UserDevice userDevice) {
+        ensureDefaultsCore(userDevice);
+    }
+
+    /** 같은 트랜잭션에서 수행: UserDevice 등록 직후 호출용 */
+    @Transactional
+    public void ensureDefaultsSameTx(UserDevice userDevice) {
+        ensureDefaultsCore(userDevice);
+    }
+
+    private void ensureDefaultsCore(UserDevice userDevice) {
         List<NotificationSetting> existing = notificationSettingRepository.findByUserDeviceId(userDevice.getId());
 
         // 이미 있는 (subject, action) 키 집합

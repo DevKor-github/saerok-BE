@@ -27,7 +27,7 @@ public class NotificationSettingCommandService {
         UserDevice userDevice = userDeviceRepository.findByUserIdAndDeviceId(command.userId(), command.deviceId())
                 .orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
 
-        backfillService.ensureDefaults(userDevice);
+        backfillService.ensureDefaultsNewTx(userDevice);
 
         NotificationSetting setting = notificationSettingRepository
                 .findByUserDeviceIdAndSubjectAndAction(
