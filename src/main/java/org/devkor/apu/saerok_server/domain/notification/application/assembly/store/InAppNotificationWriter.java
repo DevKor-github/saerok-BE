@@ -5,7 +5,9 @@ import org.devkor.apu.saerok_server.domain.notification.application.assembly.ren
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationTypeResolver;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.stereotype.Component;
@@ -28,11 +30,12 @@ public class InAppNotificationWriter {
         User actor = userRepository.findById(a.actorId())
                 .orElseThrow(() -> new IllegalArgumentException("Actor not found: " + a.actorId()));
 
+        NotificationType type = NotificationTypeResolver.from(a.subject(), a.action());
+
         Notification entity = Notification.builder()
                 .user(recipient)
                 .body(r.inAppBody())
-                .subject(a.subject())
-                .action(a.action())
+                .type(type)
                 .relatedId(a.relatedId())
                 .deepLink(deepLink)
                 .actor(actor)

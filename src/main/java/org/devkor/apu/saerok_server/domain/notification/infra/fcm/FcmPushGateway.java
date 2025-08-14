@@ -1,5 +1,4 @@
-// ===== ./src/main/java/org/devkor/apu/saerok_server/domain/notification/infra/gateway/FcmPushGateway.java =====
-package org.devkor.apu.saerok_server.domain.notification.infra.gateway;
+package org.devkor.apu.saerok_server.domain.notification.infra.fcm;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
