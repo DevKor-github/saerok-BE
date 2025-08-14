@@ -48,7 +48,7 @@ public class UserDeviceCommandService {
                     return newDevice;
                 });
 
-        backfillService.ensureDefaultsSameTx(userDevice);
+        backfillService.ensureDefaults(userDevice);
 
         return userDeviceWebMapper.toRegisterUserDeviceResponse(command, true);
     }

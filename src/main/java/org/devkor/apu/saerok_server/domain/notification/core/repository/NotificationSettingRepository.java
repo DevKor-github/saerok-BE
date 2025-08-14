@@ -2,9 +2,8 @@ package org.devkor.apu.saerok_server.domain.notification.core.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSetting;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,64 +15,55 @@ public class NotificationSettingRepository {
 
     private final EntityManager em;
 
-    /** 특정 userDeviceId의 모든 설정 조회 */
     public List<NotificationSetting> findByUserDeviceId(Long userDeviceId) {
         return em.createQuery("""
-                SELECT ns
-                FROM NotificationSetting ns
-                WHERE ns.userDevice.id = :userDeviceId
+                select ns
+                  from NotificationSetting ns
+                 where ns.userDevice.id = :deviceId
                 """, NotificationSetting.class)
-                .setParameter("userDeviceId", userDeviceId)
+                .setParameter("deviceId", userDeviceId)
                 .getResultList();
     }
 
-    /** subject와 action(Nullable)을 함께 매칭하여 단건 조회 */
-    public Optional<NotificationSetting> findByUserDeviceIdAndSubjectAndAction(
-            Long userDeviceId, NotificationSubject subject, NotificationAction action
-    ) {
-        return em.createQuery("""
-                SELECT ns
-                FROM NotificationSetting ns
-                WHERE ns.userDevice.id = :userDeviceId
-                  AND ns.subject = :subject
-                  AND ( (:action IS NULL AND ns.action IS NULL) OR ns.action = :action )
+    public Optional<NotificationSetting> findByUserDeviceIdAndType(Long userDeviceId, NotificationType type) {
+        List<NotificationSetting> list = em.createQuery("""
+                select ns
+                  from NotificationSetting ns
+                 where ns.userDevice.id = :deviceId
+                   and ns.type = :type
                 """, NotificationSetting.class)
-                .setParameter("userDeviceId", userDeviceId)
-                .setParameter("subject", subject)
-                .setParameter("action", action)
-                .getResultStream()
-                .findFirst();
+                .setParameter("deviceId", userDeviceId)
+                .setParameter("type", type)
+                .getResultList();
+        return list.stream().findFirst();
     }
 
-    /** 특정 userId에서 subject/action(Nullable) 조건으로 전체 조회 */
-    public List<NotificationSetting> findForSubjectAndAction(
-            Long userId, NotificationSubject subject, NotificationAction action
-    ) {
+    /** 푸시 발송용: 유저의 디바이스 중에서 해당 type이 enabled=true 인 디바이스 id 목록 */
+    public List<Long> findEnabledDeviceIdsByUserAndType(Long userId, NotificationType type) {
         return em.createQuery("""
-            SELECT ns
-            FROM NotificationSetting ns
-            WHERE ns.userDevice.user.id = :userId
-              AND ns.subject = :subject
-              AND ( (:action IS NULL AND ns.action IS NULL) OR ns.action = :action )
-            """, NotificationSetting.class)
+                select ns.userDevice.id
+                  from NotificationSetting ns
+                 where ns.userDevice.user.id = :userId
+                   and ns.type = :type
+                   and ns.enabled = true
+                """, Long.class)
                 .setParameter("userId", userId)
-                .setParameter("subject", subject)
-                .setParameter("action", action)
+                .setParameter("type", type)
                 .getResultList();
     }
 
+    public void save(NotificationSetting setting) {
+        em.persist(setting);
+    }
 
-    /** userId로 전체 설정 삭제 (토큰 전체 삭제 시 같이 사용) */
+    public void saveAll(List<NotificationSetting> settings) {
+        for (NotificationSetting s : settings) em.persist(s);
+    }
+
     public void deleteByUserId(Long userId) {
         em.createQuery("""
-                DELETE FROM NotificationSetting ns
-                WHERE ns.userDevice.user.id = :userId
-                """)
-                .setParameter("userId", userId)
-                .executeUpdate();
-    }
-
-    public void saveAll(List<NotificationSetting> list) {
-        list.forEach(em::persist);
+            delete from NotificationSetting ns
+             where ns.userDevice.user.id = :userId
+        """).setParameter("userId", userId).executeUpdate();
     }
 }

@@ -6,7 +6,6 @@ import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
 
 import java.util.List;
 

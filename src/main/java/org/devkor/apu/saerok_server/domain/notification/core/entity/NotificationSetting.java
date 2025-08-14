@@ -7,12 +7,9 @@ import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
 @Entity
-@Table(
-        uniqueConstraints = @UniqueConstraint(
-                name = "uq_notification_setting_user_device_subject_action",
-                columnNames = {"user_device_id", "subject", "action"}
-        )
-)
+@Table(name = "notification_setting",
+        uniqueConstraints = @UniqueConstraint(name = "uq_notification_setting_user_device_type",
+                columnNames = {"user_device_id", "type"}))
 @NoArgsConstructor
 @Getter
 public class NotificationSetting extends Auditable {
@@ -26,27 +23,21 @@ public class NotificationSetting extends Auditable {
     private UserDevice userDevice;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "subject", nullable = false, length = 50)
-    private NotificationSubject subject;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "action", length = 50)
-    private NotificationAction action; // nullable: subject 그룹 토글 용
+    @Column(name = "type", nullable = false, length = 64)
+    private NotificationType type;
 
     @Column(name = "enabled", nullable = false)
     private Boolean enabled;
 
-    @Builder
-    public NotificationSetting(UserDevice userDevice, NotificationSubject subject, NotificationAction action, Boolean enabled) {
-        if (userDevice == null) throw new IllegalArgumentException("userDevice는 null일 수 없습니다.");
-        if (subject == null) throw new IllegalArgumentException("subject는 null일 수 없습니다.");
+    private NotificationSetting(UserDevice userDevice, NotificationType type, boolean enabled) {
         this.userDevice = userDevice;
-        this.subject = subject;
-        this.action = action;
-        this.enabled = (enabled != null) ? enabled : true;
+        this.type = type;
+        this.enabled = enabled;
+    }
+
+    public static NotificationSetting of(UserDevice device, NotificationType type, boolean enabled) {
+        return new NotificationSetting(device, type, enabled);
     }
 
     public void toggle() { this.enabled = !this.enabled; }
-
-    public boolean enabled() { return Boolean.TRUE.equals(this.enabled); }
 }

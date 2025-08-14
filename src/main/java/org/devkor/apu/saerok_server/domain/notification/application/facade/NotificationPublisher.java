@@ -1,3 +1,4 @@
+// ===== ./src/main/java/org/devkor/apu/saerok_server/domain/notification/application/facade/NotificationPublisher.java =====
 package org.devkor.apu.saerok_server.domain.notification.application.facade;
 
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.devkor.apu.saerok_server.domain.notification.application.gateway.Push
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationTypeResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,12 +37,13 @@ public class NotificationPublisher {
             throw new IllegalArgumentException("Unsupported payload: " + payload.getClass());
         }
 
-        // notificationType 자리에 action.name()을 내려 푸시 data에 담기도록 함
+        String typeString = NotificationTypeResolver.from(a.subject(), a.action()).name();
+
         PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
-                r.pushTitle(), r.pushBody(), a.action().name(), a.relatedId(), deepLink, unread
+                r.pushTitle(), r.pushBody(), typeString, a.relatedId(), deepLink, unread
         );
 
-        // subject/action 축으로 게이트웨이에 전달
+        // subject/action 축은 내부 용도이므로 게이트웨이에 그대로 전달 (게이트웨이 내부에서 type 기준 검사)
         pushGateway.sendToUser(a.recipientId(), a.subject(), a.action(), cmd);
     }
 }

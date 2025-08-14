@@ -1,15 +1,12 @@
 package org.devkor.apu.saerok_server.domain.notification.core.entity;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
+/**
+ * 클라이언트에 노출되는 단일 식별자(type).
+ * 내부 (subject, action) 쌍을 아래 type으로 매핑해 사용한다.
+ */
 public enum NotificationType {
-    LIKE("좋아요"),
-    COMMENT("댓글"),
-    BIRD_ID_SUGGESTION("동정 의견"),
-    SYSTEM("시스템");
-
-    private final String description;
+    LIKED_ON_COLLECTION,
+    COMMENTED_ON_COLLECTION,
+    SUGGESTED_BIRD_ID_ON_COLLECTION
+    // SYSTEM 제거: 실데이터 없음(요청사항)
 }
