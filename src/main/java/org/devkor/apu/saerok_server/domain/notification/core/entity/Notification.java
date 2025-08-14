@@ -25,8 +25,12 @@ public class Notification extends CreatedAtOnly {
     private String body;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, length = 50)
-    private NotificationType type;
+    @Column(name = "subject", nullable = false, length = 50)
+    private NotificationSubject subject;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "action", nullable = false, length = 50)
+    private NotificationAction action;
 
     @Column(name = "related_id")
     private Long relatedId;
@@ -44,27 +48,28 @@ public class Notification extends CreatedAtOnly {
     @Builder
     public Notification(User user,
                         String body,
-                        NotificationType type,
+                        NotificationSubject subject,
+                        NotificationAction action,
                         Long relatedId,
                         String deepLink,
                         User sender,
                         Boolean isRead) {
         if (user == null) { throw new IllegalArgumentException("user는 null일 수 없습니다."); }
         if (body == null || body.trim().isEmpty()) { throw new IllegalArgumentException("body는 비어있을 수 없습니다."); }
-        if (type == null) { throw new IllegalArgumentException("type은 null일 수 없습니다."); }
+        if (subject == null) { throw new IllegalArgumentException("subject는 null일 수 없습니다."); }
+        if (action == null) { throw new IllegalArgumentException("action은 null일 수 없습니다."); }
 
         this.user = user;
         this.body = body;
-        this.type = type;
+        this.subject = subject;
+        this.action = action;
         this.relatedId = relatedId;
         this.deepLink = deepLink;
         this.sender = sender;
         this.isRead = isRead != null ? isRead : false;
     }
 
-    // 알림을 읽음 처리
     public void markAsRead() { this.isRead = true; }
 
-    // 미읽음 여부
     public boolean isUnread() { return !this.isRead; }
 }

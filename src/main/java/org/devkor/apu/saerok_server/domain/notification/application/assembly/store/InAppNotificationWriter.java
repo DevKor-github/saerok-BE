@@ -5,7 +5,6 @@ import org.devkor.apu.saerok_server.domain.notification.application.assembly.ren
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
@@ -26,17 +25,11 @@ public class InAppNotificationWriter {
         User recipient = userRepository.findById(a.recipientId())
                 .orElseThrow(() -> new IllegalArgumentException("Recipient not found: " + a.recipientId()));
 
-        // TEMP: action -> legacy NotificationType 매핑 (추후 Notification 자체도 subject/action으로 교체 가능)
-        NotificationType legacy = switch (a.action()) {
-            case LIKE -> NotificationType.LIKE;
-            case COMMENT -> NotificationType.COMMENT;
-            case SUGGEST_BIRD_ID -> NotificationType.BIRD_ID_SUGGESTION;
-        };
-
         Notification entity = Notification.builder()
                 .user(recipient)
                 .body(r.inAppBody())
-                .type(legacy)            // ← 기존 필드 유지
+                .subject(a.subject())
+                .action(a.action())
                 .relatedId(a.relatedId())
                 .deepLink(deepLink)
                 .sender(null)

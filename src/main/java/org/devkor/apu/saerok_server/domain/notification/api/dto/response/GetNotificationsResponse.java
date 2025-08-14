@@ -18,10 +18,13 @@ public record GetNotificationsResponse(
             @Schema(description = "내용")
             String body,
 
-            @Schema(description = "알림 타입")
-            String type,
+            @Schema(description = "알림 주제", example = "COLLECTION")
+            String subject,
 
-            @Schema(description = "관련 ID (컬렉션 ID)")
+            @Schema(description = "알림 액션", example = "LIKE")
+            String action,
+
+            @Schema(description = "관련 ID (예: 컬렉션 ID)")
             Long relatedId,
 
             @Schema(description = "딥링크 URL")
