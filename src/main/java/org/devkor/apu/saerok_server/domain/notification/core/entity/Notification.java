@@ -39,8 +39,8 @@ public class Notification extends CreatedAtOnly {
     private String deepLink;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
-    private User sender;
+    @JoinColumn(name = "actor_id")
+    private User actor;
 
     @Column(name = "is_read", nullable = false)
     private Boolean isRead;
@@ -52,7 +52,7 @@ public class Notification extends CreatedAtOnly {
                         NotificationAction action,
                         Long relatedId,
                         String deepLink,
-                        User sender,
+                        User actor,
                         Boolean isRead) {
         if (user == null) { throw new IllegalArgumentException("user는 null일 수 없습니다."); }
         if (body == null || body.trim().isEmpty()) { throw new IllegalArgumentException("body는 비어있을 수 없습니다."); }
@@ -65,7 +65,7 @@ public class Notification extends CreatedAtOnly {
         this.action = action;
         this.relatedId = relatedId;
         this.deepLink = deepLink;
-        this.sender = sender;
+        this.actor = actor;
         this.isRead = isRead != null ? isRead : false;
     }
 

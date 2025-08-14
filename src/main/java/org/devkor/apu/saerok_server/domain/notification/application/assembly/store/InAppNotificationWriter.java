@@ -25,6 +25,9 @@ public class InAppNotificationWriter {
         User recipient = userRepository.findById(a.recipientId())
                 .orElseThrow(() -> new IllegalArgumentException("Recipient not found: " + a.recipientId()));
 
+        User actor = userRepository.findById(a.actorId())
+                .orElseThrow(() -> new IllegalArgumentException("Actor not found: " + a.actorId()));
+
         Notification entity = Notification.builder()
                 .user(recipient)
                 .body(r.inAppBody())
@@ -32,7 +35,7 @@ public class InAppNotificationWriter {
                 .action(a.action())
                 .relatedId(a.relatedId())
                 .deepLink(deepLink)
-                .sender(null)
+                .actor(actor)
                 .isRead(false)
                 .build();
 

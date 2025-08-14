@@ -23,7 +23,7 @@ public interface NotificationWebMapper {
 
     GetUnreadCountResponse toGetUnreadCountResponse(Long unreadCount);
 
-    @Mapping(target = "senderId", source = "sender.id")
-    @Mapping(target = "senderNickname", source = "sender.nickname")
+    @Mapping(target = "actorId", source = "actor.id")
+    @Mapping(target = "actorNickname", source = "actor.nickname")
     GetNotificationsResponse.Item toItem(Notification notification);
 }

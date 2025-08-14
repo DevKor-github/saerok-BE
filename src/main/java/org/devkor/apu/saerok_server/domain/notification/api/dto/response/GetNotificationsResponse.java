@@ -30,11 +30,11 @@ public record GetNotificationsResponse(
             @Schema(description = "딥링크 URL")
             String deepLink,
 
-            @Schema(description = "보낸 사람 ID")
-            Long senderId,
+            @Schema(description = "알림을 일으킨 사람 ID")
+            Long actorId,
 
-            @Schema(description = "보낸 사람 닉네임")
-            String senderNickname,
+            @Schema(description = "알림을 일으킨 사람 닉네임")
+            String actorNickname,
 
             @Schema(description = "읽음 여부")
             Boolean isRead,
