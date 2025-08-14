@@ -3,15 +3,15 @@ package org.devkor.apu.saerok_server.domain.notification.mapper;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.GetNotificationsResponse;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.GetUnreadCountResponse;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
+import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
 import java.util.List;
 
-@Mapper(
-        componentModel = MappingConstants.ComponentModel.SPRING
-)
+@Mapper(componentModel = "spring",
+        imports = OffsetDateTimeLocalizer.class)
 public interface NotificationWebMapper {
 
     default GetNotificationsResponse toGetNotificationsResponse(List<Notification> notifications) {
@@ -25,5 +25,6 @@ public interface NotificationWebMapper {
 
     @Mapping(target = "actorId", source = "actor.id")
     @Mapping(target = "actorNickname", source = "actor.nickname")
+    @Mapping(target = "createdAt", expression = "java(OffsetDateTimeLocalizer.toSeoulLocalDateTime(notification.getCreatedAt()))")
     GetNotificationsResponse.Item toItem(Notification notification);
 }

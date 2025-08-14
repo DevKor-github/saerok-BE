@@ -2,7 +2,7 @@ package org.devkor.apu.saerok_server.domain.notification.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Schema(description = "알림 목록 조회 응답")
@@ -40,6 +40,6 @@ public record GetNotificationsResponse(
             Boolean isRead,
 
             @Schema(description = "생성 시각")
-            OffsetDateTime createdAt
+            LocalDateTime createdAt
     ) {}
 }
