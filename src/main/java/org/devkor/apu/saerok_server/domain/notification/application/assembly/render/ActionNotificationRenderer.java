@@ -24,9 +24,9 @@ public class ActionNotificationRenderer implements NotificationRenderer {
                     "나의 새록을 좋아해요."     // push body
             );
             case COMMENTED_ON_COLLECTION -> new RenderedMessage(
-                    a.actorName() + "님이 나의 새록에 댓글을 남겼어요. \"" + String.valueOf(a.extras().getOrDefault("comment", "")) +"\"",
+                    a.actorName() + "님이 나의 새록에 댓글을 남겼어요. \"" + a.extras().getOrDefault("comment", "") +"\"",
                     a.actorName(),
-                    "나의 새록에 댓글을 남겼어요. " +String.valueOf(a.extras().getOrDefault("comment", ""))
+                    "나의 새록에 댓글을 남겼어요. \"" + a.extras().getOrDefault("comment", "") + "\""
             );
             case SUGGESTED_BIRD_ID_ON_COLLECTION -> new RenderedMessage(
                     "두근두근! 새로운 의견이 공유되었어요. 확인해볼까요?",
