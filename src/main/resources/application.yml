@@ -24,6 +24,7 @@ spring:
       - "classpath:config/size-category-rules.yml"
       - "classpath:config/reserved-nicknames.yml"
       - "classpath:config/user-profile-images-default.yml"
+      - "classpath:config/notification-messages.yml"
 
 api_prefix: /api/v1
 

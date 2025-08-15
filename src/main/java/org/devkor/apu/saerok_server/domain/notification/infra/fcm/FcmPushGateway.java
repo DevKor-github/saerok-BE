@@ -10,12 +10,14 @@ import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationTypeResolver;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Slf4j
 @Component
+@Profile({"dev","prod"})
 @RequiredArgsConstructor
 public class FcmPushGateway implements PushGateway {
 
