@@ -6,7 +6,6 @@ import lombok.Setter;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.validation.annotation.Validated;
 
 import java.util.EnumMap;
 import java.util.EnumSet;

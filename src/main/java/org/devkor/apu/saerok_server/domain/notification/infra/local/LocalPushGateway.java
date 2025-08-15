@@ -47,10 +47,4 @@ public class LocalPushGateway implements PushGateway {
     private String safe(String s) {
         return s == null ? "" : s.replace("\n", "\\n");
     }
-
-    private String clip(String s, int max) {
-        if (s == null) return "";
-        String flat = s.replace("\n", "\\n");
-        return flat.length() <= max ? flat : flat.substring(0, max) + "…";
-    }
 }
