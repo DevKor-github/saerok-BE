@@ -1,4 +1,3 @@
-// ===== ./src/main/java/org/devkor/apu/saerok_server/domain/notification/application/facade/NotificationPublisher.java =====
 package org.devkor.apu.saerok_server.domain.notification.application.facade;
 
 import lombok.RequiredArgsConstructor;
@@ -8,6 +7,7 @@ import org.devkor.apu.saerok_server.domain.notification.application.assembly.ren
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.store.InAppNotificationWriter;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
 import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
@@ -26,10 +26,10 @@ public class NotificationPublisher {
     private final DeepLinkResolver deepLinkResolver;
 
     @Transactional
-    public void push(NotificationPayload payload, org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target target) {
-        RenderedMessage r = renderer.render(payload);
+    public void push(NotificationPayload payload, Target target) {
+        RenderedMessage renderedMessage = renderer.render(payload);
         String deepLink = deepLinkResolver.resolve(target);
-        inAppWriter.save(payload, r, deepLink);
+        inAppWriter.save(payload, renderedMessage, deepLink);
 
         int unread = notificationRepository.countUnreadByUserId(payload.recipientId()).intValue();
 
@@ -40,7 +40,7 @@ public class NotificationPublisher {
         String typeString = NotificationTypeResolver.from(a.subject(), a.action()).name();
 
         PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
-                r.pushTitle(), r.pushBody(), typeString, a.relatedId(), deepLink, unread
+                renderedMessage.pushTitle(), renderedMessage.pushBody(), typeString, a.relatedId(), deepLink, unread
         );
 
         // subject/action 축은 내부 용도이므로 게이트웨이에 그대로 전달 (게이트웨이 내부에서 type 기준 검사)

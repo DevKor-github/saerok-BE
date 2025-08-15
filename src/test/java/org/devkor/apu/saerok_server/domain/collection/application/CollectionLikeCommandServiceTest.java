@@ -10,13 +10,12 @@ import org.devkor.apu.saerok_server.domain.notification.application.facade.Notif
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -37,11 +36,11 @@ class CollectionLikeCommandServiceTest {
     @Mock CollectionLikeRepository collectionLikeRepository;
     @Mock CollectionRepository collectionRepository;
     @Mock UserRepository userRepository;
-    @Mock NotificationPublisher publisher;  // ⟵ 기존 PushNotificationService 대체
+    @Mock NotificationPublisher publisher;
 
     @BeforeEach
     void setUp() {
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher); // 실객체
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher);
         collectionLikeCommandService = new CollectionLikeCommandService(
                 collectionLikeRepository,
                 collectionRepository,
@@ -79,7 +78,9 @@ class CollectionLikeCommandServiceTest {
         verify(publisher).push(payloadCap.capture(), targetCap.capture());
 
         ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
-        assertEquals(NotificationType.LIKE, p.type());
+        // 🔁 변경: type() → subject()/action()
+        assertEquals(NotificationSubject.COLLECTION, p.subject());
+        assertEquals(NotificationAction.LIKE, p.action());
         assertEquals(999L, p.recipientId());
         assertEquals(userId, p.actorId());
         assertEquals(collectionId, p.relatedId());
@@ -106,7 +107,7 @@ class CollectionLikeCommandServiceTest {
         assertFalse(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
         verify(collectionLikeRepository).findByUserIdAndCollectionId(userId, collectionId);
-        verifyNoInteractions(publisher); // ⟵ 알림 없음
+        verifyNoInteractions(publisher);
     }
 
     @Test

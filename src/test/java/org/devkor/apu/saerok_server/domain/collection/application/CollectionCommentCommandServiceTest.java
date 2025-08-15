@@ -14,7 +14,8 @@ import org.devkor.apu.saerok_server.domain.notification.application.facade.Notif
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
@@ -121,7 +122,8 @@ class CollectionCommentCommandServiceTest {
             verify(publisher).push(payloadCap.capture(), targetCap.capture());
 
             ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
-            assertThat(p.type()).isEqualTo(NotificationType.COMMENT);
+            assertThat(p.subject()).isEqualTo(NotificationSubject.COLLECTION);
+            assertThat(p.action()).isEqualTo(NotificationAction.COMMENT);
             assertThat(p.recipientId()).isEqualTo(OTHER_ID);
             assertThat(p.actorId()).isEqualTo(OWNER_ID);
             assertThat(p.relatedId()).isEqualTo(COLL_ID);
