@@ -6,7 +6,7 @@ import org.devkor.apu.saerok_server.domain.notification.application.dto.Register
 import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
-import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationSettingInitService;
+import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationSettingBackfillService;
 import org.devkor.apu.saerok_server.domain.notification.mapper.UserDeviceWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
@@ -14,8 +14,6 @@ import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -26,33 +24,31 @@ public class UserDeviceCommandService {
     private final NotificationSettingRepository notificationSettingRepository;
     private final UserRepository userRepository;
     private final UserDeviceWebMapper userDeviceWebMapper;
-    private final NotificationSettingInitService notificationSettingInitService;
+    private final NotificationSettingBackfillService backfillService;
 
     public RegisterUserDeviceResponse registerUserDevice(RegisterUserDeviceCommand command) {
         User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
-        if (command.deviceId() == null || command.deviceId().isEmpty() || command.token() == null || command.token().isEmpty()) {
+        if (command.deviceId() == null || command.deviceId().isEmpty()
+                || command.token() == null || command.token().isEmpty()) {
             throw new BadRequestException("deviceId와 token은 필수입니다");
         }
 
-        Optional<UserDevice> existingToken = userDeviceRepository
-                .findByUserIdAndDeviceId(command.userId(), command.deviceId());
+        UserDevice userDevice = userDeviceRepository
+                .findByUserIdAndDeviceId(command.userId(), command.deviceId())
+                .map(existing -> {
+                    existing.updateToken(command.token());
+                    return existing;
+                })
+                .orElseGet(() -> {
+                    UserDevice newDevice = UserDevice.create(user, command.deviceId(), command.token());
+                    userDeviceRepository.save(newDevice);
+                    userDeviceRepository.flush();
+                    return newDevice;
+                });
 
-        UserDevice userDevice;
-        if (existingToken.isPresent()) {
-            // 기존 토큰이 있으면 갱신
-            userDevice = existingToken.get();
-            userDevice.updateToken(command.token());
-        } else {
-            // 새로운 토큰 등록
-            userDevice = UserDevice.create(user, command.deviceId(), command.token());
-            userDeviceRepository.save(userDevice);
-            userDeviceRepository.flush();
-
-            // 새 디바이스에 대한 기본 알림 설정 생성
-            notificationSettingInitService.createDefaultSettingsForDevice(userDevice.getId());
-        }
+        backfillService.ensureDefaults(userDevice);
 
         return userDeviceWebMapper.toRegisterUserDeviceResponse(command, true);
     }

@@ -5,7 +5,8 @@ import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Ac
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -50,15 +51,25 @@ public class NotifyActionDsl {
         public StepTo suggestedName(String name){ extras.put("suggestedName", name); return this; }
 
         public void to(Long recipientId){
-            NotificationType type = switch (action) {
-                case LIKE -> NotificationType.LIKE;
-                case COMMENT -> NotificationType.COMMENT;
-                case BIRD_ID_SUGGESTION -> NotificationType.BIRD_ID_SUGGESTION;
+            NotificationSubject notificationSubject = switch (target.type()) {
+                case COLLECTION -> NotificationSubject.COLLECTION;
+            };
+
+            NotificationAction notificationAction = switch (action) {
+                case LIKE -> NotificationAction.LIKE;
+                case COMMENT -> NotificationAction.COMMENT;
+                case SUGGEST_BIRD_ID -> NotificationAction.SUGGEST_BIRD_ID;
             };
 
             publisher.push(
                     new ActionNotificationPayload(
-                            type, recipientId, actor.id(), actor.name(), target.id(), extras
+                            recipientId,
+                            actor.id(),
+                            actor.name(),
+                            target.id(),
+                            notificationSubject,
+                            notificationAction,
+                            extras
                     ),
                     target
             );

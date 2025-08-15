@@ -1,11 +1,13 @@
 package org.devkor.apu.saerok_server.domain.notification.application.assembly.store;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer.RenderedMessage;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer.RenderedMessage;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationTypeResolver;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.stereotype.Component;
@@ -25,13 +27,18 @@ public class InAppNotificationWriter {
         User recipient = userRepository.findById(a.recipientId())
                 .orElseThrow(() -> new IllegalArgumentException("Recipient not found: " + a.recipientId()));
 
+        User actor = userRepository.findById(a.actorId())
+                .orElseThrow(() -> new IllegalArgumentException("Actor not found: " + a.actorId()));
+
+        NotificationType type = NotificationTypeResolver.from(a.subject(), a.action());
+
         Notification entity = Notification.builder()
                 .user(recipient)
                 .body(r.inAppBody())
-                .type(a.type())
+                .type(type)
                 .relatedId(a.relatedId())
                 .deepLink(deepLink)
-                .sender(null)              // TODO: sender를 actor로 바꾸고, 반영
+                .actor(actor)
                 .isRead(false)
                 .build();
 

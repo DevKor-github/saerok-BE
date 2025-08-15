@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
 import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSetting;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
-import org.springframework.scheduling.annotation.Async;
+import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationTypeResolver;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,32 +18,23 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class FcmPushGateway implements PushGateway {
-    
-    private final FcmMessageClient fcmMessageClient;
-    private final NotificationSettingRepository notificationSettingRepository;
+
+    private final NotificationSettingRepository settingRepository;
     private final UserDeviceRepository userDeviceRepository;
+    private final FcmMessageClient fcmMessageClient;
 
-    // TODO: 실제 푸시 알림 전송은 메인 트랜잭션 커밋 이후에 이뤄지도록 변경해야 함
-    @Async("pushNotificationExecutor")
-    @Transactional(readOnly = true)
-    public void sendToUser(Long userId, NotificationType notificationType, PushMessageCommand message) {
-        List<NotificationSetting> settings = notificationSettingRepository
-                .findByUserIdAndTypeAndEnabledTrue(userId, notificationType);
+    @Override
+    public void sendToUser(Long userId, NotificationSubject subject, NotificationAction action, PushMessageCommand cmd) {
+        NotificationType type = NotificationTypeResolver.from(subject, action);
 
-        if (settings.isEmpty()) {
+        List<Long> deviceIds = settingRepository.findEnabledDeviceIdsByUserAndType(userId, type);
+        if (deviceIds.isEmpty()) {
+            log.debug("No enabled devices for user={}, type={}", userId, type);
             return;
         }
 
-        List<Long> userDeviceIds = settings.stream()
-                .map(setting -> setting.getUserDevice().getId())
-                .toList();
-
-        List<String> fcmTokens = userDeviceRepository.findTokensByUserDeviceIds(userDeviceIds);
-
-        if (fcmTokens.isEmpty()) {
-            return;
-        }
-
-        fcmMessageClient.sendToDevices(fcmTokens, message);
+        List<String> tokens = userDeviceRepository.findTokensByUserDeviceIds(deviceIds);
+        if (tokens.isEmpty()) return;
+        fcmMessageClient.sendToDevices(tokens, cmd);
     }
 }

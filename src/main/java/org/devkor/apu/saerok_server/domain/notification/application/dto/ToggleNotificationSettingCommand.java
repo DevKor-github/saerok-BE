@@ -5,6 +5,5 @@ import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification
 public record ToggleNotificationSettingCommand(
         Long userId,
         String deviceId,
-        NotificationType notificationType
-) {
-}
+        NotificationType type
+) {}

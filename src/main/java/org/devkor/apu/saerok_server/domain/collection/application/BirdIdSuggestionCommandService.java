@@ -87,7 +87,7 @@ public class BirdIdSuggestionCommandService {
             notifyAction
                     .by(Actor.of(userId, user.getNickname()))
                     .on(Target.collection(collectionId))
-                    .did(ActionKind.BIRD_ID_SUGGESTION)
+                    .did(ActionKind.SUGGEST_BIRD_ID)
                     .suggestedName(bird.getName().getKoreanName())
                     .to(collection.getUser().getId());
         }
