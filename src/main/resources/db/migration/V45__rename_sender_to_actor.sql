@@ -1,0 +1,1 @@
+ALTER TABLE notification RENAME COLUMN sender_id TO actor_id;

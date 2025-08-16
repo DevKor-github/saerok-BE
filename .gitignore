@@ -41,3 +41,6 @@ out/
 
 # node js 관련
 node_modules
+
+# Firebase Admin Key
+src/main/resources/config/firebase-admin-key.json

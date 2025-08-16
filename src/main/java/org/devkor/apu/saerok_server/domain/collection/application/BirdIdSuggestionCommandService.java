@@ -7,6 +7,10 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.*;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
+import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -23,6 +27,7 @@ public class BirdIdSuggestionCommandService {
     private final CollectionRepository       collectionRepo;
     private final BirdRepository             birdRepo;
     private final UserRepository             userRepo;
+    private final NotifyActionDsl notifyAction;
 
     public SuggestBirdIdResponse suggest(Long userId, Long collectionId, Long birdId) {
         User user = userRepo.findById(userId)
@@ -72,10 +77,19 @@ public class BirdIdSuggestionCommandService {
             BirdIdSuggestion suggestion = new BirdIdSuggestion(user, collection, bird, BirdIdSuggestion.SuggestionType.SUGGEST);
             suggestionRepo.save(suggestion);
             suggestionId = suggestion.getId();
-            
+
             // 2. 동의도 자동으로 추가 (제안자는 자동으로 동의한 것으로 처리)
             BirdIdSuggestion agree = new BirdIdSuggestion(user, collection, bird, BirdIdSuggestion.SuggestionType.AGREE);
             suggestionRepo.save(agree);
+        }
+        // 최초 제안인 경우에만 알림 발송
+        if (!birdAlreadySuggested) {
+            notifyAction
+                    .by(Actor.of(userId, user.getNickname()))
+                    .on(Target.collection(collectionId))
+                    .did(ActionKind.SUGGEST_BIRD_ID)
+                    .suggestedName(bird.getName().getKoreanName())
+                    .to(collection.getUser().getId());
         }
 
         return new SuggestBirdIdResponse(suggestionId);
@@ -96,7 +110,7 @@ public class BirdIdSuggestionCommandService {
 
         Bird bird = birdRepo.findById(birdId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
-        
+
         if (!suggestionRepo.existsByCollectionIdAndBirdIdAndType(
                 collectionId, birdId, BirdIdSuggestion.SuggestionType.SUGGEST)) {
             throw new BadRequestException("제안되지 않은 조류에는 동의할 수 없어요");
@@ -146,7 +160,7 @@ public class BirdIdSuggestionCommandService {
 
         Bird bird = birdRepo.findById(birdId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
-        
+
         if (!suggestionRepo.existsByCollectionIdAndBirdIdAndType(
                 collectionId, birdId, BirdIdSuggestion.SuggestionType.SUGGEST)) {
             throw new BadRequestException("제안되지 않은 조류에는 비동의할 수 없어요");
