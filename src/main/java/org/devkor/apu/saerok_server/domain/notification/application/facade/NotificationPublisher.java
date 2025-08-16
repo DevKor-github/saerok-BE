@@ -12,6 +12,7 @@ import org.devkor.apu.saerok_server.domain.notification.application.model.payloa
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationTypeResolver;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,9 +25,16 @@ public class NotificationPublisher {
     private final NotificationRepository notificationRepository;
     private final PushGateway pushGateway;
     private final DeepLinkResolver deepLinkResolver;
+    private final UserRepository userRepository;
 
     @Transactional
     public void push(NotificationPayload payload, Target target) {
+
+        // 알림을 받을 유저가 없는 경우(ex: 탈퇴된 유저) early return
+        if (userRepository.findById(payload.recipientId()).isEmpty()) {
+            return;
+        }
+
         RenderedMessage renderedMessage = renderer.render(payload);
         String deepLink = deepLinkResolver.resolve(target);
         inAppWriter.save(payload, renderedMessage, deepLink);
