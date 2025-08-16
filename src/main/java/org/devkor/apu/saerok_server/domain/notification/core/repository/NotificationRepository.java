@@ -55,16 +55,4 @@ public class NotificationRepository {
                 .setParameter("userId", userId)
                 .executeUpdate();
     }
-
-    // TODO: 컬렉션 삭제 시 CollectionCommandService에서 호출 필요
-    /**
-     * 특정 컬렉션과 관련된 모든 알림 삭제 (컬렉션 삭제 시 사용)
-     */
-    public void deleteByRelatedId(Long relatedId) {
-        em.createQuery(
-                "DELETE FROM Notification n " +
-                "WHERE n.relatedId = :relatedId")
-                .setParameter("relatedId", relatedId)
-                .executeUpdate();
-    }
 }

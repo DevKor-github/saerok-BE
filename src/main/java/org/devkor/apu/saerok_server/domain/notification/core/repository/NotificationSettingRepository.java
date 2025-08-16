@@ -56,10 +56,6 @@ public class NotificationSettingRepository {
         em.persist(setting);
     }
 
-    public void saveAll(List<NotificationSetting> settings) {
-        for (NotificationSetting s : settings) em.persist(s);
-    }
-
     public int deleteByUserId(Long userId) {
         return em.createQuery("""
             delete from NotificationSetting ns
