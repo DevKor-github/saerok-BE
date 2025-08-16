@@ -75,7 +75,11 @@ public class UserBirdCollection extends Auditable {
         if (location == null) throw new IllegalArgumentException("location은 null일 수 없습니다.");
 
         this.user = user;
-        changeBird(bird);
+        if (bird != null) {
+            this.bird = bird;
+        } else {
+            this.birdIdSuggestionRequestedAt = OffsetDateTime.now();
+        }
         this.tempBirdName = tempBirdName;
         this.discoveredDate = discoveredDate;
         this.location = location;
