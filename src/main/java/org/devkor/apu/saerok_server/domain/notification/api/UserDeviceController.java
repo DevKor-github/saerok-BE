@@ -18,7 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "User Device API", description = "사용자 디바이스 관련 API")
+@Tag(name = "Notification API", description = "알림 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/notifications/tokens")
@@ -34,6 +34,7 @@ public class UserDeviceController {
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
                     사용자 디바이스 정보를 등록/갱신합니다.<br>
+                    ⚠️ 디바이스 ID 및 토큰을 최신 상태로 유지하지 않으면 푸시 알림을 받을 수 없습니다!
                     """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "등록/갱신 성공",

@@ -19,7 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Collection Like API", description = "컬렉션 좋아요 관련 API")
+@Tag(name = "Collections API", description = "컬렉션 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/collections")
@@ -73,9 +73,9 @@ public class CollectionLikeController {
     @GetMapping("/liked")
     @PreAuthorize("hasRole('USER')")
     @Operation(
-            summary = "내가 좋아요한 컬렉션 ID 목록",
+            summary = "내가 좋아요한 컬렉션 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
-            description = "사용자가 좋아요한 컬렉션의 ID 목록을 조회합니다.",
+            description = "내가 좋아요한 컬렉션 목록을 조회합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "좋아요한 컬렉션 ID 목록 조회 성공",
                             content = @Content(schema = @Schema(implementation = GetLikedCollectionsResponse.class))),
