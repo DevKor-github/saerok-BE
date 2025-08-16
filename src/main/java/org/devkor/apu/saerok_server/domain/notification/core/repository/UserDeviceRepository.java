@@ -27,8 +27,8 @@ public class UserDeviceRepository {
     }
 
     // 모든 토큰 삭제
-    public void deleteAllByUserId(Long userId) {
-        em.createQuery("DELETE FROM UserDevice ud WHERE ud.user.id = :userId")
+    public int deleteByUserId(Long userId) {
+        return em.createQuery("DELETE FROM UserDevice ud WHERE ud.user.id = :userId")
                 .setParameter("userId", userId)
                 .executeUpdate();
     }

@@ -72,6 +72,24 @@ public class AppleApiClient {
         return response;
     }
 
+    public void revokeRefreshToken(String refreshToken) {
+        String clientSecret = createClientSecret();
+        webClient.post()
+                .uri("https://appleid.apple.com/auth/revoke")
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .body(BodyInserters.fromFormData("client_id", appleProperties.getClientId())
+                        .with("client_secret", clientSecret)
+                        .with("token", refreshToken)
+                        .with("token_type_hint", "refresh_token"))
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response -> {
+                    log.error("Apple revoke 실패");
+                    return Mono.error(new OAuthException("Apple revoke 실패", 502));
+                })
+                .toBodilessEntity()
+                .block();
+    }
+
     private String createClientSecret() {
 
         Instant now = Instant.now();

@@ -1,9 +1,12 @@
 package org.devkor.apu.saerok_server.domain.user.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.auth.infra.SocialRevoker;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
+import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
+import org.devkor.apu.saerok_server.domain.user.application.helper.UserHardDeleteHelper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
@@ -15,6 +18,7 @@ import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,20 +32,19 @@ public class UserCommandService {
     private final ImageService imageService;
     private final UserProfileImageUrlService userProfileImageUrlService;
 
+    private final SocialAuthRepository socialAuthRepository;
+    private final List<SocialRevoker> socialRevokers;
+    private final UserHardDeleteHelper userHardDeleteHelper;
+
     public UpdateUserProfileResponse updateUserProfile(UpdateUserProfileCommand command) {
 
         User user = userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
         try {
             if (command.nickname() != null) userProfileUpdateService.changeNickname(user, command.nickname());
+
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("사용자 정보 수정이 거부되었습니다: " + e.getMessage());
-        }
-
-        if (command.profileImageContentType() != null && command.profileImageObjectKey() != null) {
-            userProfileUpdateService.changeProfileImage(user, command.profileImageObjectKey(), command.profileImageContentType());
-        } else if (!(command.profileImageContentType() == null && command.profileImageObjectKey() == null)) {
-            throw new BadRequestException("프로필 사진 변경 시, profileImageContentType과 profileImageObjectKey 둘 다 있어야 합니다");
         }
 
         userSignupStatusService.tryCompleteSignup(user);
@@ -73,5 +76,26 @@ public class UserCommandService {
     public void deleteProfileImage(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         userProfileUpdateService.deleteProfileImage(user);
+    }
+
+    public void deleteUserAccount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("이미 탈퇴했거나 존재하지 않는 사용자 id예요"));
+
+        // 1) 소셜 연동 해제
+        var links = socialAuthRepository.findByUserId(userId);
+        for (var link : links) {
+            socialRevokers.stream()
+                    .filter(r -> r.provider() == link.getProvider())
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Revoker 미구현: " + link.getProvider()))
+                    .revoke(link);
+        }
+
+        // 2) Hard Delete
+        userHardDeleteHelper.purgeAll(userId);
+
+        // 3) Soft Delete
+        user.anonymizeForWithdrawal();
     }
 }

@@ -64,6 +64,6 @@ public class UserDeviceCommandService {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
         notificationSettingRepository.deleteByUserId(userId);
-        userDeviceRepository.deleteAllByUserId(userId);
+        userDeviceRepository.deleteByUserId(userId);
     }
 }

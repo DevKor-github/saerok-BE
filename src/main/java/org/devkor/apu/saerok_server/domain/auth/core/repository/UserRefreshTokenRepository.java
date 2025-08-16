@@ -23,4 +23,10 @@ public class UserRefreshTokenRepository {
                 .getResultStream()
                 .findFirst();
     }
+
+    public int deleteByUserId(Long userId) {
+        return em.createQuery("DELETE FROM UserRefreshToken rt WHERE rt.user.id = :userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+    }
 }

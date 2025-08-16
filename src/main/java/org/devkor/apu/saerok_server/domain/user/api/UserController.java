@@ -140,7 +140,7 @@ public class UserController {
             @RequestBody ProfileImagePresignRequest request
     ) {
         return userCommandService.generateProfileImagePresignUrl(
-                userPrincipal.getId(), 
+                userPrincipal.getId(),
                 request.getContentType()
         );
     }
@@ -211,5 +211,39 @@ public class UserController {
             @RequestParam String nickname
     ) {
         return userQueryService.checkNickname(nickname);
+    }
+
+    @DeleteMapping("/me")
+    @PreAuthorize("hasRole('USER')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "회원 탈퇴",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+            내 계정을 탈퇴 처리합니다.
+
+            탈퇴 시 처리되는 내용:
+            - 연결된 소셜 계정(Apple/Kakao) 연동 해제
+            - 사용자 권한(role), 리프레시 토큰, 프로필 이미지, 도감 북마크 삭제
+            - 닉네임/이메일/전화번호/성별/생년월일 등 개인정보 초기화
+            - 계정 상태를 '탈퇴됨'으로 변경
+
+            삭제되지 않고 남는 내용 (같은 소셜 계정으로 재가입 시, 복구됨):
+            - 내가 올린 컬렉션과 이미지
+            - 컬렉션 댓글, 좋아요, 신고 내역
+            - 소셜 계정 연동 정보(social_auth)
+
+            이 API를 호출하면 즉시 탈퇴가 완료되며, 복구할 수 없습니다.
+            재가입 시 처음 가입하는 것처럼 소셜 계정 동의 절차가 다시 진행됩니다.
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "탈퇴 완료"),
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content)
+            }
+    )
+    public void deleteUserAccount(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        userCommandService.deleteUserAccount(userPrincipal.getId());
     }
 }

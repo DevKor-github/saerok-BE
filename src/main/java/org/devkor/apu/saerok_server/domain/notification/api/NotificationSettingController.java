@@ -20,7 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Notification Settings API", description = "알림 설정 관련 API")
+@Tag(name = "Notification API", description = "알림 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/notifications/settings")
@@ -33,7 +33,7 @@ public class NotificationSettingController {
     @GetMapping
     @PreAuthorize("hasRole('USER')")
     @Operation(
-            summary = "디바이스별 알림 설정 조회",
+            summary = "알림 설정 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -53,10 +53,10 @@ public class NotificationSettingController {
     @PatchMapping("/toggle")
     @PreAuthorize("hasRole('USER')")
     @Operation(
-            summary = "특정 알림 유형 토글",
+            summary = "알림 설정 토글",
             security = @SecurityRequirement(name = "bearerAuth"),
-            description = "사용자의 특정 디바이스에서 특정 알림 유형을 토글합니다.<br>" +
-                    "request로 디바이스 id와 알림 유형이 필요합니다.",
+            description = "사용자의 특정 디바이스에서 특정 알림 설정을 토글합니다.<br>" +
+                    "request로 디바이스 id와 알림 설정이 필요합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "토글 성공",
                             content = @Content(schema = @Schema(implementation = ToggleNotificationResponse.class))),

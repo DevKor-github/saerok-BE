@@ -1,0 +1,3 @@
+UPDATE user_bird_collection
+SET bird_id_suggestion_requested_at = CURRENT_TIMESTAMP
+WHERE bird_id IS NULL AND bird_id_suggestion_requested_at IS NULL;

@@ -6,12 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResponse;
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade;
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade.AuthBundle;
+import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialAuth;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.auth.core.service.UserProvisioningService;
 import org.devkor.apu.saerok_server.domain.auth.infra.SocialAuthClient;
-import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
+import org.devkor.apu.saerok_server.domain.user.core.entity.SignupStatusType;
 import org.devkor.apu.saerok_server.global.security.crypto.DataCryptoService;
 import org.devkor.apu.saerok_server.global.security.crypto.EncryptedPayload;
 import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
@@ -40,6 +41,13 @@ public abstract class AbstractSocialAuthService {
 
         SocialAuth socialAuth = socialAuthRepository
                 .findByProviderAndProviderUserId(provider, userInfo.sub())
+                .map(link -> {
+                    // 탈퇴했던 유저면 재프로비저닝
+                    if (link.getUser().getSignupStatus() == SignupStatusType.WITHDRAWN) {
+                        userProvisioningService.provisionRejoinedUser(link.getUser(), userInfo.email());
+                    }
+                    return link;
+                })
                 .orElseGet(() -> userProvisioningService.provisionNewUser(provider, userInfo));
 
         if (userInfo.refreshToken() != null) {
