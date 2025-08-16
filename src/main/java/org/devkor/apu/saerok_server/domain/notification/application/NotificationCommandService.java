@@ -50,6 +50,6 @@ public class NotificationCommandService {
 
     public void deleteAllNotifications(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
-        notificationRepository.deleteAllByUserId(userId);
+        notificationRepository.deleteByUserId(userId);
     }
 }

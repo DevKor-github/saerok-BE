@@ -23,8 +23,8 @@ public class NotificationRepository {
     public void remove(Notification notification) { em.remove(notification); }
 
     // 사용자의 모든 알림 삭제
-    public void deleteAllByUserId(Long userId) {
-        em.createQuery("DELETE FROM Notification n WHERE n.user.id = :userId")
+    public int deleteByUserId(Long userId) {
+        return em.createQuery("DELETE FROM Notification n WHERE n.user.id = :userId")
                 .setParameter("userId", userId)
                 .executeUpdate();
     }

@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
 import org.devkor.apu.saerok_server.domain.dex.bookmark.core.repository.BookmarkRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
@@ -21,7 +24,10 @@ public class UserHardDeleteHelper {
     private final UserRoleRepository userRoleRepository;
     private final UserRefreshTokenRepository userRefreshTokenRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final ImageService imageService;
+    private final NotificationRepository notificationRepository;
 
     /**
      * 회원 탈퇴 시 영구 삭제가 필요한 리소스를 일괄 정리한다.
@@ -33,8 +39,13 @@ public class UserHardDeleteHelper {
         int tokens = userRefreshTokenRepository.deleteByUserId(userId);
         int bookmarks = bookmarkRepository.deleteByUserId(userId);
 
-        log.info("[Withdrawal][HardDelete] userId={}, roles={}, refreshTokens={}, bookmarks={}",
-                userId, roles, tokens, bookmarks);
+        int notifications = notificationRepository.deleteByUserId(userId);
+        int notificationSettings = notificationSettingRepository.deleteByUserId(userId);
+        int userDevices = userDeviceRepository.deleteByUserId(userId);
+
+        log.info("[Withdrawal][HardDelete] userId={}, roles={}, refreshTokens={}, bookmarks={}," +
+                        "notifications={}, notificationSettings={}, userDevices={}",
+                userId, roles, tokens, bookmarks, notifications, notificationSettings, userDevices);
     }
 
     private void purgeProfileImage(Long userId) {

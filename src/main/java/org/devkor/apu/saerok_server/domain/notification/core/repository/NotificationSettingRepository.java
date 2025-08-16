@@ -60,8 +60,8 @@ public class NotificationSettingRepository {
         for (NotificationSetting s : settings) em.persist(s);
     }
 
-    public void deleteByUserId(Long userId) {
-        em.createQuery("""
+    public int deleteByUserId(Long userId) {
+        return em.createQuery("""
             delete from NotificationSetting ns
              where ns.userDevice.user.id = :userId
         """).setParameter("userId", userId).executeUpdate();

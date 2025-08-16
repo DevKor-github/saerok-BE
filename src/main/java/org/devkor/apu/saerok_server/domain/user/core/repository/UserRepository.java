@@ -20,6 +20,13 @@ public class UserRepository {
                 .findFirst();
     }
 
+    public Optional<User> findDeletedUserById(Long id) {
+        return em.createQuery("SELECT u FROM User u WHERE u.id = :id AND u.deletedAt IS NOT NULL", User.class)
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst();
+    }
+
     public User save(User user) {
         em.persist(user);
         return user;
