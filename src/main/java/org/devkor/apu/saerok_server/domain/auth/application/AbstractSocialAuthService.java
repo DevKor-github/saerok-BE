@@ -44,7 +44,7 @@ public abstract class AbstractSocialAuthService {
                 .map(link -> {
                     // 탈퇴했던 유저면 재프로비저닝
                     if (link.getUser().getSignupStatus() == SignupStatusType.WITHDRAWN) {
-                        userProvisioningService.provisionRejoinedUser(link, userInfo);
+                        userProvisioningService.provisionRejoinedUser(link.getUser(), userInfo.email());
                     }
                     return link;
                 })

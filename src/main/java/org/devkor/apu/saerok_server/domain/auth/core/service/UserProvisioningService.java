@@ -57,13 +57,12 @@ public class UserProvisioningService {
      *  - USER 롤이 없으면 다시 부여
      *  - 기본 프로필 이미지가 비어 있으면 랜덤 배정
      */
-    public void provisionRejoinedUser(SocialAuth existingLink, SocialUserInfo userInfo) {
-        User user = existingLink.getUser();
+    public void provisionRejoinedUser(User user, String email) {
 
         user.restoreForRejoin();
 
-        if (user.getEmail() == null && userInfo.email() != null) {
-            user.setEmail(userInfo.email());
+        if (user.getEmail() == null && email != null) {
+            user.setEmail(email);
         }
 
         if (userRoleRepository.findByUser(user).isEmpty()) {

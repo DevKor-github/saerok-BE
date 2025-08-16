@@ -7,9 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.response.LocalAccessTokenResponse;
 import org.devkor.apu.saerok_server.domain.auth.application.LocalAuthService;
 import org.springframework.context.annotation.Profile;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 @Profile("local")
 @RestController
@@ -28,5 +27,16 @@ public class LocalAuthController {
     @PermitAll
     public LocalAccessTokenResponse issueLocalDummyUserToken() {
         return localAuthService.issueLocalDummyUserToken();
+    }
+
+    @Operation(
+            summary = "탈퇴한 더미 유저 재가입 처리",
+            description = "탈퇴 처리된 더미 유저를 재가입시킵니다."
+    )
+    @PostMapping("/rejoin-dummy-user")
+    @PermitAll
+    @ResponseStatus(HttpStatus.CREATED)
+    public void rejoinDummyUser() {
+        localAuthService.rejoinDummyUser();
     }
 }
