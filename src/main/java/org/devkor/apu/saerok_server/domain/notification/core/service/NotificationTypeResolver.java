@@ -19,6 +19,11 @@ public final class NotificationTypeResolver {
                 case LIKE -> NotificationType.LIKED_ON_COLLECTION;
                 case COMMENT -> NotificationType.COMMENTED_ON_COLLECTION;
                 case SUGGEST_BIRD_ID -> NotificationType.SUGGESTED_BIRD_ID_ON_COLLECTION;
+                default -> throw new IllegalArgumentException("Unsupported action for APP: " + action);
+            };
+            case APP -> switch (action) {
+                case BADGE_REFRESH -> NotificationType.BADGE_REFRESH;
+                default -> throw new IllegalArgumentException("Unsupported action for APP: " + action);
             };
         };
     }

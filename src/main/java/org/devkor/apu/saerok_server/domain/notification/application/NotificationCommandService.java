@@ -1,7 +1,11 @@
 package org.devkor.apu.saerok_server.domain.notification.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
+import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
@@ -16,6 +20,7 @@ public class NotificationCommandService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final PushGateway pushGateway;
 
     public void readNotification(Long userId, Long notificationId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
@@ -28,11 +33,17 @@ public class NotificationCommandService {
         }
 
         notification.markAsRead();
+
+        int unread = notificationRepository.countUnreadByUserId(userId).intValue();
+        pushGateway.sendToUser(userId, NotificationSubject.APP, NotificationAction.BADGE_REFRESH, PushMessageCommand.forBadge(unread));
     }
 
     public void readAllNotifications(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         notificationRepository.markAllAsReadByUserId(userId);
+
+        int unread = notificationRepository.countUnreadByUserId(userId).intValue();
+        pushGateway.sendToUser(userId, NotificationSubject.APP, NotificationAction.BADGE_REFRESH, PushMessageCommand.forBadge(unread));
     }
 
     public void deleteNotification(Long userId, Long notificationId) {

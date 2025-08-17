@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.notification.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 
 @Schema(description = "푸시 알림 메시지 커맨드")
 public record PushMessageCommand(
@@ -25,5 +26,9 @@ public record PushMessageCommand(
 ) {
     public static PushMessageCommand createPushMessageCommand(String title, String body, String notificationType, Long relatedId, String deepLink, int unreadCount) {
         return new PushMessageCommand(title, body, notificationType, relatedId, deepLink, unreadCount);
+    }
+
+    public static PushMessageCommand forBadge (int unreadCount){
+        return new PushMessageCommand(null, null, NotificationType.BADGE_REFRESH.name(), null, null, unreadCount);
     }
 }
