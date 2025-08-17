@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Schema(description = "알림 목록 조회 응답")
 public record GetNotificationsResponse(
@@ -16,14 +17,8 @@ public record GetNotificationsResponse(
             @Schema(description = "알림 ID")
             Long id,
 
-            @Schema(description = "내용", example = "새록님이 좋아요를 눌렀어요")
-            String body,
-
             @Schema(description = "알림 식별자", example = "LIKED_ON_COLLECTION")
             NotificationType type,
-
-            @Schema(description = "관련 ID (예: 컬렉션 ID)", example = "52")
-            Long relatedId,
 
             @Schema(description = "딥링크 URL")
             String deepLink,
@@ -33,6 +28,13 @@ public record GetNotificationsResponse(
 
             @Schema(description = "알림을 일으킨 사람 닉네임", example = "새록")
             String actorNickname,
+
+            @Schema(description = "알림을 일으킨 사람 프로필 이미지 URL",
+                    example = "https://cdn.saerok.dev/user-profile-images/3.jpg")
+            String actorProfileImageUrl,
+
+            @Schema(description = "추가 메타데이터")
+            Map<String, Object> payload,
 
             @Schema(description = "읽음 여부")
             Boolean isRead,

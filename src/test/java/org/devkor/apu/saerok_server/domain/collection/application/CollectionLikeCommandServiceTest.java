@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
@@ -22,7 +23,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
@@ -40,12 +43,19 @@ class CollectionLikeCommandServiceTest {
 
     @BeforeEach
     void setUp() {
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher);
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(
+                publisher,
+                (target, base) -> {
+                    Map<String,Object> extras = base == null ? new HashMap<>() : new HashMap<>(base);
+                    if (target.type() == TargetType.COLLECTION) {
+                        extras.put("collectionId", target.id());
+                        extras.put("collectionImageUrl", null);
+                    }
+                    return extras;
+                }
+        );
         collectionLikeCommandService = new CollectionLikeCommandService(
-                collectionLikeRepository,
-                collectionRepository,
-                userRepository,
-                notifyActionDsl
+                collectionLikeRepository, collectionRepository, userRepository, notifyActionDsl
         );
     }
 
@@ -72,18 +82,18 @@ class CollectionLikeCommandServiceTest {
         assertTrue(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
 
-        // 발행된 알림 캡처/검증
         ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
         ArgumentCaptor<Target> targetCap = ArgumentCaptor.forClass(Target.class);
         verify(publisher).push(payloadCap.capture(), targetCap.capture());
 
         ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
-        // 🔁 변경: type() → subject()/action()
         assertEquals(NotificationSubject.COLLECTION, p.subject());
         assertEquals(NotificationAction.LIKE, p.action());
         assertEquals(999L, p.recipientId());
         assertEquals(userId, p.actorId());
-        assertEquals(collectionId, p.relatedId());
+        Map<String, Object> extras = p.extras();
+        assertEquals(collectionId, extras.get("collectionId"));
+        assertTrue(extras.containsKey("collectionImageUrl"));
         assertEquals(Target.collection(collectionId), targetCap.getValue());
     }
 

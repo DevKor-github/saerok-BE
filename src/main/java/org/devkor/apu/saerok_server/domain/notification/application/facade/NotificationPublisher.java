@@ -30,7 +30,6 @@ public class NotificationPublisher {
     @Transactional
     public void push(NotificationPayload payload, Target target) {
 
-        // 알림을 받을 유저가 없는 경우(ex: 탈퇴된 유저) early return
         if (userRepository.findById(payload.recipientId()).isEmpty()) {
             return;
         }
@@ -48,10 +47,9 @@ public class NotificationPublisher {
         String typeString = NotificationTypeResolver.from(a.subject(), a.action()).name();
 
         PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
-                renderedMessage.pushTitle(), renderedMessage.pushBody(), typeString, a.relatedId(), deepLink, unread
+                renderedMessage.pushTitle(), renderedMessage.pushBody(), typeString, target.id(), deepLink, unread
         );
 
-        // subject/action 축은 내부 용도이므로 게이트웨이에 그대로 전달 (게이트웨이 내부에서 type 기준 검사)
         pushGateway.sendToUser(a.recipientId(), a.subject(), a.action(), cmd);
     }
 }
