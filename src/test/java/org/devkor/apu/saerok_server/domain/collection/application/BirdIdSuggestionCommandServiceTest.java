@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SuggestBirdIdResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion.SuggestionType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
@@ -27,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -41,12 +43,13 @@ class BirdIdSuggestionCommandServiceTest {
     @Mock BirdRepository             birdRepo;
     @Mock UserRepository             userRepo;
     @Mock NotificationPublisher      publisher;
+    @Mock CollectionImageUrlService  collectionImageUrlService;
 
     BirdIdSuggestionCommandService sut;
 
     @BeforeEach
     void setUp() {
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher);
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher, collectionRepo, collectionImageUrlService);
         sut = new BirdIdSuggestionCommandService(
                 suggestionRepo, collectionRepo, birdRepo, userRepo, notifyActionDsl
         );
@@ -106,6 +109,8 @@ class BirdIdSuggestionCommandServiceTest {
             when(userRepo.findById(1L)).thenReturn(Optional.of(u));
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
             when(birdRepo.findById(5L)).thenReturn(Optional.of(b));
+            // DSL에서 대표 이미지 URL 조회 시 null Optional 방지
+            when(collectionImageUrlService.getPrimaryImageUrlFor(col)).thenReturn(Optional.empty());
 
             when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST)).thenReturn(false);
             when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE)).thenReturn(false);
@@ -128,68 +133,92 @@ class BirdIdSuggestionCommandServiceTest {
             verify(publisher).push(payloadCap.capture(), targetCap.capture());
 
             ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
-            // 🔁 변경: type() → subject()/action()
             assertThat(p.subject()).isEqualTo(NotificationSubject.COLLECTION);
             assertThat(p.action()).isEqualTo(NotificationAction.SUGGEST_BIRD_ID);
             assertThat(p.recipientId()).isEqualTo(2L);
             assertThat(p.actorId()).isEqualTo(1L);
-            assertThat(p.relatedId()).isEqualTo(100L);
+            Map<String, Object> extras = p.extras();
+            assertThat(extras.get("collectionId")).isEqualTo(100L);
+            assertThat(extras).containsKey("collectionImageUrl");
             assertThat(targetCap.getValue()).isEqualTo(Target.collection(100L));
         }
 
-        // 나머지 테스트는 원문 그대로
+        // 나머지 케이스는 기존 로직과 동일하며 알림 발송 여부/예외 흐름만 확인
         @Test @DisplayName("성공 - 이미 제안된 새 (동의만 생성, 알림 없음)")
-        void alreadySuggested() { /* ... 원문 동일 ... */ }
+        void alreadySuggested() {
+            User u = user(1L);
+            UserBirdCollection col = collection(100L, user(2L));
+            Bird b = bird(5L);
+
+            when(userRepo.findById(1L)).thenReturn(Optional.of(u));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
+            when(birdRepo.findById(5L)).thenReturn(Optional.of(b));
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST)).thenReturn(false);
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE)).thenReturn(false);
+            when(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).thenReturn(true);
+
+            sut.suggest(1L, 100L, 5L);
+
+            verify(publisher, never()).push(any(), any());
+        }
 
         @Test @DisplayName("사용자 없음 → NotFoundException")
-        void userNotFound() { /* ... 원문 동일 ... */ }
+        void userNotFound() {
+            when(userRepo.findById(1L)).thenReturn(Optional.empty());
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.NotFoundException.class);
+        }
 
         @Test @DisplayName("컬렉션 없음 → NotFoundException")
-        void collectionNotFound() { /* ... 원문 동일 ... */ }
+        void collectionNotFound() {
+            when(userRepo.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.empty());
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.NotFoundException.class);
+        }
 
         @Test @DisplayName("이미 확정된 컬렉션 → BadRequestException")
-        void alreadyAdopted() { /* ... 원문 동일 ... */ }
+        void alreadyAdopted() {
+            User u = user(1L);
+            UserBirdCollection col = collection(100L, user(2L));
+            col.changeBird(bird(5L));
+            when(userRepo.findById(1L)).thenReturn(Optional.of(u));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.BadRequestException.class);
+        }
 
         @Test @DisplayName("내 컬렉션에 제안 → BadRequestException")
-        void ownCollection() { /* ... 원문 동일 ... */ }
+        void ownCollection() {
+            User owner = user(1L);
+            UserBirdCollection col = collection(100L, owner);
+            when(userRepo.findById(1L)).thenReturn(Optional.of(owner));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.BadRequestException.class);
+        }
 
         @Test @DisplayName("조류 없음 → NotFoundException")
-        void birdNotFound() { /* ... 원문 동일 ... */ }
+        void birdNotFound() {
+            when(userRepo.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.of(collection(100L, user(2L))));
+            when(birdRepo.findById(5L)).thenReturn(Optional.empty());
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.NotFoundException.class);
+        }
 
         @Test @DisplayName("이미 내가 제안한 bird → BadRequestException")
-        void duplicateMyOwnSuggestion() { /* ... 원문 동일 ... */ }
+        void duplicateMyOwnSuggestion() {
+            when(userRepo.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.of(collection(100L, user(2L))));
+            when(birdRepo.findById(5L)).thenReturn(Optional.of(bird(5L)));
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST)).thenReturn(true);
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.BadRequestException.class);
+        }
 
         @Test @DisplayName("이미 내가 동의한 bird → BadRequestException")
-        void duplicateMyOwnAgree() { /* ... 원문 동일 ... */ }
-    }
-
-    @Nested @DisplayName("동의 토글(toggleAgree)")
-    class ToggleAgree {
-        @Test @DisplayName("성공 - 동의 추가")
-        void addAgree() { /* ... 원문 동일 ... */ }
-
-        @Test @DisplayName("성공 - 동의 취소")
-        void cancelAgree() { /* ... 원문 동일 ... */ }
-    }
-
-    @Nested @DisplayName("비동의 토글(toggleDisagree)")
-    class ToggleDisagree {
-        @Test @DisplayName("성공 - 비동의 추가")
-        void addDisagree() { /* ... 원문 동일 ... */ }
-
-        @Test @DisplayName("성공 - 비동의 취소")
-        void cancelDisagree() { /* ... 원문 동일 ... */ }
-    }
-
-    @Nested @DisplayName("adopt")
-    class Adopt {
-        @Test @DisplayName("성공")
-        void success() { /* ... 원문 동일 ... */ }
-
-        @Test @DisplayName("컬렉션 없음 → NotFoundException")
-        void collectionNotFound() { /* ... 원문 동일 ... */ }
-
-        @Test @DisplayName("권한 없음 → ForbiddenException")
-        void forbidden() { /* ... 원문 동일 ... */ }
+        void duplicateMyOwnAgree() {
+            when(userRepo.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.of(collection(100L, user(2L))));
+            when(birdRepo.findById(5L)).thenReturn(Optional.of(bird(5L)));
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST)).thenReturn(false);
+            when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE)).thenReturn(true);
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.BadRequestException.class);
+        }
     }
 }

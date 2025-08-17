@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.LikeStatusResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
@@ -22,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,10 +39,11 @@ class CollectionLikeCommandServiceTest {
     @Mock CollectionRepository collectionRepository;
     @Mock UserRepository userRepository;
     @Mock NotificationPublisher publisher;
+    @Mock CollectionImageUrlService collectionImageUrlService;
 
     @BeforeEach
     void setUp() {
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher);
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher, collectionRepository, collectionImageUrlService);
         collectionLikeCommandService = new CollectionLikeCommandService(
                 collectionLikeRepository,
                 collectionRepository,
@@ -66,6 +69,8 @@ class CollectionLikeCommandServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(false);
+        // DSL에서 대표 이미지 URL 조회 시 null Optional 방지
+        when(collectionImageUrlService.getPrimaryImageUrlFor(collection)).thenReturn(java.util.Optional.empty());
 
         LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 
@@ -78,12 +83,13 @@ class CollectionLikeCommandServiceTest {
         verify(publisher).push(payloadCap.capture(), targetCap.capture());
 
         ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
-        // 🔁 변경: type() → subject()/action()
         assertEquals(NotificationSubject.COLLECTION, p.subject());
         assertEquals(NotificationAction.LIKE, p.action());
         assertEquals(999L, p.recipientId());
         assertEquals(userId, p.actorId());
-        assertEquals(collectionId, p.relatedId());
+        Map<String, Object> extras = p.extras();
+        assertEquals(collectionId, extras.get("collectionId"));
+        assertTrue(extras.containsKey("collectionImageUrl"));
         assertEquals(Target.collection(collectionId), targetCap.getValue());
     }
 

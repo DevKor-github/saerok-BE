@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionCommentRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionCommentRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentCountResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
@@ -27,6 +28,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -51,6 +53,7 @@ class CollectionCommentCommandServiceTest {
     @Mock CollectionRepository              collectionRepo;
     @Mock UserRepository                    userRepo;
     @Mock NotificationPublisher             publisher; // 변경점: PushNotificationService -> NotificationPublisher
+    @Mock CollectionImageUrlService         collectionImageUrlService;
 
     // Query 서비스용 추가 의존성
     @Mock CollectionCommentLikeRepository   commentLikeRepo;
@@ -79,7 +82,7 @@ class CollectionCommentCommandServiceTest {
     @BeforeEach
     void init() {
         // Command SUT (DSL은 실제 객체로 주입, 외부 경계는 publisher만 mock)
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher);
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher, collectionRepo, collectionImageUrlService);
         sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo, notifyActionDsl);
 
         // Query SUT (이번 테스트에서 필요한 최소한만 stubbing)
@@ -105,6 +108,8 @@ class CollectionCommentCommandServiceTest {
 
             when(userRepo.findById(OWNER_ID)).thenReturn(Optional.of(commenter));
             when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
+            // DSL에서 대표 이미지 URL 조회 시 null Optional 방지
+            when(collectionImageUrlService.getPrimaryImageUrlFor(coll)).thenReturn(Optional.empty());
 
             doAnswer(inv -> {
                 setField((Object) inv.getArgument(0), "id", COMMENT_ID);
@@ -126,8 +131,10 @@ class CollectionCommentCommandServiceTest {
             assertThat(p.action()).isEqualTo(NotificationAction.COMMENT);
             assertThat(p.recipientId()).isEqualTo(OTHER_ID);
             assertThat(p.actorId()).isEqualTo(OWNER_ID);
-            assertThat(p.relatedId()).isEqualTo(COLL_ID);
-            assertThat(p.extras().get("comment")).isEqualTo("Nice"); // DSL에서 comment(...)로 채워짐
+            Map<String, Object> extras = p.extras();
+            assertThat(extras.get("collectionId")).isEqualTo(COLL_ID);
+            assertThat(extras.get("comment")).isEqualTo("Nice"); // DSL에서 comment(...)로 채워짐
+            assertThat(extras).containsKey("collectionImageUrl");
             assertThat(targetCap.getValue()).isEqualTo(Target.collection(COLL_ID));
         }
 
