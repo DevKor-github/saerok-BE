@@ -16,9 +16,6 @@ public record GetNotificationsResponse(
             @Schema(description = "알림 ID")
             Long id,
 
-            @Schema(description = "내용", example = "새록님이 좋아요를 눌렀어요")
-            String body,
-
             @Schema(description = "알림 식별자", example = "LIKED_ON_COLLECTION")
             NotificationType type,
 
