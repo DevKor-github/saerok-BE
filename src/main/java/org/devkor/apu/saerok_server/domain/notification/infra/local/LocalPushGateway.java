@@ -44,6 +44,21 @@ public class LocalPushGateway implements PushGateway {
         );
     }
 
+    @Override
+    public void sendSilentBadgeUpdate(Long userId, int unreadCount) {
+        log.info("""
+                
+                ┌─────────────── LOCAL SILENT BADGE UPDATE (SIMULATED) ────────────┐
+                │ userId       : {}
+                │ unreadCount  : {}
+                │ purpose      : Badge Update Only
+                └──────────────────────────────────────────────────────────┘
+                """,
+                userId,
+                unreadCount
+        );
+    }
+
     private String safe(String s) {
         return s == null ? "" : s.replace("\n", "\\n");
     }

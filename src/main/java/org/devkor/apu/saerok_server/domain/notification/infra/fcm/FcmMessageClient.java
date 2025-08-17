@@ -29,16 +29,7 @@ public class FcmMessageClient {
 
         try {
             BatchResponse response = firebaseMessaging.sendEachForMulticast(message);
-
-            List<String> invalid = collectInvalidTokens(fcmTokens, response);
-
-            if (!invalid.isEmpty()) {
-                try {
-                    invalid.forEach(userDeviceRepository::deleteByToken);
-                } catch (Exception e) {
-                    log.warn("Invalid FCM tokens cleanup failed ({} tokens): {}", invalid.size(), e.getMessage());
-                }
-            }
+            cleanupInvalidTokens(fcmTokens, response);
         } catch (FirebaseMessagingException e) {
             log.error("FCM multicast send failed: code={}, msg={}", e.getErrorCode(), e.getMessage());
         } catch (Exception e) {
@@ -70,6 +61,39 @@ public class FcmMessageClient {
         return b.build();
     }
 
+    @Async("pushNotificationExecutor")
+    public void sendSilentBadgeUpdate(List<String> fcmTokens, int unreadCount) {
+        if (fcmTokens == null || fcmTokens.isEmpty()) return;
+
+        MulticastMessage message = buildSilentBadgeMessage(fcmTokens, unreadCount);
+
+        try {
+            BatchResponse response = firebaseMessaging.sendEachForMulticast(message);
+            cleanupInvalidTokens(fcmTokens, response);
+        } catch (FirebaseMessagingException e) {
+            log.error("FCM silent badge update failed: code={}, msg={}", e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected FCM silent badge update error: {}", e.getMessage(), e);
+        }
+    }
+
+    private MulticastMessage buildSilentBadgeMessage(List<String> tokens, int unreadCount) {
+        Map<String, String> data = new HashMap<>();
+        data.put("type", "UPDATE_BADGE");
+        data.put("silent", "true");
+
+        int badge = Math.max(0, Math.min(unreadCount, 999));
+        ApnsConfig apns = ApnsConfig.builder()
+                .setAps(Aps.builder().setBadge(badge).setContentAvailable(true).build())
+                .build();
+
+        MulticastMessage.Builder builder = MulticastMessage.builder()
+                .putAllData(data)
+                .setApnsConfig(apns);
+        tokens.forEach(builder::addToken);
+        return builder.build();
+    }
+
     private List<String> collectInvalidTokens(List<String> tokens, BatchResponse resp) {
         List<String> invalid = new ArrayList<>();
         if (resp == null) return invalid;
@@ -84,5 +108,17 @@ public class FcmMessageClient {
             }
         }
         return invalid;
+    }
+
+    private void cleanupInvalidTokens(List<String> fcmTokens, BatchResponse response) {
+        List<String> invalid = collectInvalidTokens(fcmTokens, response);
+
+        if (!invalid.isEmpty()) {
+            try {
+                invalid.forEach(userDeviceRepository::deleteByToken);
+            } catch (Exception e) {
+                log.warn("Invalid FCM tokens cleanup failed ({} tokens): {}", invalid.size(), e.getMessage());
+            }
+        }
     }
 }

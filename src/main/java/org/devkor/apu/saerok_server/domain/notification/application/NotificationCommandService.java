@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.notification.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
@@ -16,6 +17,7 @@ public class NotificationCommandService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final PushGateway pushGateway;
 
     public void readNotification(Long userId, Long notificationId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
@@ -28,11 +30,15 @@ public class NotificationCommandService {
         }
 
         notification.markAsRead();
+
+        pushGateway.sendSilentBadgeUpdate(userId, notificationRepository.countUnreadByUserId(userId).intValue());
     }
 
     public void readAllNotifications(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         notificationRepository.markAllAsReadByUserId(userId);
+
+        pushGateway.sendSilentBadgeUpdate(userId, notificationRepository.countUnreadByUserId(userId).intValue());
     }
 
     public void deleteNotification(Long userId, Long notificationId) {

@@ -6,4 +6,6 @@ import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification
 
 public interface PushGateway {
     void sendToUser(Long userId, NotificationSubject subject, NotificationAction action, PushMessageCommand cmd);
+
+    void sendSilentBadgeUpdate(Long userId, int unreadCount);
 }
