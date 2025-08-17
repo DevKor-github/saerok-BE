@@ -36,7 +36,7 @@ public class NotificationPublisher {
 
         RenderedMessage renderedMessage = renderer.render(payload);
         String deepLink = deepLinkResolver.resolve(target);
-        inAppWriter.save(payload, deepLink);
+        Long notificationId = inAppWriter.save(payload, deepLink);
 
         int unread = notificationRepository.countUnreadByUserId(payload.recipientId()).intValue();
 
@@ -47,7 +47,7 @@ public class NotificationPublisher {
         String typeString = NotificationTypeResolver.from(a.subject(), a.action()).name();
 
         PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
-                renderedMessage.pushTitle(), renderedMessage.pushBody(), typeString, target.id(), deepLink, unread
+                renderedMessage.pushTitle(), renderedMessage.pushBody(), typeString, target.id(), deepLink, unread, notificationId
         );
 
         pushGateway.sendToUser(a.recipientId(), a.subject(), a.action(), cmd);

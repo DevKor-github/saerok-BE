@@ -19,6 +19,7 @@ public class NotificationRepository {
     }
 
     public void save(Notification notification) { em.persist(notification); }
+    public void flush() { em.flush(); }
 
     public void remove(Notification notification) { em.remove(notification); }
 
