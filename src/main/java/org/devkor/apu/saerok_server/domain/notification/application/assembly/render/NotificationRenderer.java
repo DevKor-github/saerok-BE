@@ -6,8 +6,7 @@ public interface NotificationRenderer {
     RenderedMessage render(NotificationPayload payload);
 
     /**
-     * <h2>inAppBody</h2><p>인앱 알림 목록에 저장될 본문 (body-only)</p>
      * <h2>pushTitle / pushBody</h2><p>푸시 알림용 타이틀/본문</p>
      */
-    record RenderedMessage(String inAppBody, String pushTitle, String pushBody) { }
+    record RenderedMessage(String pushTitle, String pushBody) { }
 }
