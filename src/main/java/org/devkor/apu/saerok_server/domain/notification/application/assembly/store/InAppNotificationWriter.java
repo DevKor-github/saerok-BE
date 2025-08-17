@@ -1,7 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.application.assembly.store;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer.RenderedMessage;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
@@ -19,7 +18,7 @@ public class InAppNotificationWriter {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-    public void save(NotificationPayload payload, RenderedMessage r, String deepLink) {
+    public void save(NotificationPayload payload, String deepLink) {
         if (!(payload instanceof ActionNotificationPayload a)) {
             throw new IllegalArgumentException("Unsupported payload: " + payload.getClass());
         }
@@ -34,7 +33,6 @@ public class InAppNotificationWriter {
 
         Notification entity = Notification.builder()
                 .user(recipient)
-                .body(r.inAppBody())
                 .type(type)
                 .relatedId(a.relatedId())
                 .deepLink(deepLink)

@@ -21,9 +21,6 @@ public class Notification extends CreatedAtOnly {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "body", nullable = false, columnDefinition = "TEXT")
-    private String body;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 64)
     private NotificationType type;
@@ -43,18 +40,15 @@ public class Notification extends CreatedAtOnly {
 
     @Builder
     public Notification(User user,
-                        String body,
                         NotificationType type,
                         Long relatedId,
                         String deepLink,
                         User actor,
                         Boolean isRead) {
         if (user == null) { throw new IllegalArgumentException("user는 null일 수 없습니다."); }
-        if (body == null || body.trim().isEmpty()) { throw new IllegalArgumentException("body는 비어있을 수 없습니다."); }
         if (type == null) { throw new IllegalArgumentException("type은 null일 수 없습니다."); }
 
         this.user = user;
-        this.body = body;
         this.type = type;
         this.relatedId = relatedId;
         this.deepLink = deepLink;

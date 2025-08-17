@@ -37,7 +37,7 @@ public class NotificationPublisher {
 
         RenderedMessage renderedMessage = renderer.render(payload);
         String deepLink = deepLinkResolver.resolve(target);
-        inAppWriter.save(payload, renderedMessage, deepLink);
+        inAppWriter.save(payload, deepLink);
 
         int unread = notificationRepository.countUnreadByUserId(payload.recipientId()).intValue();
 
