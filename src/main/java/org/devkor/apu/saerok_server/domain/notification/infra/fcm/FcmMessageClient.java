@@ -79,7 +79,7 @@ public class FcmMessageClient {
 
     private MulticastMessage buildSilentBadgeMessage(List<String> tokens, int unreadCount) {
         Map<String, String> data = new HashMap<>();
-        data.put("type", "BADGE_UPDATE");
+        data.put("type", "UPDATE_BADGE");
         data.put("silent", "true");
 
         int badge = Math.max(0, Math.min(unreadCount, 999));
