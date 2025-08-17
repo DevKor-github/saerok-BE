@@ -34,15 +34,12 @@ public class InAppNotificationWriter {
 
         NotificationType type = NotificationTypeResolver.from(a.subject(), a.action());
 
-        // extras + relatedId를 합쳐 payload(jsonb)에 저장
         Map<String, Object> payloadMap = new HashMap<>();
         if (a.extras() != null) payloadMap.putAll(a.extras());
-        payloadMap.put("relatedId", a.relatedId());
 
         Notification entity = Notification.builder()
                 .user(recipient)
                 .type(type)
-                // .relatedId(a.relatedId())  // 더 이상 직접 쓰지 않음 (payload.relatedId로 이동)
                 .deepLink(deepLink)
                 .actor(actor)
                 .isRead(false)

@@ -20,9 +20,6 @@ public record GetNotificationsResponse(
             @Schema(description = "알림 식별자", example = "LIKED_ON_COLLECTION")
             NotificationType type,
 
-            @Schema(description = "관련 ID (예: 컬렉션 ID)", example = "52")
-            Long relatedId,
-
             @Schema(description = "딥링크 URL")
             String deepLink,
 

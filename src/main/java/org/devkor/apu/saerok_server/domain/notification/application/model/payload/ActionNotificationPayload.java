@@ -9,7 +9,6 @@ public record ActionNotificationPayload(
         Long recipientId,
         Long actorId,
         String actorName,
-        Long relatedId,
         NotificationSubject subject,
         NotificationAction action,
         Map<String, Object> extras

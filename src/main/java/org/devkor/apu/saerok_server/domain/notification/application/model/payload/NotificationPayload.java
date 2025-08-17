@@ -10,7 +10,6 @@ public sealed interface NotificationPayload
 
     NotificationSubject subject();
     NotificationAction action();
-    Long recipientId();           // D: 알림 받을 사람
-    Long relatedId();             // 관련 리소스 id (ex. collectionId)
-    Map<String, Object> extras(); // 템플릿 변수 (코멘트 내용 등)
+    Long recipientId();           // 알림 받을 사람
+    Map<String, Object> extras(); // 메타데이터 (ex. comment, collectionId, collectionImageUrl ...)
 }

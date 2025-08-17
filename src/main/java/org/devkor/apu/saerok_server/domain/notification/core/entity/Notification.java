@@ -30,9 +30,6 @@ public class Notification extends CreatedAtOnly {
     @Column(name = "type", nullable = false, length = 64)
     private NotificationType type;
 
-    @Column(name = "related_id")
-    private Long relatedId;
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb", nullable = false)
     private Map<String, Object> payload;
@@ -50,7 +47,6 @@ public class Notification extends CreatedAtOnly {
     @Builder
     public Notification(User user,
                         NotificationType type,
-                        Long relatedId,
                         String deepLink,
                         User actor,
                         Boolean isRead,
@@ -60,7 +56,6 @@ public class Notification extends CreatedAtOnly {
 
         this.user = user;
         this.type = type;
-        this.relatedId = relatedId; // 남겨두되 신규 쓰기는 payload.relatedId 사용
         this.deepLink = deepLink;
         this.actor = actor;
         this.isRead = isRead != null ? isRead : false;
