@@ -39,4 +39,16 @@ public class FcmPushGateway implements PushGateway {
         if (tokens.isEmpty()) return;
         fcmMessageClient.sendToDevices(tokens, cmd);
     }
+
+    @Override
+    public void sendSilentBadgeUpdate(Long userId, int unreadCount) {
+        List<String> tokens = userDeviceRepository.findTokensByUserId(userId);
+        if (tokens.isEmpty()) {
+            log.debug("No devices found for user={}", userId);
+            return;
+        }
+
+        log.debug("Sending silent badge update to user={}, devices={}, unreadCount={}", userId, tokens.size(), unreadCount);
+        fcmMessageClient.sendSilentBadgeUpdate(tokens, unreadCount);
+    }
 }

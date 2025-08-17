@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.notification.application;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
@@ -10,6 +11,7 @@ import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -31,14 +33,14 @@ public class NotificationCommandService {
 
         notification.markAsRead();
 
-        int unread = notificationRepository.countUnreadByUserId(userId).intValue();
+        pushGateway.sendSilentBadgeUpdate(userId, notificationRepository.countUnreadByUserId(userId).intValue());
     }
 
     public void readAllNotifications(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         notificationRepository.markAllAsReadByUserId(userId);
 
-        int unread = notificationRepository.countUnreadByUserId(userId).intValue();
+        pushGateway.sendSilentBadgeUpdate(userId, notificationRepository.countUnreadByUserId(userId).intValue());
     }
 
     public void deleteNotification(Long userId, Long notificationId) {

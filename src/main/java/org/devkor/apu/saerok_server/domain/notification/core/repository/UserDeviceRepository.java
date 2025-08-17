@@ -73,4 +73,11 @@ public class UserDeviceRepository {
                 .setParameter("userDeviceIds", userDeviceIds)
                 .getResultList();
     }
+    
+    // 사용자 ID로 모든 FCM 토큰 조회 (사일런트 푸시용)
+    public List<String> findTokensByUserId(Long userId) {
+        return em.createQuery("SELECT ud.token FROM UserDevice ud WHERE ud.user.id = :userId", String.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
 }
