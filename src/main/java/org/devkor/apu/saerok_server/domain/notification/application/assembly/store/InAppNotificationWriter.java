@@ -21,7 +21,7 @@ public class InAppNotificationWriter {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-    public void save(NotificationPayload payload, String deepLink) {
+    public Long save(NotificationPayload payload, String deepLink) {
         if (!(payload instanceof ActionNotificationPayload a)) {
             throw new IllegalArgumentException("Unsupported payload: " + payload.getClass());
         }
@@ -47,5 +47,7 @@ public class InAppNotificationWriter {
                 .build();
 
         notificationRepository.save(entity);
+        notificationRepository.flush();
+        return entity.getId();
     }
 }

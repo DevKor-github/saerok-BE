@@ -21,9 +21,12 @@ public record PushMessageCommand(
         String deepLink,
 
         @Schema(description = "읽지 않은 알림 수 (APNs 배지용)", example = "5")
-        int unreadCount
+        int unreadCount,
+
+        @Schema(description = "알림 ID", example = "12")
+        Long notificationId
 ) {
-    public static PushMessageCommand createPushMessageCommand(String title, String body, String notificationType, Long relatedId, String deepLink, int unreadCount) {
-        return new PushMessageCommand(title, body, notificationType, relatedId, deepLink, unreadCount);
+    public static PushMessageCommand createPushMessageCommand(String title, String body, String notificationType, Long relatedId, String deepLink, int unreadCount, Long notificationId) {
+        return new PushMessageCommand(title, body, notificationType, relatedId, deepLink, unreadCount, notificationId);
     }
 }
