@@ -47,43 +47,25 @@ public class FcmMessageClient {
     }
 
     private MulticastMessage buildMulticast(List<String> tokens, PushMessageCommand cmd) {
-        boolean isBadgeRefresh = "BADGE_REFRESH".equals(cmd.notificationType());
+        Notification notification = Notification.builder()
+                .setTitle(cmd.title())
+                .setBody(cmd.body())
+                .build();
 
         Map<String,String> data = new HashMap<>();
         if (cmd.notificationType() != null) data.put("type", cmd.notificationType());
         if (cmd.relatedId() != null)       data.put("relatedId", cmd.relatedId().toString());
         if (cmd.deepLink() != null)        data.put("deeplink", cmd.deepLink());
-        data.put("unreadCount", String.valueOf(cmd.unreadCount()));
 
         int badge = Math.max(0, Math.min(cmd.unreadCount(), 999));
-        Aps.Builder apsBuilder = Aps.builder()
-                .setBadge(badge);
-
-        if (isBadgeRefresh) {
-            apsBuilder.setContentAvailable(true);
-        } else {
-            apsBuilder.setSound("default");
-        }
         ApnsConfig apns = ApnsConfig.builder()
-                .setAps(apsBuilder.build())
+                .setAps(Aps.builder().setBadge(badge).setSound("default").build())
                 .build();
 
-        Notification notification = null;
-        if (!isBadgeRefresh) {
-            notification = Notification.builder()
-                    .setTitle(cmd.title())
-                    .setBody(cmd.body())
-                    .build();
-        }
-
         MulticastMessage.Builder b = MulticastMessage.builder()
-                .setApnsConfig(apns)
-                .putAllData(data);
-
-        if (notification != null) {
-            b.setNotification(notification);
-        }
-
+                .setNotification(notification)
+                .setApnsConfig(apns);
+        if (!data.isEmpty()) b.putAllData(data);
         tokens.forEach(b::addToken);
         return b.build();
     }

@@ -1,11 +1,8 @@
 package org.devkor.apu.saerok_server.domain.notification.application;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
 import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
@@ -35,7 +32,6 @@ public class NotificationCommandService {
         notification.markAsRead();
 
         int unread = notificationRepository.countUnreadByUserId(userId).intValue();
-        pushGateway.sendToUser(userId, NotificationSubject.APP, NotificationAction.BADGE_REFRESH, PushMessageCommand.forBadge(unread));
     }
 
     public void readAllNotifications(Long userId) {
@@ -43,7 +39,6 @@ public class NotificationCommandService {
         notificationRepository.markAllAsReadByUserId(userId);
 
         int unread = notificationRepository.countUnreadByUserId(userId).intValue();
-        pushGateway.sendToUser(userId, NotificationSubject.APP, NotificationAction.BADGE_REFRESH, PushMessageCommand.forBadge(unread));
     }
 
     public void deleteNotification(Long userId, Long notificationId) {
