@@ -29,6 +29,10 @@ public record GetNotificationsResponse(
             @Schema(description = "알림을 일으킨 사람 닉네임", example = "새록")
             String actorNickname,
 
+            @Schema(description = "알림을 일으킨 사람 프로필 이미지 URL",
+                    example = "https://cdn.saerok.dev/user-profile-images/3.jpg")
+            String actorProfileImageUrl,
+
             @Schema(description = "추가 메타데이터")
             Map<String, Object> payload,
 
