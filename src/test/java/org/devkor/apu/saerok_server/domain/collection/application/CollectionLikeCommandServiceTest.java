@@ -1,7 +1,6 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.LikeStatusResponse;
-import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
@@ -9,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
@@ -25,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
@@ -39,16 +40,22 @@ class CollectionLikeCommandServiceTest {
     @Mock CollectionRepository collectionRepository;
     @Mock UserRepository userRepository;
     @Mock NotificationPublisher publisher;
-    @Mock CollectionImageUrlService collectionImageUrlService;
 
     @BeforeEach
     void setUp() {
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher, collectionRepository, collectionImageUrlService);
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(
+                publisher,
+                (target, base) -> {
+                    Map<String,Object> extras = base == null ? new HashMap<>() : new HashMap<>(base);
+                    if (target.type() == TargetType.COLLECTION) {
+                        extras.put("collectionId", target.id());
+                        extras.put("collectionImageUrl", null);
+                    }
+                    return extras;
+                }
+        );
         collectionLikeCommandService = new CollectionLikeCommandService(
-                collectionLikeRepository,
-                collectionRepository,
-                userRepository,
-                notifyActionDsl
+                collectionLikeRepository, collectionRepository, userRepository, notifyActionDsl
         );
     }
 
@@ -69,15 +76,12 @@ class CollectionLikeCommandServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(false);
-        // DSL에서 대표 이미지 URL 조회 시 null Optional 방지
-        when(collectionImageUrlService.getPrimaryImageUrlFor(collection)).thenReturn(java.util.Optional.empty());
 
         LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 
         assertTrue(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
 
-        // 발행된 알림 캡처/검증
         ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
         ArgumentCaptor<Target> targetCap = ArgumentCaptor.forClass(Target.class);
         verify(publisher).push(payloadCap.capture(), targetCap.capture());

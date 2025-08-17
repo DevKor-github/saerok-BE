@@ -1,7 +1,6 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SuggestBirdIdResponse;
-import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion.SuggestionType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
@@ -12,6 +11,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdReposito
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
@@ -30,6 +30,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,19 +44,27 @@ class BirdIdSuggestionCommandServiceTest {
     @Mock BirdRepository             birdRepo;
     @Mock UserRepository             userRepo;
     @Mock NotificationPublisher      publisher;
-    @Mock CollectionImageUrlService  collectionImageUrlService;
 
     BirdIdSuggestionCommandService sut;
 
     @BeforeEach
     void setUp() {
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(publisher, collectionRepo, collectionImageUrlService);
+        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(
+                publisher,
+                (target, base) -> {
+                    Map<String,Object> extras = base == null ? new HashMap<>() : new HashMap<>(base);
+                    if (target.type() == TargetType.COLLECTION) {
+                        extras.put("collectionId", target.id());
+                        extras.put("collectionImageUrl", null);
+                    }
+                    return extras;
+                }
+        );
         sut = new BirdIdSuggestionCommandService(
                 suggestionRepo, collectionRepo, birdRepo, userRepo, notifyActionDsl
         );
     }
 
-    // ─── in-test fixture builders ─────────────────────────────────────────
     private User user(long id) {
         User u = new User();
         ReflectionTestUtils.setField(u, "id", id);
@@ -95,7 +104,6 @@ class BirdIdSuggestionCommandServiceTest {
         ReflectionTestUtils.setField(s, "id", id);
         return s;
     }
-    // ────────────────────────────────────────────────────────────────────────
 
     @Nested @DisplayName("suggestion")
     class Suggest {
@@ -109,9 +117,6 @@ class BirdIdSuggestionCommandServiceTest {
             when(userRepo.findById(1L)).thenReturn(Optional.of(u));
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
             when(birdRepo.findById(5L)).thenReturn(Optional.of(b));
-            // DSL에서 대표 이미지 URL 조회 시 null Optional 방지
-            when(collectionImageUrlService.getPrimaryImageUrlFor(col)).thenReturn(Optional.empty());
-
             when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.SUGGEST)).thenReturn(false);
             when(suggestionRepo.existsByUserIdAndCollectionIdAndBirdIdAndType(1L, 100L, 5L, SuggestionType.AGREE)).thenReturn(false);
             when(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).thenReturn(false);
@@ -127,7 +132,6 @@ class BirdIdSuggestionCommandServiceTest {
             assertThat(res.suggestionId()).isEqualTo(999L);
             verify(suggestionRepo, times(2)).save(any(BirdIdSuggestion.class));
 
-            // 발행된 알림 캡처/검증
             ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
             ArgumentCaptor<Target> targetCap = ArgumentCaptor.forClass(Target.class);
             verify(publisher).push(payloadCap.capture(), targetCap.capture());
@@ -143,7 +147,6 @@ class BirdIdSuggestionCommandServiceTest {
             assertThat(targetCap.getValue()).isEqualTo(Target.collection(100L));
         }
 
-        // 나머지 케이스는 기존 로직과 동일하며 알림 발송 여부/예외 흐름만 확인
         @Test @DisplayName("성공 - 이미 제안된 새 (동의만 생성, 알림 없음)")
         void alreadySuggested() {
             User u = user(1L);
@@ -158,7 +161,6 @@ class BirdIdSuggestionCommandServiceTest {
             when(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).thenReturn(true);
 
             sut.suggest(1L, 100L, 5L);
-
             verify(publisher, never()).push(any(), any());
         }
 
@@ -179,7 +181,7 @@ class BirdIdSuggestionCommandServiceTest {
         void alreadyAdopted() {
             User u = user(1L);
             UserBirdCollection col = collection(100L, user(2L));
-            col.changeBird(bird(5L));
+            col.changeBird(bird(5L)); // 확정 상태로 표시
             when(userRepo.findById(1L)).thenReturn(Optional.of(u));
             when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
             assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.BadRequestException.class);
