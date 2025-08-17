@@ -30,11 +30,10 @@ public class ActionNotificationRenderer implements NotificationRenderer {
         vars.put("actorName", nullToEmpty(a.actorName()));
         a.extras().forEach((k, v) -> vars.put(k, v == null ? "" : String.valueOf(v)));
 
-        String inApp = renderTemplate(t.getInAppBody(), vars);
         String title = renderTemplate(t.getPushTitle(), vars);
         String body  = renderTemplate(t.getPushBody(), vars);
 
-        return new RenderedMessage(inApp, title, body);
+        return new RenderedMessage(title, body);
     }
 
     private static String nullToEmpty(String s) {
