@@ -11,6 +11,9 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class InAppNotificationWriter {
@@ -31,13 +34,19 @@ public class InAppNotificationWriter {
 
         NotificationType type = NotificationTypeResolver.from(a.subject(), a.action());
 
+        // extras + relatedId를 합쳐 payload(jsonb)에 저장
+        Map<String, Object> payloadMap = new HashMap<>();
+        if (a.extras() != null) payloadMap.putAll(a.extras());
+        payloadMap.put("relatedId", a.relatedId());
+
         Notification entity = Notification.builder()
                 .user(recipient)
                 .type(type)
-                .relatedId(a.relatedId())
+                // .relatedId(a.relatedId())  // 더 이상 직접 쓰지 않음 (payload.relatedId로 이동)
                 .deepLink(deepLink)
                 .actor(actor)
                 .isRead(false)
+                .payload(payloadMap)
                 .build();
 
         notificationRepository.save(entity);

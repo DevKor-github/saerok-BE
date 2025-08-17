@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper(componentModel = "spring",
         imports = OffsetDateTimeLocalizer.class)
@@ -25,5 +26,17 @@ public interface NotificationWebMapper {
     @Mapping(target = "actorId", source = "actor.id")
     @Mapping(target = "actorNickname", source = "actor.nickname")
     @Mapping(target = "createdAt", expression = "java(OffsetDateTimeLocalizer.toSeoulLocalDateTime(notification.getCreatedAt()))")
+    @Mapping(target = "payload", expression = "java(notification.getPayload())")
+    @Mapping(target = "relatedId", expression = "java(resolveRelatedId(notification))")
     GetNotificationsResponse.Item toItem(Notification notification);
+
+    /** 엔티티.relatedId 없을 때 payload.relatedId로 폴백 */
+    default Long resolveRelatedId(Notification n) {
+        if (n.getRelatedId() != null) return n.getRelatedId();
+        Map<String, Object> p = n.getPayload();
+        if (p == null) return null;
+        Object v = p.get("relatedId");
+        if (v instanceof Number num) return num.longValue();
+        return null;
+    }
 }

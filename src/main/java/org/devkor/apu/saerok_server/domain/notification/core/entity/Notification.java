@@ -6,6 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.shared.entity.CreatedAtOnly;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "notification")
@@ -28,6 +33,10 @@ public class Notification extends CreatedAtOnly {
     @Column(name = "related_id")
     private Long relatedId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "payload", columnDefinition = "jsonb", nullable = false)
+    private Map<String, Object> payload;
+
     @Column(name = "deep_link", length = 500)
     private String deepLink;
 
@@ -44,16 +53,22 @@ public class Notification extends CreatedAtOnly {
                         Long relatedId,
                         String deepLink,
                         User actor,
-                        Boolean isRead) {
+                        Boolean isRead,
+                        Map<String, Object> payload) {
         if (user == null) { throw new IllegalArgumentException("user는 null일 수 없습니다."); }
         if (type == null) { throw new IllegalArgumentException("type은 null일 수 없습니다."); }
 
         this.user = user;
         this.type = type;
-        this.relatedId = relatedId;
+        this.relatedId = relatedId; // 남겨두되 신규 쓰기는 payload.relatedId 사용
         this.deepLink = deepLink;
         this.actor = actor;
         this.isRead = isRead != null ? isRead : false;
+        if (payload != null) {
+            this.payload = new HashMap<>(payload);
+        } else {
+            this.payload = new HashMap<>();
+        }
     }
 
     public void markAsRead() { this.isRead = true; }

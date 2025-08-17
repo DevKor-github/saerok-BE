@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Schema(description = "알림 목록 조회 응답")
 public record GetNotificationsResponse(
@@ -30,6 +31,9 @@ public record GetNotificationsResponse(
 
             @Schema(description = "알림을 일으킨 사람 닉네임", example = "새록")
             String actorNickname,
+
+            @Schema(description = "추가 메타데이터")
+            Map<String, Object> payload,
 
             @Schema(description = "읽음 여부")
             Boolean isRead,
