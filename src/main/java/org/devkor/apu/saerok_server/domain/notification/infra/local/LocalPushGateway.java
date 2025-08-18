@@ -28,7 +28,6 @@ public class LocalPushGateway implements PushGateway {
                 │ title        : {}
                 │ body         : {}
                 │ relatedId    : {}
-                │ deepLink     : {}
                 │ unreadCount  : {}
                 └──────────────────────────────────────────────────────────┘
                 """,
@@ -39,7 +38,6 @@ public class LocalPushGateway implements PushGateway {
                 safe(cmd.title()),
                 safe(cmd.body()),
                 cmd.relatedId(),
-                safe(cmd.deepLink()),
                 cmd.unreadCount()
         );
     }

@@ -1,7 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.application.facade;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.application.assembly.deeplink.DeepLinkResolver;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer.RenderedMessage;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.store.InAppNotificationWriter;
@@ -24,7 +23,6 @@ public class NotificationPublisher {
     private final InAppNotificationWriter inAppWriter;
     private final NotificationRepository notificationRepository;
     private final PushGateway pushGateway;
-    private final DeepLinkResolver deepLinkResolver;
     private final UserRepository userRepository;
 
     @Transactional
@@ -35,8 +33,7 @@ public class NotificationPublisher {
         }
 
         RenderedMessage renderedMessage = renderer.render(payload);
-        String deepLink = deepLinkResolver.resolve(target);
-        Long notificationId = inAppWriter.save(payload, deepLink);
+        Long notificationId = inAppWriter.save(payload);
 
         int unread = notificationRepository.countUnreadByUserId(payload.recipientId()).intValue();
 
@@ -47,7 +44,7 @@ public class NotificationPublisher {
         String typeString = NotificationTypeResolver.from(a.subject(), a.action()).name();
 
         PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
-                renderedMessage.pushTitle(), renderedMessage.pushBody(), typeString, target.id(), deepLink, unread, notificationId
+                renderedMessage.pushTitle(), renderedMessage.pushBody(), typeString, target.id(), unread, notificationId
         );
 
         pushGateway.sendToUser(a.recipientId(), a.subject(), a.action(), cmd);

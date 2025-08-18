@@ -34,9 +34,6 @@ public class Notification extends CreatedAtOnly {
     @Column(name = "payload", columnDefinition = "jsonb", nullable = false)
     private Map<String, Object> payload;
 
-    @Column(name = "deep_link", length = 500)
-    private String deepLink;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id")
     private User actor;
@@ -47,7 +44,6 @@ public class Notification extends CreatedAtOnly {
     @Builder
     public Notification(User user,
                         NotificationType type,
-                        String deepLink,
                         User actor,
                         Boolean isRead,
                         Map<String, Object> payload) {
@@ -56,7 +52,6 @@ public class Notification extends CreatedAtOnly {
 
         this.user = user;
         this.type = type;
-        this.deepLink = deepLink;
         this.actor = actor;
         this.isRead = isRead != null ? isRead : false;
         if (payload != null) {

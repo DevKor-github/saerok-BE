@@ -46,7 +46,6 @@ public class FcmMessageClient {
         Map<String,String> data = new HashMap<>();
         if (cmd.notificationType() != null) data.put("type", cmd.notificationType());
         if (cmd.relatedId() != null)       data.put("relatedId", cmd.relatedId().toString());
-        if (cmd.deepLink() != null)        data.put("deeplink", cmd.deepLink());
         if (cmd.notificationId() != null)  data.put("notificationId", cmd.notificationId().toString());
 
         int badge = Math.max(0, Math.min(cmd.unreadCount(), 999));
