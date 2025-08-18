@@ -17,16 +17,13 @@ public record PushMessageCommand(
         @Schema(description = "이벤트 발생지 id", example = "123")
         Long relatedId,
 
-        @Schema(description = "딥링크 URL", example = "saerok://collection/123")
-        String deepLink,
-
         @Schema(description = "읽지 않은 알림 수 (APNs 배지용)", example = "5")
         int unreadCount,
 
         @Schema(description = "알림 ID", example = "12")
         Long notificationId
 ) {
-    public static PushMessageCommand createPushMessageCommand(String title, String body, String notificationType, Long relatedId, String deepLink, int unreadCount, Long notificationId) {
-        return new PushMessageCommand(title, body, notificationType, relatedId, deepLink, unreadCount, notificationId);
+    public static PushMessageCommand createPushMessageCommand(String title, String body, String notificationType, Long relatedId, int unreadCount, Long notificationId) {
+        return new PushMessageCommand(title, body, notificationType, relatedId, unreadCount, notificationId);
     }
 }
