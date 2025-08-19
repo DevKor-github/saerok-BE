@@ -47,6 +47,12 @@ public class UserCommandService {
             throw new BadRequestException("사용자 정보 수정이 거부되었습니다: " + e.getMessage());
         }
 
+        if (command.profileImageContentType() != null && command.profileImageObjectKey() != null) {
+            userProfileUpdateService.changeProfileImage(user, command.profileImageObjectKey(), command.profileImageContentType());
+        } else if (!(command.profileImageContentType() == null && command.profileImageObjectKey() == null)) {
+            throw new BadRequestException("프로필 사진 변경 시, profileImageContentType과 profileImageObjectKey 둘 다 있어야 합니다");
+        }
+
         userSignupStatusService.tryCompleteSignup(user);
 
         return new UpdateUserProfileResponse(
