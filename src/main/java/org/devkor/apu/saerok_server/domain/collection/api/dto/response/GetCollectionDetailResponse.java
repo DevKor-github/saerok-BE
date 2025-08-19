@@ -46,6 +46,9 @@ public class GetCollectionDetailResponse {
     @Schema(description = "내가 좋아요 눌렀는지 여부", example = "true")
     private Boolean isLiked;
 
+    @Schema(description = "내 컬렉션인지 여부", example = "false")
+    private Boolean isMine;
+
     @Schema(description = "새 정보")
     private BirdInfo bird;
 

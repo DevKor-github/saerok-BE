@@ -115,9 +115,10 @@ public class CollectionQueryService {
         long likeCount = collectionLikeRepository.countByCollectionId(collectionId);
         long commentCount = collectionCommentRepository.countByCollectionId(collectionId);
         boolean isLikedByMe = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
+        boolean isMine = userId != null && userId.equals(collection.getUser().getId());
         String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
 
-        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLikedByMe);
+        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLikedByMe, isMine);
     }
 
     public GetNearbyCollectionsResponse getNearbyCollections(GetNearbyCollectionsCommand command) {
