@@ -101,7 +101,7 @@ class CollectionQueryServiceTest {
         given(userProfileImageUrlService.getProfileImageUrlFor(owner))
                 .willReturn(profileUrl);
         given(collectionWebMapper.toGetCollectionDetailResponse(
-                collection, imageUrl, profileUrl, 5L, 3L, false))
+                collection, imageUrl, profileUrl, 5L, 3L, false, false))
                 .willReturn(expected);
 
         //-- When
@@ -142,7 +142,7 @@ class CollectionQueryServiceTest {
                 .willReturn(true);
         given(userProfileImageUrlService.getProfileImageUrlFor(owner)).willReturn(profileUrl);
         given(collectionWebMapper.toGetCollectionDetailResponse(
-                collection, null, profileUrl, 3L, 2L, true))
+                collection, null, profileUrl, 3L, 2L, true, true))
                 .willReturn(expected);
 
         //-- When
