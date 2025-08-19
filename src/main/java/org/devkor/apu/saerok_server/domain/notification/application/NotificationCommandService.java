@@ -52,10 +52,14 @@ public class NotificationCommandService {
         }
 
         notificationRepository.remove(notification);
+
+        pushGateway.sendSilentBadgeUpdate(userId, notificationRepository.countUnreadByUserId(userId).intValue());
     }
 
     public void deleteAllNotifications(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
         notificationRepository.deleteByUserId(userId);
+
+        pushGateway.sendSilentBadgeUpdate(userId, notificationRepository.countUnreadByUserId(userId).intValue());
     }
 }
