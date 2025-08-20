@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserProfilePolicy {
+public class NicknamePolicy {
 
     private final BannedWordService bannedWordService;
     private final ReservedWordService reservedWordService;
@@ -62,12 +62,5 @@ public class UserProfilePolicy {
 
         // 다 통과하면 valid
         return new NicknameValidationResult(true, null);
-    }
-
-    public boolean isEmailValid(String email) {
-        if (email == null) return false;
-
-        String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        return email.matches(emailRegex);
     }
 }

@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.collection.core.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Repository;
@@ -33,6 +34,19 @@ public class CollectionRepository {
                 "SELECT c FROM UserBirdCollection c " +
                 "WHERE c.user.id = :userId", UserBirdCollection.class)
                 .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    /** 특정 사용자의 컬렉션 중 accessLevel 이 일치하는 목록만 반환 */
+    public List<UserBirdCollection> findByUserIdAndAccessLevel(
+            Long userId,
+            AccessLevelType accessLevel
+    ) {
+        return em.createQuery(
+                        "SELECT c FROM UserBirdCollection c " +
+                                "WHERE c.user.id = :userId AND c.accessLevel = :access", UserBirdCollection.class)
+                .setParameter("userId", userId)
+                .setParameter("access", accessLevel)
                 .getResultList();
     }
 
@@ -85,6 +99,21 @@ public class CollectionRepository {
                 .setParameter("refPoint", ref)
                 .setParameter("radius", radiusMeters)
                 .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    /**
+     * bird_id 가 비어 있고 공개(PUBLIC)인 컬렉션 조회 + 작성자 fetch join
+     */
+    public List<UserBirdCollection> findPublicPendingCollections() {
+        return em.createQuery("""
+            SELECT c FROM UserBirdCollection c
+            JOIN FETCH c.user u
+            WHERE c.accessLevel = :public
+              AND c.bird IS NULL
+            ORDER BY c.birdIdSuggestionRequestedAt DESC
+            """, UserBirdCollection.class)
+                .setParameter("public", AccessLevelType.PUBLIC)
                 .getResultList();
     }
 }

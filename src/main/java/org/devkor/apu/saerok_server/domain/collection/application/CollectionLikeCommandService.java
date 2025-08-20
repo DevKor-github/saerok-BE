@@ -6,6 +6,10 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
+import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
+import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -21,6 +25,7 @@ public class CollectionLikeCommandService {
     private final CollectionLikeRepository collectionLikeRepository;
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
+    private final NotifyActionDsl notifyAction;
 
     /**
      * 좋아요 토글 (추가/제거)
@@ -45,6 +50,15 @@ public class CollectionLikeCommandService {
             // 좋아요가 없으면 추가
             UserBirdCollectionLike like = new UserBirdCollectionLike(user, collection);
             collectionLikeRepository.save(like);
+            
+            // 자신의 컬렉션이 아닌 경우에만 푸시 알림 발송
+            if (!collection.getUser().getId().equals(userId)) {
+                notifyAction
+                        .by(Actor.of(userId, user.getNickname()))
+                        .on(Target.collection(collectionId))
+                        .did(ActionKind.LIKE)
+                        .to(collection.getUser().getId());
+            }
             
             return new LikeStatusResponse(true);
         }

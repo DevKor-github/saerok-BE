@@ -16,7 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Collection Comment Like API", description = "컬렉션 댓글 좋아요 관련 API")
+@Tag(name = "Collection Comment API", description = "컬렉션 댓글 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/collections/comments")

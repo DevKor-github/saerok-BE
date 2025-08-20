@@ -27,7 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Collections API", description = "컬렉션 기능 관련 API")
+@Tag(name = "Collections API", description = "컬렉션 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/collections/")

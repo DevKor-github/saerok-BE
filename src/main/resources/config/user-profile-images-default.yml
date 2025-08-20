@@ -1,0 +1,5 @@
+user-profile-images-default:
+  content-type: image/png
+  keys:
+    - user-profile-images/default/default-2.png
+    - user-profile-images/default/default-3.png

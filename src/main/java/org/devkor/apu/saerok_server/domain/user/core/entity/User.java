@@ -27,6 +27,7 @@ public class User extends SoftDeletableAuditable {
     @Column(name = "phone")
     private String phone;
 
+    @Setter
     @Column(name = "email")
     private String email;
 
@@ -41,6 +42,27 @@ public class User extends SoftDeletableAuditable {
 
     @Column(name = "joined_at")
     private OffsetDateTime joinedAt;
+
+    @Setter
+    @Column(name = "default_profile_image_variant")
+    private Short defaultProfileImageVariant;
+
+    public void anonymizeForWithdrawal() {
+        this.setNickname(null);
+        this.email = null;
+        this.phone = null;
+        this.gender = null;
+        this.birthDate = null;
+        this.setDefaultProfileImageVariant(null);
+        this.setSignupStatus(SignupStatusType.WITHDRAWN);
+        this.softDelete();
+    }
+
+    public void restoreForRejoin() {
+        this.deletedAt = null; // Soft delete 해제
+        this.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+        this.joinedAt = OffsetDateTime.now(); // 재가입 시점으로 갱신
+    }
 
     public static User createUser(String email) {
         User user = new User();

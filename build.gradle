@@ -75,6 +75,9 @@ dependencies {
 
 	// 금칙어 필터링 라이브러리 의존성 추가
 	implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
+
+	// FCM admin SDK 추가
+	implementation 'com.google.firebase:firebase-admin:9.5.0'
 }
 
 tasks.named('test') {

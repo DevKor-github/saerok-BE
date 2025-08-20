@@ -5,6 +5,7 @@ import java.time.LocalDate;
 public record GetMyUserProfileResponse(
         String nickname,
         String email,
-        LocalDate joinedDate
+        LocalDate joinedDate,
+        String profileImageUrl
 ) {
 }

@@ -11,13 +11,10 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
+import org.devkor.apu.saerok_server.domain.user.core.service.ProfileImageDefaultService;
 import org.devkor.apu.saerok_server.global.shared.exception.SocialAuthAlreadyExistsException;
 import org.springframework.stereotype.Service;
 
-/**
- * 새로운 유저에 대한 프로비저닝(Provisioning: 사용자가 요청한 IT 자원을 사용할 수 있는 상태로 준비하는 것)을 담당하는 도메인 서비스
- * 사용자 관점에서는 "회원가입", 시스템 관점에서는 "프로비저닝".
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -26,9 +23,10 @@ public class UserProvisioningService {
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final SocialAuthRepository socialAuthRepository;
+    private final ProfileImageDefaultService profileImageDefaultService;
 
     /**
-     * 새로운 사용자에게 필요한 자원(User, UserRole, SocialAuth)을 할당한다.
+     * 새로운 사용자에게 필요한 자원을 할당한다.
      * @param provider 소셜 공급자 (ex. Apple, Kakao)
      * @param userInfo 소셜 공급자로부터 받은 사용자 정보 (sub, email)
      * @return 해당 사용자에게 생성된 SocialAuth 엔티티
@@ -40,10 +38,39 @@ public class UserProvisioningService {
         }
 
         User user = userRepository.save(User.createUser(userInfo.email()));
+        profileImageDefaultService.setRandomVariant(user);
+
         userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
 
         return socialAuthRepository.save(
                 SocialAuth.createSocialAuth(user, provider, userInfo.sub())
         );
+    }
+
+    /**
+     * 탈퇴했던 사용자가 재가입할 때 필요한 자원을 다시 준비한다.
+     * 기존 users 레코드를 그대로 사용하고, 다음을 수행한다:
+     *  - signupStatus → PROFILE_REQUIRED
+     *  - deleted_at → null
+     *  - joined_at → 현재 시각
+     *  - 이메일이 비어 있으면 소셜에서 받은 이메일로 복구
+     *  - USER 롤이 없으면 다시 부여
+     *  - 기본 프로필 이미지가 비어 있으면 랜덤 배정
+     */
+    public void provisionRejoinedUser(User user, String email) {
+
+        user.restoreForRejoin();
+
+        if (user.getEmail() == null && email != null) {
+            user.setEmail(email);
+        }
+
+        if (userRoleRepository.findByUser(user).isEmpty()) {
+            userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
+        }
+
+        if (user.getDefaultProfileImageVariant() == null) {
+            profileImageDefaultService.setRandomVariant(user);
+        }
     }
 }
