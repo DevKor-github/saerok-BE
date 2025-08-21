@@ -18,6 +18,8 @@ public abstract class BirdProfileViewMapper {
     private ImageDomainService imageDomainService;
 
     @Mapping(target = "images.s3Url", ignore = true)
+    @Mapping(target = "nibrUrl", expression = "java(birdProfileView.getNibrUrl() == null ? \"\" : birdProfileView.getNibrUrl())")
+    // TODO: 프론트에서 nibrUrl null 처리가 되면, 이 nibrUrl 임시 처리(null 대신 빈 문자열)를 지운다.
     public abstract BirdFullSyncResponse.BirdProfileItem toDto(BirdProfileView birdProfileView);
 
     @AfterMapping
