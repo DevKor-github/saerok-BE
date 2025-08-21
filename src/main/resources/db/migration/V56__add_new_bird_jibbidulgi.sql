@@ -9,3 +9,6 @@ INSERT INTO bird_habitat (id,bird_id,habitat_type) VALUES (nextval('bird_habitat
 
 -- bird_residency
 INSERT INTO bird_residency (id,bird_id,residency_type_id,rarity_type_id,month_bitmask) VALUES (nextval('bird_residency_seq'),603,(SELECT id FROM residency_type WHERE code='RESIDENT'),(SELECT id FROM rarity_type WHERE code='COMMON'),NULL);
+
+-- bird_seq를 올바른 값으로 보정
+SELECT setval('bird_seq', (SELECT MAX(id) FROM bird));
