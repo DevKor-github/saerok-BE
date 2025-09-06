@@ -6,6 +6,8 @@ WORKDIR /app
 # 필요하면 settings.gradle, gradle.properties 등도 함께 복사
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle gradle
+RUN chmod +x gradlew
+
 RUN ./gradlew --no-daemon dependencies || true
 
 # 실제 소스 복사 후 빌드
