@@ -85,6 +85,13 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             set -euxo pipefail
+            # ======== bind workflow values into remote shell ========
+            COMPOSE_FILE_REMOTE="${{ env.COMPOSE_FILE_REMOTE }}"
+            CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
+            IMAGE_REPO="${{ steps.normalize.outputs.image_repo }}"
+            export COMPOSE_FILE_REMOTE CONTAINER_NAME IMAGE_REPO
+            # =======================================================
+
             banner () { echo "::notice::$1"; }
             section () { echo "::group::$1"; }
             endsection () { echo "::endgroup::"; }
@@ -118,7 +125,7 @@ jobs:
             endsection
 
             section "3) Generate ${COMPOSE_FILE_REMOTE}"
-            cat > ${COMPOSE_FILE_REMOTE} <<'YAML'
+            cat > "${COMPOSE_FILE_REMOTE}" <<'YAML'
             services:
               app:
                 image: ${{ steps.normalize.outputs.image_repo }}:dev-latest
@@ -156,21 +163,19 @@ jobs:
                   start_period: 60s
             YAML
             banner "Compose file written: ${COMPOSE_FILE_REMOTE}"
-            docker compose -f ${COMPOSE_FILE_REMOTE} config --services || true
+            docker compose -f "${COMPOSE_FILE_REMOTE}" config --services || true
             endsection
 
             section "4) Pull & Up (recreate with port-fallback)"
-            # 1차 시도
             set +e
-            docker compose -f ${COMPOSE_FILE_REMOTE} pull
-            docker compose -f ${COMPOSE_FILE_REMOTE} up -d --force-recreate
+            docker compose -f "${COMPOSE_FILE_REMOTE}" pull
+            docker compose -f "${COMPOSE_FILE_REMOTE}" up -d --force-recreate
             UP_RC=$?
             set -e
 
             if [ $UP_RC -ne 0 ]; then
               echo "::warning::compose up failed (rc=$UP_RC). Checking port 8080..."
               ss -lntp || true
-
               if ss -lntp | grep -q ':8080 '; then
                 echo "::warning::Port 8080 is busy. Trying to free it."
                 if ! command -v fuser >/dev/null 2>&1; then
@@ -179,22 +184,21 @@ jobs:
                 fi
                 sudo fuser -k 8080/tcp || true
                 sleep 2
-                # 2차 시도
-                docker compose -f ${COMPOSE_FILE_REMOTE} up -d --force-recreate
+                docker compose -f "${COMPOSE_FILE_REMOTE}" up -d --force-recreate
               else
                 echo "::error::Compose up failed and port 8080 is not busy. Aborting."
                 exit 1
               fi
             fi
 
-            docker compose -f ${COMPOSE_FILE_REMOTE} ps
+            docker compose -f "${COMPOSE_FILE_REMOTE}" ps
             endsection
 
             section "5) Wait for health=healthy"
             set +e
             ATTEMPTS=40
             for i in $(seq 1 ${ATTEMPTS}); do
-              STATUS=$(docker inspect -f '{{.State.Health.Status}}' ${{ env.CONTAINER_NAME }} 2>/dev/null || echo "unknown")
+              STATUS=$(docker inspect -f '{{.State.Health.Status}}' "${CONTAINER_NAME}" 2>/dev/null || echo "unknown")
               echo "[$i/${ATTEMPTS}] health: $STATUS"
               if [ "$STATUS" = "healthy" ]; then
                 banner "Container is healthy."
@@ -205,14 +209,14 @@ jobs:
             done
             if [ "${OK:-0}" != "1" ]; then
               echo "::warning::Container did not reach healthy state in time."
-              docker logs --tail=200 ${{ env.CONTAINER_NAME }} || true
+              docker logs --tail=200 "${CONTAINER_NAME}" || true
               exit 1
             fi
             set -e
             endsection
 
             section "6) Tail last logs"
-            docker logs --tail=200 ${{ env.CONTAINER_NAME }} || true
+            docker logs --tail=200 "${CONTAINER_NAME}" || true
             endsection
 
             banner "✅ Deploy done"
