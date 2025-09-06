@@ -21,7 +21,7 @@ jobs:
       - name: 🧾 Checkout
         uses: actions/checkout@v4
 
-      # GHCR 레포(org/repo) 소문자 정규화 → output + env 모두 세팅
+      # GHCR 레포(org/repo) 소문자 정규화 → outputs + env
       - name: 🔧 Normalize image repo
         id: normalize
         run: |
@@ -107,57 +107,17 @@ jobs:
             docker compose version
             endsection
 
-            section "1) Stop legacy raw JAR if running (PID-safe, single shell)"
-            bash -lc '
-              set +e
-              JAR_PIDS="$(pgrep -f "java .* -jar" || true)"
-
-              if [ -n "$JAR_PIDS" ]; then
-                echo "::notice::Stopping old raw JAR... PIDs: $JAR_PIDS"
-
-                for pid in $JAR_PIDS; do
-                  kill -TERM "$pid" 2>/dev/null || true
-                done
-
-                for i in $(seq 1 20); do
-                  ALIVE=""
-                  for pid in $JAR_PIDS; do
-                    kill -0 "$pid" 2>/dev/null && ALIVE="$ALIVE $pid"
-                  done
-                  if [ -z "$ALIVE" ]; then
-                    echo "All JAR PIDs exited."
-                    break
-                  fi
-                  echo "waiting old jar... ($i) alive:$ALIVE"
-                  sleep 1
-                done
-
-                ALIVE=""
-                for pid in $JAR_PIDS; do
-                  kill -0 "$pid" 2>/dev/null && ALIVE="$ALIVE $pid"
-                done
-                if [ -n "$ALIVE" ]; then
-                  echo "::warning::Force killing remaining PIDs:$ALIVE"
-                  kill -KILL $ALIVE 2>/dev/null || true
-                fi
-              else
-                echo "::notice::No raw JAR process found."
-              fi
-              exit 0
-            '
-            endsection
-
-            section "2) Prepare workspace"
+            section "1) Prepare workspace"
             mkdir -p ~/saerok
             cd ~/saerok
             pwd
             endsection
 
-            section "3) Docker login (GHCR pull)"
+            section "2) Docker login (GHCR pull)"
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             endsection
 
-            section "4) Generate ${COMPOSE_FILE_REMOTE}"
+            section "3) Generate ${COMPOSE_FILE_REMOTE}"
             cat > ${COMPOSE_FILE_REMOTE} <<'YAML'
             services:
               app:
@@ -199,13 +159,38 @@ jobs:
             docker compose -f ${COMPOSE_FILE_REMOTE} config --services || true
             endsection
 
-            section "5) Pull & Up (recreate)"
+            section "4) Pull & Up (recreate with port-fallback)"
+            # 1차 시도
+            set +e
             docker compose -f ${COMPOSE_FILE_REMOTE} pull
             docker compose -f ${COMPOSE_FILE_REMOTE} up -d --force-recreate
+            UP_RC=$?
+            set -e
+
+            if [ $UP_RC -ne 0 ]; then
+              echo "::warning::compose up failed (rc=$UP_RC). Checking port 8080..."
+              ss -lntp || true
+
+              if ss -lntp | grep -q ':8080 '; then
+                echo "::warning::Port 8080 is busy. Trying to free it."
+                if ! command -v fuser >/dev/null 2>&1; then
+                  sudo apt-get -qq update
+                  sudo DEBIAN_FRONTEND=noninteractive apt-get -y -qq install psmisc
+                fi
+                sudo fuser -k 8080/tcp || true
+                sleep 2
+                # 2차 시도
+                docker compose -f ${COMPOSE_FILE_REMOTE} up -d --force-recreate
+              else
+                echo "::error::Compose up failed and port 8080 is not busy. Aborting."
+                exit 1
+              fi
+            fi
+
             docker compose -f ${COMPOSE_FILE_REMOTE} ps
             endsection
 
-            section "6) Wait for health=healthy"
+            section "5) Wait for health=healthy"
             set +e
             ATTEMPTS=40
             for i in $(seq 1 ${ATTEMPTS}); do
@@ -226,7 +211,7 @@ jobs:
             set -e
             endsection
 
-            section "7) Tail last logs"
+            section "6) Tail last logs"
             docker logs --tail=200 ${{ env.CONTAINER_NAME }} || true
             endsection
 
