@@ -104,25 +104,51 @@ jobs:
             docker compose version
             endsection
 
-            section "1) Stop legacy raw JAR if running"
-            if pgrep -fa "java .* -jar" >/dev/null 2>&1; then
-              banner "Stopping old raw JAR process..."
+            section "1) Stop legacy raw JAR if running (PID-safe)"
+            # pgrep 결과가 없어도 실패하지 않게
               set +e
-              pkill -f "java .* -jar"
-              for i in $(seq 1 20); do
-                if pgrep -fa "java .* -jar" >/dev/null 2>&1; then
-                  echo "waiting old jar... ($i)"
-                  sleep 1
-                else
-                  break
-                fi
-              done
+              JAR_PIDS="$(pgrep -f 'java .* -jar' || true)"
               set -e
-            else
+              
+              if [ -n "$JAR_PIDS" ]; then
+            banner "Stopping old raw JAR process... PIDs: $JAR_PIDS"
+            
+            # 1) TERM으로 그레이스풀 종료 시도
+              set +e
+              for pid in $JAR_PIDS; do
+              kill -TERM "$pid" || true
+              done
+            
+              # 2) 종료 대기 (최대 20초)
+              for i in $(seq 1 20); do
+              ALIVE=""
+              for pid in $JAR_PIDS; do
+              if kill -0 "$pid" 2>/dev/null; then ALIVE="$ALIVE $pid"; fi
+              done
+              if [ -z "$ALIVE" ]; then
+              echo "All JAR PIDs exited."
+              break
+              fi
+              echo "waiting old jar... ($i) alive:$ALIVE"
+              sleep 1
+              done
+            
+              # 3) 아직 살아있으면 KILL
+              ALIVE=""
+              for pid in $JAR_PIDS; do
+              if kill -0 "$pid" 2>/dev/null; then ALIVE="$ALIVE $pid"; fi
+              done
+              if [ -n "$ALIVE" ]; then
+              echo "::warning::Force killing remaining PIDs:$ALIVE"
+              kill -KILL $ALIVE || true
+              fi
+              set -e
+              else
               banner "No raw JAR process found."
-            fi
-            endsection
-
+              fi
+              endsection
+  
+  
             section "2) Prepare workspace"
             mkdir -p ~/saerok
             cd ~/saerok
