@@ -2,17 +2,17 @@
 FROM gradle:8.8-jdk21 AS builder
 WORKDIR /app
 
-# Gradle 캐시 최적화를 위해 먼저 의존성 레이어만 복사 (옵션)
-# 필요하면 settings.gradle, gradle.properties 등도 함께 복사
+# Gradle 캐시 최적화를 위한 사전 레이어 (옵션)
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle gradle
 RUN chmod +x gradlew
-
 RUN ./gradlew --no-daemon dependencies || true
 
 # 실제 소스 복사 후 빌드
 COPY . .
-# 테스트까지 돌리고 싶으면 'test bootJar', 빠르게는 'bootJar'만
+# COPY . . 로 gradlew가 덮어써질 수 있으므로 다시 실행 권한 부여
+RUN chmod +x gradlew
+# 테스트까지 돌리려면 'clean test bootJar' 로 변경
 RUN ./gradlew --no-daemon clean bootJar
 
 # ===== Runtime stage =====
@@ -21,7 +21,10 @@ ENV TZ=Asia/Seoul \
     JAVA_OPTS="-Duser.timezone=Asia/Seoul -XX:+UseZGC -XX:MaxRAMPercentage=75"
 WORKDIR /app
 
-# 산출 JAR 복사 (빌드 결과가 하나라면 다음 라인으로 충분)
+# (헬스체크용) curl 설치 - docker compose healthcheck가 컨테이너 내부에서 실행됨
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# 빌드 산출물 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
