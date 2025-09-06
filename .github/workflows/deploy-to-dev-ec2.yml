@@ -21,9 +21,12 @@ jobs:
       - name: 🧾 Checkout
         uses: actions/checkout@v4
 
-      # GHCR 레포(org/repo)를 소문자로 정규화
+      # GHCR 레포(org/repo) 소문자 정규화 → output + env 모두 세팅
       - name: 🔧 Normalize image repo
-        run: echo "IMAGE_REPO=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+        id: normalize
+        run: |
+          echo "image_repo=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_REPO=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -39,7 +42,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_REPO }}
+          images: ${{ steps.normalize.outputs.image_repo }}
           tags: |
             type=raw,value=dev-latest
             type=sha,format=long,prefix=dev-,suffix=
@@ -62,8 +65,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.IMAGE_REPO }}:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_REPO }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache
+          cache-to: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache,mode=max
 
       - name: ✅ Verify image pushed
         run: |
@@ -104,51 +107,46 @@ jobs:
             docker compose version
             endsection
 
-            section "1) Stop legacy raw JAR if running (PID-safe)"
-            # pgrep 결과가 없어도 실패하지 않게
+            section "1) Stop legacy raw JAR if running (PID-safe, single shell)"
+            bash -lc '
               set +e
-              JAR_PIDS="$(pgrep -f 'java .* -jar' || true)"
-              set -e
-              
+              JAR_PIDS="$(pgrep -f "java .* -jar" || true)"
+
               if [ -n "$JAR_PIDS" ]; then
-            banner "Stopping old raw JAR process... PIDs: $JAR_PIDS"
-            
-            # 1) TERM으로 그레이스풀 종료 시도
-              set +e
-              for pid in $JAR_PIDS; do
-              kill -TERM "$pid" || true
-              done
-            
-              # 2) 종료 대기 (최대 20초)
-              for i in $(seq 1 20); do
-              ALIVE=""
-              for pid in $JAR_PIDS; do
-              if kill -0 "$pid" 2>/dev/null; then ALIVE="$ALIVE $pid"; fi
-              done
-              if [ -z "$ALIVE" ]; then
-              echo "All JAR PIDs exited."
-              break
-              fi
-              echo "waiting old jar... ($i) alive:$ALIVE"
-              sleep 1
-              done
-            
-              # 3) 아직 살아있으면 KILL
-              ALIVE=""
-              for pid in $JAR_PIDS; do
-              if kill -0 "$pid" 2>/dev/null; then ALIVE="$ALIVE $pid"; fi
-              done
-              if [ -n "$ALIVE" ]; then
-              echo "::warning::Force killing remaining PIDs:$ALIVE"
-              kill -KILL $ALIVE || true
-              fi
-              set -e
+                echo "::notice::Stopping old raw JAR... PIDs: $JAR_PIDS"
+
+                for pid in $JAR_PIDS; do
+                  kill -TERM "$pid" 2>/dev/null || true
+                done
+
+                for i in $(seq 1 20); do
+                  ALIVE=""
+                  for pid in $JAR_PIDS; do
+                    kill -0 "$pid" 2>/dev/null && ALIVE="$ALIVE $pid"
+                  done
+                  if [ -z "$ALIVE" ]; then
+                    echo "All JAR PIDs exited."
+                    break
+                  fi
+                  echo "waiting old jar... ($i) alive:$ALIVE"
+                  sleep 1
+                done
+
+                ALIVE=""
+                for pid in $JAR_PIDS; do
+                  kill -0 "$pid" 2>/dev/null && ALIVE="$ALIVE $pid"
+                done
+                if [ -n "$ALIVE" ]; then
+                  echo "::warning::Force killing remaining PIDs:$ALIVE"
+                  kill -KILL $ALIVE 2>/dev/null || true
+                fi
               else
-              banner "No raw JAR process found."
+                echo "::notice::No raw JAR process found."
               fi
-              endsection
-  
-  
+              exit 0
+            '
+            endsection
+
             section "2) Prepare workspace"
             mkdir -p ~/saerok
             cd ~/saerok
@@ -163,7 +161,7 @@ jobs:
             cat > ${COMPOSE_FILE_REMOTE} <<'YAML'
             services:
               app:
-                image: ${{ env.IMAGE_REPO }}:dev-latest
+                image: ${{ steps.normalize.outputs.image_repo }}:dev-latest
                 container_name: saerok-dev
                 restart: always
                 ports:
@@ -198,7 +196,6 @@ jobs:
                   start_period: 60s
             YAML
             banner "Compose file written: ${COMPOSE_FILE_REMOTE}"
-            # 비밀 유출 방지: 서비스 이름만 표시
             docker compose -f ${COMPOSE_FILE_REMOTE} config --services || true
             endsection
 
@@ -241,7 +238,7 @@ jobs:
           {
             echo "## 🚀 Deploy Summary";
             echo "";
-            echo "- Image repo: \`${{ env.IMAGE_REPO }}\`";
+            echo "- Image repo: \`$IMAGE_REPO\`";
             echo "- Tags pushed:";
             echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | sed 's/^/  - /';
             echo "";
