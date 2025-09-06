@@ -14,13 +14,16 @@ jobs:
       packages: write
 
     env:
-      IMAGE_REPO: ghcr.io/${{ github.repository }}
       CONTAINER_NAME: saerok-dev
       COMPOSE_FILE_REMOTE: docker-compose.dev.yml
 
     steps:
       - name: 🧾 Checkout
         uses: actions/checkout@v4
+
+      # GHCR 레포(org/repo)를 소문자로 정규화
+      - name: 🔧 Normalize image repo
+        run: echo "IMAGE_REPO=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -41,6 +44,16 @@ jobs:
             type=raw,value=dev-latest
             type=sha,format=long,prefix=dev-,suffix=
 
+      - name: 📌 Show image tags
+        run: |
+          echo "::group::Image tags"
+          echo "${{ steps.meta.outputs.tags }}" | tr ' ' '\n'
+          echo "::endgroup::"
+          {
+            echo "### 🏷️ Image tags";
+            echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | sed 's/^/- /';
+          } >> $GITHUB_STEP_SUMMARY
+
       - name: 🏗️ Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -51,6 +64,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.IMAGE_REPO }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_REPO }}:buildcache,mode=max
+
+      - name: ✅ Verify image pushed
+        run: |
+          echo "::notice::Pushed to $IMAGE_REPO (primary tag: dev-latest)"
+          {
+            echo "### ✅ Build & Push";
+            echo "- Repo: \`$IMAGE_REPO\`";
+            echo "- Primary tag: \`dev-latest\`";
+          } >> $GITHUB_STEP_SUMMARY
 
       - name: 🚀 Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v1
@@ -85,7 +107,8 @@ jobs:
             section "1) Stop legacy raw JAR if running"
             if pgrep -fa "java .* -jar" >/dev/null 2>&1; then
               banner "Stopping old raw JAR process..."
-              pkill -f "java .* -jar" || true
+              set +e
+              pkill -f "java .* -jar"
               for i in $(seq 1 20); do
                 if pgrep -fa "java .* -jar" >/dev/null 2>&1; then
                   echo "waiting old jar... ($i)"
@@ -94,6 +117,7 @@ jobs:
                   break
                 fi
               done
+              set -e
             else
               banner "No raw JAR process found."
             fi
@@ -105,7 +129,7 @@ jobs:
             pwd
             endsection
 
-            section "3) Docker login (pull from GHCR)"
+            section "3) Docker login (GHCR pull)"
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             endsection
 
@@ -113,7 +137,7 @@ jobs:
             cat > ${COMPOSE_FILE_REMOTE} <<'YAML'
             services:
               app:
-                image: ghcr.io/${{ github.repository }}:dev-latest
+                image: ${{ env.IMAGE_REPO }}:dev-latest
                 container_name: saerok-dev
                 restart: always
                 ports:
@@ -148,7 +172,8 @@ jobs:
                   start_period: 60s
             YAML
             banner "Compose file written: ${COMPOSE_FILE_REMOTE}"
-            docker compose -f ${COMPOSE_FILE_REMOTE} config
+            # 비밀 유출 방지: 서비스 이름만 표시
+            docker compose -f ${COMPOSE_FILE_REMOTE} config --services || true
             endsection
 
             section "5) Pull & Up (recreate)"
@@ -183,3 +208,27 @@ jobs:
             endsection
 
             banner "✅ Deploy done"
+
+      - name: 🧾 Summary
+        if: always()
+        run: |
+          {
+            echo "## 🚀 Deploy Summary";
+            echo "";
+            echo "- Image repo: \`${{ env.IMAGE_REPO }}\`";
+            echo "- Tags pushed:";
+            echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | sed 's/^/  - /';
+            echo "";
+            echo "### Health";
+            echo "- Target container: \`${{ env.CONTAINER_NAME }}\`";
+            echo "- Health check: \`GET /health\`";
+            echo "";
+            echo "### Useful commands (on EC2)";
+            echo "\`\`\`bash";
+            echo "ssh ubuntu@${{ secrets.EC2_HOST }}";
+            echo "cd ~/saerok";
+            echo "docker compose -f ${COMPOSE_FILE_REMOTE} ps";
+            echo "docker logs -f ${CONTAINER_NAME}";
+            echo "curl -i localhost:8080/health";
+            echo "\`\`\`";
+          } >> $GITHUB_STEP_SUMMARY
