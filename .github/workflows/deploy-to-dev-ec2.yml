@@ -22,6 +22,9 @@ jobs:
       - name: 🧾 Checkout
         uses: actions/checkout@v4
 
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: 🔐 Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -38,17 +41,6 @@ jobs:
             type=raw,value=dev-latest
             type=sha,format=long,prefix=dev-,suffix=
 
-      - name: 📌 Show image tags to be pushed
-        run: |
-          echo "::group::Image tags"
-          echo "${{ steps.meta.outputs.tags }}" | tr ' ' '\n'
-          echo "::endgroup::"
-          {
-            echo "### 🏷️ Image tags";
-            echo '';
-            echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | sed 's/^/- /';
-          } >> $GITHUB_STEP_SUMMARY
-
       - name: 🏗️ Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -57,20 +49,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: ✅ Verify image exists in GHCR
-        run: |
-          echo "::group::Verify GHCR image (dry check)"
-          echo "Primary tag: dev-latest"
-          echo "Repo: $IMAGE_REPO"
-          echo "::notice::If this step passed, push likely succeeded."
-          echo "::endgroup::"
-          {
-            echo "### ✅ Build & Push";
-            echo "- Repo: \`$IMAGE_REPO\`";
-            echo "- Primary tag: \`dev-latest\`";
-            echo "- Status: **pushed**";
-          } >> $GITHUB_STEP_SUMMARY
+          cache-from: type=registry,ref=${{ env.IMAGE_REPO }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_REPO }}:buildcache,mode=max
 
       - name: 🚀 Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v1
@@ -80,7 +60,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             set -euxo pipefail
-
             banner () { echo "::notice::$1"; }
             section () { echo "::group::$1"; }
             endsection () { echo "::endgroup::"; }
@@ -90,8 +69,6 @@ jobs:
               banner "Installing Docker..."
               curl -fsSL https://get.docker.com | sh
               sudo usermod -aG docker $USER || true
-            else
-              banner "Docker already installed."
             fi
             if ! docker compose version >/dev/null 2>&1; then
               banner "Installing docker compose plugin..."
@@ -100,8 +77,6 @@ jobs:
               sudo curl -fsSL https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-x86_64 \
                 -o /usr/local/lib/docker/cli-plugins/docker-compose
               sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-            else
-              banner "Docker Compose already installed."
             fi
             docker --version
             docker compose version
@@ -173,9 +148,7 @@ jobs:
                   start_period: 60s
             YAML
             banner "Compose file written: ${COMPOSE_FILE_REMOTE}"
-            echo "----- compose config (normalized) -----"
             docker compose -f ${COMPOSE_FILE_REMOTE} config
-            echo "--------------------------------------"
             endsection
 
             section "5) Pull & Up (recreate)"
@@ -210,27 +183,3 @@ jobs:
             endsection
 
             banner "✅ Deploy done"
-
-      - name: 🧾 Add deploy summary
-        if: always()
-        run: |
-          {
-            echo "## 🚀 Deploy Summary";
-            echo "";
-            echo "- Image repo: \`${{ env.IMAGE_REPO }}\`";
-            echo "- Tags pushed:";
-            echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | sed 's/^/  - /';
-            echo "";
-            echo "### Health";
-            echo "- Target container: \`${{ env.CONTAINER_NAME }}\`";
-            echo "- Health check: \`GET /health\` (inside container)";
-            echo "";
-            echo "### Useful commands (on EC2)";
-            echo "\`\`\`bash";
-            echo "ssh ubuntu@${{ secrets.EC2_HOST }}";
-            echo "cd ~/saerok";
-            echo "docker compose -f ${COMPOSE_FILE_REMOTE} ps";
-            echo "docker logs -f ${CONTAINER_NAME}";
-            echo "curl -i localhost:8080/health";
-            echo "\`\`\`";
-          } >> $GITHUB_STEP_SUMMARY
