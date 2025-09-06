@@ -1,4 +1,4 @@
-name: Deploy to Dev EC2 (Docker Compose)
+name: Deploy to Dev EC2
 
 on:
   push:
@@ -7,240 +7,81 @@ on:
 
 jobs:
   deploy:
+    name: Build and Deploy to EC2
     runs-on: ubuntu-latest
     environment: dev
-    permissions:
-      contents: read
-      packages: write
-
-    env:
-      CONTAINER_NAME: saerok-dev
-      COMPOSE_FILE_REMOTE: docker-compose.dev.yml
 
     steps:
-      - name: 🧾 Checkout
-        uses: actions/checkout@v4
+      - name: Checkout source code
+        uses: actions/checkout@v3
 
-      # GHCR 레포(org/repo) 소문자 정규화 → outputs + env
-      - name: 🔧 Normalize image repo
-        id: normalize
-        run: |
-          echo "image_repo=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
-          echo "IMAGE_REPO=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
-
-      - name: 🔧 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🔐 Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
         with:
-          registry: ghcr.io
-          username: ${{ secrets.GHCR_USERNAME }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          distribution: 'corretto'
+          java-version: '21'
 
-      - name: 🏷️ Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: Grant execute permission for Gradle
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew test bootJar
+
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@v0.1.7
         with:
-          images: ${{ steps.normalize.outputs.image_repo }}
-          tags: |
-            type=raw,value=dev-latest
-            type=sha,format=long,prefix=dev-,suffix=
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: build/libs/*.jar
+          target: ~/saerok/
+          strip_components: '2'
 
-      - name: 📌 Show image tags
-        run: |
-          echo "::group::Image tags"
-          echo "${{ steps.meta.outputs.tags }}" | tr ' ' '\n'
-          echo "::endgroup::"
-          {
-            echo "### 🏷️ Image tags";
-            echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | sed 's/^/- /';
-          } >> $GITHUB_STEP_SUMMARY
-
-      - name: 🏗️ Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache
-          cache-to: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache,mode=max
-
-      - name: ✅ Verify image pushed
-        run: |
-          echo "::notice::Pushed to $IMAGE_REPO (primary tag: dev-latest)"
-          {
-            echo "### ✅ Build & Push";
-            echo "- Repo: \`$IMAGE_REPO\`";
-            echo "- Primary tag: \`dev-latest\`";
-          } >> $GITHUB_STEP_SUMMARY
-
-      - name: 🚀 Deploy on EC2 via SSH
+      - name: Restart application on EC2
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          debug: true
           script: |
             set -euxo pipefail
-            # ======== bind workflow values into remote shell ========
-            COMPOSE_FILE_REMOTE="${{ env.COMPOSE_FILE_REMOTE }}"
-            CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
-            IMAGE_REPO="${{ steps.normalize.outputs.image_repo }}"
-            export COMPOSE_FILE_REMOTE CONTAINER_NAME IMAGE_REPO
-            # =======================================================
-
-            banner () { echo "::notice::$1"; }
-            section () { echo "::group::$1"; }
-            endsection () { echo "::endgroup::"; }
-
-            section "0) Ensure Docker & Compose"
-            if ! command -v docker >/dev/null 2>&1; then
-              banner "Installing Docker..."
-              curl -fsSL https://get.docker.com | sh
-              sudo usermod -aG docker $USER || true
-            fi
-            if ! docker compose version >/dev/null 2>&1; then
-              banner "Installing docker compose plugin..."
-              DOCKER_COMPOSE_VERSION="v2.29.7"
-              sudo mkdir -p /usr/local/lib/docker/cli-plugins
-              sudo curl -fsSL https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-x86_64 \
-                -o /usr/local/lib/docker/cli-plugins/docker-compose
-              sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-            fi
-            docker --version
-            docker compose version
-            endsection
-
-            section "1) Prepare workspace"
-            mkdir -p ~/saerok
+            
             cd ~/saerok
-            pwd
-            endsection
-
-            section "2) Docker login (GHCR pull)"
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            endsection
-
-            section "3) Generate ${COMPOSE_FILE_REMOTE}"
-            cat > "${COMPOSE_FILE_REMOTE}" <<'YAML'
-            services:
-              app:
-                image: ${{ steps.normalize.outputs.image_repo }}:dev-latest
-                container_name: saerok-dev
-                restart: always
-                ports:
-                  - "8080:8080"
-                environment:
-                  SPRING_PROFILES_ACTIVE: "dev"
-                  DB_URL: "${{ secrets.DB_URL }}"
-                  DB_USERNAME: "${{ secrets.DB_USERNAME }}"
-                  DB_PASSWORD: "${{ secrets.DB_PASSWORD }}"
-                  IAM_ACCESS_KEY: "${{ secrets.IAM_ACCESS_KEY }}"
-                  IAM_SECRET_KEY: "${{ secrets.IAM_SECRET_KEY }}"
-                  UPLOAD_IMAGE_BUCKET_NAME: "${{ vars.UPLOAD_IMAGE_BUCKET_NAME }}"
-                  UPLOAD_IMAGE_DOMAIN: "${{ vars.UPLOAD_IMAGE_DOMAIN }}"
-                  DEX_IMAGE_BUCKET_NAME: "${{ vars.DEX_IMAGE_BUCKET_NAME }}"
-                  DEX_IMAGE_DOMAIN: "${{ vars.DEX_IMAGE_DOMAIN }}"
-                  APPLE_CLIENT_ID: "${{ secrets.APPLE_CLIENT_ID }}"
-                  APPLE_TEAM_ID: "${{ secrets.APPLE_TEAM_ID }}"
-                  APPLE_KEY_ID: "${{ secrets.APPLE_KEY_ID }}"
-                  APPLE_PRIVATE_KEY: "${{ secrets.APPLE_PRIVATE_KEY }}"
-                  JWT_SECRET: "${{ secrets.JWT_SECRET }}"
-                  KAKAO_ADMIN_KEY: "${{ secrets.KAKAO_ADMIN_KEY }}"
-                  KAKAO_CLIENT_ID: "${{ secrets.KAKAO_CLIENT_ID }}"
-                  KAKAO_REDIRECT_URI: "${{ secrets.KAKAO_REDIRECT_URI }}"
-                  KAKAO_CLIENT_SECRET: "${{ secrets.KAKAO_CLIENT_SECRET }}"
-                  KMS_KEY_ID: "${{ secrets.KMS_KEY_ID }}"
-                  FIREBASE_ADMIN_KEY: "${{ secrets.FIREBASE_ADMIN_KEY }}"
-                healthcheck:
-                  test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null || exit 1"]
-                  interval: 10s
-                  timeout: 3s
-                  retries: 15
-                  start_period: 60s
-            YAML
-            banner "Compose file written: ${COMPOSE_FILE_REMOTE}"
-            docker compose -f "${COMPOSE_FILE_REMOTE}" config --services || true
-            endsection
-
-            section "4) Pull & Up (recreate with port-fallback)"
-            set +e
-            docker compose -f "${COMPOSE_FILE_REMOTE}" pull
-            docker compose -f "${COMPOSE_FILE_REMOTE}" up -d --force-recreate
-            UP_RC=$?
-            set -e
-
-            if [ $UP_RC -ne 0 ]; then
-              echo "::warning::compose up failed (rc=$UP_RC). Checking port 8080..."
-              ss -lntp || true
-              if ss -lntp | grep -q ':8080 '; then
-                echo "::warning::Port 8080 is busy. Trying to free it."
-                if ! command -v fuser >/dev/null 2>&1; then
-                  sudo apt-get -qq update
-                  sudo DEBIAN_FRONTEND=noninteractive apt-get -y -qq install psmisc
-                fi
-                sudo fuser -k 8080/tcp || true
-                sleep 2
-                docker compose -f "${COMPOSE_FILE_REMOTE}" up -d --force-recreate
-              else
-                echo "::error::Compose up failed and port 8080 is not busy. Aborting."
-                exit 1
-              fi
-            fi
-
-            docker compose -f "${COMPOSE_FILE_REMOTE}" ps
-            endsection
-
-            section "5) Wait for health=healthy"
-            set +e
-            ATTEMPTS=40
-            for i in $(seq 1 ${ATTEMPTS}); do
-              STATUS=$(docker inspect -f '{{.State.Health.Status}}' "${CONTAINER_NAME}" 2>/dev/null || echo "unknown")
-              echo "[$i/${ATTEMPTS}] health: $STATUS"
-              if [ "$STATUS" = "healthy" ]; then
-                banner "Container is healthy."
-                OK=1
-                break
-              fi
-              sleep 2
-            done
-            if [ "${OK:-0}" != "1" ]; then
-              echo "::warning::Container did not reach healthy state in time."
-              docker logs --tail=200 "${CONTAINER_NAME}" || true
-              exit 1
-            fi
-            set -e
-            endsection
-
-            section "6) Tail last logs"
-            docker logs --tail=200 "${CONTAINER_NAME}" || true
-            endsection
-
-            banner "✅ Deploy done"
-
-      - name: 🧾 Summary
-        if: always()
-        run: |
-          {
-            echo "## 🚀 Deploy Summary";
-            echo "";
-            echo "- Image repo: \`$IMAGE_REPO\`";
-            echo "- Tags pushed:";
-            echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | sed 's/^/  - /';
-            echo "";
-            echo "### Health";
-            echo "- Target container: \`${{ env.CONTAINER_NAME }}\`";
-            echo "- Health check: \`GET /health\`";
-            echo "";
-            echo "### Useful commands (on EC2)";
-            echo "\`\`\`bash";
-            echo "ssh ubuntu@${{ secrets.EC2_HOST }}";
-            echo "cd ~/saerok";
-            echo "docker compose -f ${COMPOSE_FILE_REMOTE} ps";
-            echo "docker logs -f ${CONTAINER_NAME}";
-            echo "curl -i localhost:8080/health";
-            echo "\`\`\`";
-          } >> $GITHUB_STEP_SUMMARY
+            echo ">>> 현재 위치: $(pwd)"
+            echo ">>> 파일:"
+            ls -al
+            
+            # JAR 확인
+            JAR_NAME=$(ls -1t *.jar | head -n1)
+            [ -n "$JAR_NAME" ] || { echo "❌ JAR 없음"; exit 2; }
+            echo ">>> 선택된 JAR: $JAR_NAME"
+            
+            # 기존 프로세스 종료
+            pkill -f "$JAR_NAME" || true
+            
+            # 백그라운드 실행
+            DB_URL="${{ secrets.DB_URL }}" \
+            DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+            DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            IAM_ACCESS_KEY="${{ secrets.IAM_ACCESS_KEY }}" \
+            IAM_SECRET_KEY="${{ secrets.IAM_SECRET_KEY }}" \
+            UPLOAD_IMAGE_BUCKET_NAME="${{ vars.UPLOAD_IMAGE_BUCKET_NAME }}" \
+            UPLOAD_IMAGE_DOMAIN="${{ vars.UPLOAD_IMAGE_DOMAIN }}" \
+            DEX_IMAGE_BUCKET_NAME="${{ vars.DEX_IMAGE_BUCKET_NAME }}" \
+            DEX_IMAGE_DOMAIN="${{ vars.DEX_IMAGE_DOMAIN }}" \
+            APPLE_CLIENT_ID="${{ secrets.APPLE_CLIENT_ID }}" \
+            APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}" \
+            APPLE_KEY_ID="${{ secrets.APPLE_KEY_ID }}" \
+            APPLE_PRIVATE_KEY="${{ secrets.APPLE_PRIVATE_KEY }}" \
+            JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            KAKAO_ADMIN_KEY="${{ secrets.KAKAO_ADMIN_KEY }}" \
+            KAKAO_CLIENT_ID="${{ secrets.KAKAO_CLIENT_ID }}" \
+            KAKAO_REDIRECT_URI="${{ secrets.KAKAO_REDIRECT_URI }}" \
+            KAKAO_CLIENT_SECRET="${{ secrets.KAKAO_CLIENT_SECRET }}" \
+            KMS_KEY_ID="${{ secrets.KMS_KEY_ID }}" \
+            FIREBASE_ADMIN_KEY="${{ secrets.FIREBASE_ADMIN_KEY }}" \
+            nohup java -Duser.timezone=Asia/Seoul -jar $JAR_NAME --spring.profiles.active=dev > app.log 2>&1 &
+            
+            echo "✅ 배포 완료"
+            
