@@ -78,12 +78,13 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
             # 2) Create ephemeral env file in RAM (no disk residue)
-            sudo mkdir -p /run/saerok && sudo chmod 755 /run/saerok
+            #    - make /run/saerok owned by current user to avoid Permission denied
+            sudo install -d -m 0700 -o "$(id -un)" -g "$(id -gn)" /run/saerok
             ENV_FILE="/run/saerok/env.dev"
             umask 177
             : > "$ENV_FILE"
 
-            # 2-1) Write secrets safely
+            # 2-1) Write secrets safely (single-line values assumed)
             add_kv() { printf '%s\n' "$1=$2" >> "$ENV_FILE"; }
             add_kv DB_URL "${{ secrets.DB_URL }}"
             add_kv DB_USERNAME "${{ secrets.DB_USERNAME }}"
