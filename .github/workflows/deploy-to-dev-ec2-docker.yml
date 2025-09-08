@@ -1,0 +1,141 @@
+name: Deploy Dev (Docker Compose via GHCR)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 🧾 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔡 Normalize image repo (lowercase)
+        id: normalize
+        run: echo "image_repo=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: 🧱 Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: 🏷️ Meta (tags/labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.normalize.outputs.image_repo }}
+          tags: |
+            type=raw,value=dev-latest
+            type=sha,format=long,prefix=dev-
+
+      - name: 🏗️ Build & Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache
+          cache-to: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache,mode=max
+
+      - name: 📤 Copy compose files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: deploy/docker-compose.yml,deploy/docker-compose.dev.yml
+          target: ~/saerok/
+          strip_components: 1
+
+      - name: 🚀 Deploy on EC2 (pull & up)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+
+            cd ~/saerok
+
+            # 0) Docker & Compose must exist already
+            docker --version
+            docker compose version
+
+            # 1) Login to GHCR for pull
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+            # 2) Create ephemeral env file in RAM (no disk residue)
+            sudo mkdir -p /run/saerok && sudo chmod 755 /run/saerok
+            ENV_FILE="/run/saerok/env.dev"
+            umask 177
+            : > "$ENV_FILE"
+
+            # 2-1) Write secrets safely
+            add_kv() { printf '%s\n' "$1=$2" >> "$ENV_FILE"; }
+            add_kv DB_URL "${{ secrets.DB_URL }}"
+            add_kv DB_USERNAME "${{ secrets.DB_USERNAME }}"
+            add_kv DB_PASSWORD "${{ secrets.DB_PASSWORD }}"
+            add_kv APPLE_CLIENT_ID "${{ secrets.APPLE_CLIENT_ID }}"
+            add_kv APPLE_TEAM_ID "${{ secrets.APPLE_TEAM_ID }}"
+            add_kv APPLE_KEY_ID "${{ secrets.APPLE_KEY_ID }}"
+            add_kv APPLE_PRIVATE_KEY "${{ secrets.APPLE_PRIVATE_KEY }}"
+            add_kv FIREBASE_ADMIN_KEY "${{ secrets.FIREBASE_ADMIN_KEY }}"
+            add_kv JWT_SECRET "${{ secrets.JWT_SECRET }}"
+            add_kv IAM_ACCESS_KEY "${{ secrets.IAM_ACCESS_KEY }}"
+            add_kv IAM_SECRET_KEY "${{ secrets.IAM_SECRET_KEY }}"
+            add_kv UPLOAD_IMAGE_BUCKET_NAME "${{ vars.UPLOAD_IMAGE_BUCKET_NAME }}"
+            add_kv UPLOAD_IMAGE_DOMAIN "${{ vars.UPLOAD_IMAGE_DOMAIN }}"
+            add_kv DEX_IMAGE_BUCKET_NAME "${{ vars.DEX_IMAGE_BUCKET_NAME }}"
+            add_kv DEX_IMAGE_DOMAIN "${{ vars.DEX_IMAGE_DOMAIN }}"
+            add_kv KAKAO_ADMIN_KEY "${{ secrets.KAKAO_ADMIN_KEY }}"
+            add_kv KAKAO_CLIENT_ID "${{ secrets.KAKAO_CLIENT_ID }}"
+            add_kv KAKAO_REDIRECT_URI "${{ secrets.KAKAO_REDIRECT_URI }}"
+            add_kv KAKAO_CLIENT_SECRET "${{ secrets.KAKAO_CLIENT_SECRET }}"
+            add_kv KMS_KEY_ID "${{ secrets.KMS_KEY_ID }}"
+
+            # 3) Pull & Recreate with resource limits from dev.yml
+            docker compose \
+              --env-file "$ENV_FILE" \
+              -p saerok \
+              -f docker-compose.yml \
+              -f docker-compose.dev.yml \
+              pull --quiet
+
+            docker compose \
+              --env-file "$ENV_FILE" \
+              -p saerok \
+              -f docker-compose.yml \
+              -f docker-compose.dev.yml \
+              up -d --force-recreate --quiet-pull
+
+            # 4) Clean up env (memory file)
+            shred -u "$ENV_FILE" || rm -f "$ENV_FILE"
+
+            # 5) Show minimal status (no secrets)
+            docker compose -p saerok -f docker-compose.yml -f docker-compose.dev.yml ps
+            docker logs --tail=120 saerok-dev || true
+
+            # 6) Healthcheck
+            echo "Waiting for health endpoint..."
+            for i in {1..30}; do
+              if curl -fsS http://localhost:8080/health > /dev/null; then
+                echo "✅ Healthcheck passed"
+                exit 0
+              fi
+              echo "⏳ Waiting ($i/30)..."
+              sleep 5
+            done
+            echo "❌ Healthcheck failed after retries"
+            exit 1
