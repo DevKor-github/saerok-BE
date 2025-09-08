@@ -10,7 +10,12 @@ services:
     cpus: "0.75"
     mem_limit: "700m"
 
+    # 런타임에 생성한 RAM env 파일을 컨테이너로 그대로 주입
+    env_file:
+      - /run/saerok/env.dev
+
     environment:
+      # dev 오버레이에서 명시적으로 고정하고 싶은 값만 남김
       SPRING_PROFILES_ACTIVE: "dev"
       JAVA_OPTS: >-
         -Duser.timezone=Asia/Seoul
