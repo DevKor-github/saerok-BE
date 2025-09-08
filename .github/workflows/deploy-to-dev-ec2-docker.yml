@@ -1,6 +1,8 @@
 name: Deploy Dev (Docker Compose via GHCR)
 
 on:
+  push:
+    branches: [ develop ]
   workflow_dispatch:
 
 jobs:
@@ -65,9 +67,6 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          # ------------------------------
-          # 원격에서 실행될 스크립트
-          # ------------------------------
           script: |
             set -euo pipefail
 
@@ -137,11 +136,17 @@ jobs:
             for i in {1..30}; do
               if curl -fsS http://localhost:8080/health > /dev/null; then
                 echo "✅ Healthcheck passed"
+                # 6) SUCCESS: prune old images & build cache (not used in last 24h)
+                echo "Pruning unused images and build cache older than 24h..."
+                docker image prune -af --filter "until=24h" || true
+                docker builder prune -af --filter "until=24h" || true
                 exit 0
               fi
               echo "⏳ Waiting ($i/30)..."
               sleep 5
             done
+
             echo "❌ Healthcheck failed after retries"
             docker logs --tail=200 saerok-dev || true
+            # 실패 시에는 이미지/캐시 정리하지 않음(디버깅 용도)
             exit 1
