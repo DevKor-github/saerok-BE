@@ -65,6 +65,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          # ------------------------------
+          # 원격에서 실행될 스크립트
+          # ------------------------------
           script: |
             set -euo pipefail
 
@@ -78,14 +81,17 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
             # 2) Create ephemeral env file in RAM (no disk residue)
-            #    - make /run/saerok owned by current user to avoid Permission denied
             sudo install -d -m 0700 -o "$(id -un)" -g "$(id -gn)" /run/saerok
             ENV_FILE="/run/saerok/env.dev"
             umask 177
             : > "$ENV_FILE"
+            # 어떤 경우에도 마지막에 지우도록 보장
+            cleanup() { shred -u "$ENV_FILE" || rm -f "$ENV_FILE"; }
+            trap cleanup EXIT
 
             # 2-1) Write secrets safely (single-line values assumed)
             add_kv() { printf '%s\n' "$1=$2" >> "$ENV_FILE"; }
+            add_kv SPRING_PROFILES_ACTIVE "dev"
             add_kv DB_URL "${{ secrets.DB_URL }}"
             add_kv DB_USERNAME "${{ secrets.DB_USERNAME }}"
             add_kv DB_PASSWORD "${{ secrets.DB_PASSWORD }}"
@@ -122,14 +128,11 @@ jobs:
               -f docker-compose.dev.yml \
               up -d --force-recreate --quiet-pull
 
-            # 4) Clean up env (memory file)
-            shred -u "$ENV_FILE" || rm -f "$ENV_FILE"
-
-            # 5) Show minimal status (no secrets)
+            # 4) Status & recent logs (env 파일은 trap으로 종료 시 삭제)
             docker compose -p saerok -f docker-compose.yml -f docker-compose.dev.yml ps
             docker logs --tail=120 saerok-dev || true
 
-            # 6) Healthcheck
+            # 5) Healthcheck
             echo "Waiting for health endpoint..."
             for i in {1..30}; do
               if curl -fsS http://localhost:8080/health > /dev/null; then
@@ -140,4 +143,5 @@ jobs:
               sleep 5
             done
             echo "❌ Healthcheck failed after retries"
+            docker logs --tail=200 saerok-dev || true
             exit 1
