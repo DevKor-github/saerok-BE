@@ -1,0 +1,58 @@
+package org.devkor.apu.saerok_server.domain.community.application;
+
+import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
+import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
+import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityUserInfo;
+import org.devkor.apu.saerok_server.domain.community.mapper.CommunityWebMapper;
+import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+
+@Component
+@RequiredArgsConstructor
+public class CommunityDataAssembler {
+
+    private final CollectionImageUrlService collectionImageUrlService;
+    private final UserProfileImageUrlService userProfileImageUrlService;
+    private final CollectionLikeRepository collectionLikeRepository;
+    private final CollectionCommentRepository collectionCommentRepository;
+    private final CommunityWebMapper communityWebMapper;
+
+    public List<CommunityCollectionInfo> toCollectionInfos(List<UserBirdCollection> collections, Long userId) {
+        if (collections.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, String> imageUrls = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
+
+        return collections.stream()
+                .map(collection -> {
+                    String imageUrl = imageUrls.get(collection.getId());
+                    String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
+                    long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
+                    long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
+                    boolean isLiked = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collection.getId());
+                    
+                    return communityWebMapper.toCommunityCollectionInfo(
+                            collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLiked
+                    );
+                })
+                .toList();
+    }
+
+    public List<CommunityUserInfo> toUserInfos(List<User> users) {
+        return users.stream()
+                .map(user -> {
+                    String profileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(user);
+                    return communityWebMapper.toCommunityUserInfo(user, profileImageUrl);
+                })
+                .toList();
+    }
+}
