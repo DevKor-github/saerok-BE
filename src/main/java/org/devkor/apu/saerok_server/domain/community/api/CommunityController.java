@@ -13,7 +13,7 @@ import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommuni
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchUsersResponse;
 import org.devkor.apu.saerok_server.domain.community.application.CommunityQueryService;
-import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityPaginationCommand;
+import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ErrorResponse;
@@ -77,7 +77,7 @@ public class CommunityController {
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(required = false) Integer page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(required = false) Integer size
     ) {
-        CommunityPaginationCommand command = new CommunityPaginationCommand(page, size);
+        CommunityQueryCommand command = new CommunityQueryCommand(page, size, null);
         if (!command.hasValidPagination()) {
             throw new BadRequestException("page와 size 값이 유효하지 않아요.");
         }
@@ -112,7 +112,7 @@ public class CommunityController {
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(required = false) Integer page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(required = false) Integer size
     ) {
-        CommunityPaginationCommand command = new CommunityPaginationCommand(page, size);
+        CommunityQueryCommand command = new CommunityQueryCommand(page, size, null);
         if (!command.hasValidPagination()) {
             throw new BadRequestException("page와 size 값이 유효하지 않아요.");
         }
@@ -143,7 +143,7 @@ public class CommunityController {
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(required = false) Integer page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(required = false) Integer size
     ) {
-        CommunityPaginationCommand command = new CommunityPaginationCommand(page, size);
+        CommunityQueryCommand command = new CommunityQueryCommand(page, size, null);
         if (!command.hasValidPagination()) {
             throw new BadRequestException("page와 size 값이 유효하지 않아요.");
         }
@@ -200,13 +200,13 @@ public class CommunityController {
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(required = false) Integer page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(required = false) Integer size
     ) {
-        CommunityPaginationCommand command = new CommunityPaginationCommand(page, size);
+        CommunityQueryCommand command = new CommunityQueryCommand(page, size, q);
         if (!command.hasValidPagination()) {
             throw new BadRequestException("page와 size 값이 유효하지 않아요.");
         }
         
         Long userId = userPrincipal != null ? userPrincipal.getId() : null;
-        return communityQueryService.searchCollections(q, userId, command);
+        return communityQueryService.searchCollections(userId, command);
     }
 
     // 7) 검색 - 사용자
@@ -233,11 +233,11 @@ public class CommunityController {
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(required = false) Integer page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(required = false) Integer size
     ) {
-        CommunityPaginationCommand command = new CommunityPaginationCommand(page, size);
+        CommunityQueryCommand command = new CommunityQueryCommand(page, size, q);
         if (!command.hasValidPagination()) {
             throw new BadRequestException("page와 size 값이 유효하지 않아요.");
         }
         
-        return communityQueryService.searchUsers(q, command);
+        return communityQueryService.searchUsers(command);
     }
 }
