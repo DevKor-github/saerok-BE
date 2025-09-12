@@ -5,7 +5,9 @@ import org.devkor.apu.saerok_server.domain.collection.application.helper.Collect
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSuggestionRepository;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
+import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityPendingCollectionInfo;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityUserInfo;
 import org.devkor.apu.saerok_server.domain.community.mapper.CommunityWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -24,6 +26,7 @@ public class CommunityDataAssembler {
     private final CollectionLikeRepository collectionLikeRepository;
     private final CollectionCommentRepository collectionCommentRepository;
     private final CommunityWebMapper communityWebMapper;
+    private final BirdIdSuggestionRepository birdIdSuggestionRepository;
 
     public List<CommunityCollectionInfo> toCollectionInfos(List<UserBirdCollection> collections, Long userId) {
         if (collections.isEmpty()) {
@@ -52,6 +55,31 @@ public class CommunityDataAssembler {
                 .map(user -> {
                     String profileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(user);
                     return communityWebMapper.toCommunityUserInfo(user, profileImageUrl);
+                })
+                .toList();
+    }
+
+    public List<CommunityPendingCollectionInfo> toPendingCollectionInfos(List<UserBirdCollection> collections, Long userId) {
+        if (collections.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, String> imageUrls = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
+        List<Long> collectionIds = collections.stream().map(UserBirdCollection::getId).toList();
+        Map<Long, Long> suggestionUserCounts = birdIdSuggestionRepository.countDistinctUsersByCollectionIds(collectionIds);
+
+        return collections.stream()
+                .map(collection -> {
+                    String imageUrl = imageUrls.get(collection.getId());
+                    String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
+                    long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
+                    long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
+                    boolean isLiked = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collection.getId());
+                    long suggestionUserCount = suggestionUserCounts.getOrDefault(collection.getId(), 0L);
+                    
+                    return communityWebMapper.toCommunityPendingCollectionInfo(
+                            collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLiked, suggestionUserCount
+                    );
                 })
                 .toList();
     }

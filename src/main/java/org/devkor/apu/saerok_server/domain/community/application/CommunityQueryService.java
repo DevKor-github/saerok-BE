@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityMainResponse;
+import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityPendingCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchUsersResponse;
 import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
@@ -35,7 +36,7 @@ public class CommunityQueryService {
         return new GetCommunityMainResponse(
                 dataAssembler.toCollectionInfos(recentCollections, userId),
                 dataAssembler.toCollectionInfos(popularCollections, userId),
-                dataAssembler.toCollectionInfos(pendingCollections, userId)
+                dataAssembler.toPendingCollectionInfos(pendingCollections, userId)
         );
     }
 
@@ -49,9 +50,9 @@ public class CommunityQueryService {
         return new GetCommunityCollectionsResponse(dataAssembler.toCollectionInfos(collections, userId));
     }
 
-    public GetCommunityCollectionsResponse getPendingBirdIdCollections(Long userId, CommunityQueryCommand command) {
+    public GetCommunityPendingCollectionsResponse getPendingBirdIdCollections(Long userId, CommunityQueryCommand command) {
         List<UserBirdCollection> collections = communityRepository.findPendingBirdIdCollections(command);
-        return new GetCommunityCollectionsResponse(dataAssembler.toCollectionInfos(collections, userId));
+        return new GetCommunityPendingCollectionsResponse(dataAssembler.toPendingCollectionInfos(collections, userId));
     }
 
     public GetCommunitySearchResponse searchAll(String query, Long userId) {
