@@ -126,6 +126,30 @@ public class BirdIdSuggestionRepository {
     /* ──────────────────────────── 통계/집계용 ──────────────────────────── */
 
     /**
+     * 여러 컬렉션에 대한 동정 돕기 참여 유저 수를 일괄 조회
+     */
+    public Map<Long, Long> countDistinctUsersByCollectionIds(List<Long> collectionIds) {
+        if (collectionIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Object[]> results = em.createQuery(
+                        "SELECT s.collection.id, COUNT(DISTINCT s.user.id) " +
+                        "FROM BirdIdSuggestion s " +
+                        "WHERE s.collection.id IN :collectionIds " +
+                        "GROUP BY s.collection.id",
+                        Object[].class)
+                .setParameter("collectionIds", collectionIds)
+                .getResultList();
+
+        return results.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
+
+    /**
      * 특정 컬렉션의 특정 birdId에 대한 동의/비동의 카운트와 사용자 상태 조회
      * 
      * @param collectionId 컬렉션 ID
