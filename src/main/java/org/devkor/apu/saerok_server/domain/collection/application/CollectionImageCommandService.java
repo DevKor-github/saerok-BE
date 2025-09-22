@@ -13,6 +13,8 @@ import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageMetadataService;
+import org.devkor.apu.saerok_server.global.shared.util.dto.ExtractedImageMetadata;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -28,6 +30,7 @@ public class CollectionImageCommandService {
     private final CollectionImageRepository collectionImageRepository;
     private final ImageDomainService imageDomainService;
     private final ImageService imageService;
+    private final ImageMetadataService imageMetadataService;
 
     public PresignResponse generatePresignedUploadUrl(Long userId, Long collectionId, String contentType) {
 
@@ -57,9 +60,13 @@ public class CollectionImageCommandService {
                 .contentType(command.contentType())
                 .build();
 
+        // 이미지에서 메타데이터 추출
+        ExtractedImageMetadata extractedMetadata = imageMetadataService.extractMetadataFromS3Image(command.objectKey());
+        
         return new CreateCollectionImageResponse(
                 collectionImageRepository.save(image),
-                imageDomainService.toUploadImageUrl(image.getObjectKey())
+                imageDomainService.toUploadImageUrl(image.getObjectKey()),
+                extractedMetadata
         );
     }
 

@@ -78,6 +78,9 @@ dependencies {
 
 	// FCM admin SDK 추가
 	implementation 'com.google.firebase:firebase-admin:9.5.0'
+
+	// 메타데이터 추출을 위한 의존성 추가
+	implementation 'com.drewnoakes:metadata-extractor:2.19.0'
 }
 
 tasks.named('test') {
