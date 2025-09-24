@@ -1,7 +1,7 @@
 services:
   app:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     image: saerok-local:latest
     container_name: saerok-app
