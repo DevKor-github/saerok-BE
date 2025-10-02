@@ -33,9 +33,15 @@ public abstract class AbstractSocialAuthService {
 
     protected abstract SocialAuthClient client();
 
+    /** 기존 기본 흐름(redirect_uri 고정) */
     public ResponseEntity<AccessTokenResponse> authenticate(String authorizationCode, String accessToken, ClientInfo ci) {
-
         SocialUserInfo userInfo = client().fetch(authorizationCode, accessToken);
+        return authenticateWithUserInfo(userInfo, ci);
+    }
+
+    /** 공급자별 커스텀 흐름(예: redirect_uri 동적 선택)에서도 재사용 가능한 공통 후처리 */
+    protected ResponseEntity<AccessTokenResponse> authenticateWithUserInfo(SocialUserInfo userInfo, ClientInfo ci) {
+
         SocialProviderType provider = client().provider();
         log.info("사용자 인증 - provider: {}, sub: {}, email: {}", provider, userInfo.sub(), userInfo.email());
 

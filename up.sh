@@ -8,4 +8,4 @@ docker compose \
   -p saerok-be \
   -f deploy/docker-compose.yml \
   -f deploy/docker-compose.override.yml \
-  up -d
+  up --build -d

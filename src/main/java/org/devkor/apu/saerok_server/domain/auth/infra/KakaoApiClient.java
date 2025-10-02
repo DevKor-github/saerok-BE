@@ -21,8 +21,21 @@ public class KakaoApiClient {
     private final KakaoProperties kakaoProperties;
     private final WebClient webClient;
 
+    /** 기존 시그니처 유지 (redirect_uri는 프로퍼티 기본값 사용) */
     public String requestIdToken(String authorizationCode) {
+        return requestIdToken(authorizationCode, null);
+    }
+
+    /**
+     * redirect_uri를 호출 시점에 오버라이드할 수 있는 새로운 메서드.
+     * @param authorizationCode 인가 코드
+     * @param redirectUriOverride null이 아니면 이 값을 사용, null이면 프로퍼티의 기본 redirectUri 사용
+     */
+    public String requestIdToken(String authorizationCode, String redirectUriOverride) {
         String clientSecret = kakaoProperties.getClientSecret();
+        String redirectUri = (redirectUriOverride != null && !redirectUriOverride.isBlank())
+                ? redirectUriOverride
+                : kakaoProperties.getRedirectUri();
 
         Mono<KakaoTokenResponse> responseMono = webClient.post()
                 .uri("https://kauth.kakao.com/oauth/token")
@@ -31,12 +44,13 @@ public class KakaoApiClient {
                         .with("client_secret", clientSecret)
                         .with("grant_type", "authorization_code")
                         .with("code", authorizationCode)
-                        .with("redirect_uri", kakaoProperties.getRedirectUri())
+                        .with("redirect_uri", redirectUri)
+                        .with("scope", "openid account_email")
                 )
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response ->
                         response.bodyToMono(KakaoErrorResponse.class).flatMap(error -> {
-                            log.error("Kakao 인증 에러: {} (code: {})", error.getErrorCode(), authorizationCode);
+                            log.error("Kakao 인증 에러: {} (code: {}), redirect_uri={}", error.getErrorCode(), authorizationCode, redirectUri);
 
                             RuntimeException ex = switch (error.getErrorCode()) {
                                 case "KOE320"
@@ -59,6 +73,8 @@ public class KakaoApiClient {
             log.error("Kakao 인증 서버 통신 중 예외 발생 (code: {})", authorizationCode);
             throw e;
         }
+
+        log.info(response.toString());
 
         if (response == null || response.getIdToken() == null) {
             log.error("Kakao 인증 서버 응답 오류: idToken 없음 (code: {})", authorizationCode);
