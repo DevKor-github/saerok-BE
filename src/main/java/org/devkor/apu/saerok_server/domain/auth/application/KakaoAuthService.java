@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.auth.application;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResponse;
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
+import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.auth.core.service.UserProvisioningService;
 import org.devkor.apu.saerok_server.domain.auth.infra.KakaoAuthClient;
@@ -51,7 +52,8 @@ public class KakaoAuthService extends AbstractSocialAuthService {
      * channel(요청 주체)에 따라 허용된 redirect_uri를 선택해 Kakao 토큰 교환을 수행.
      * - authorizationCode 경로에서만 redirect_uri가 사용됨
      * - accessToken 경로는 기존 처리와 동일
-     * - channel이 "admin"이면 해당 계정이 ADMIN 권한을 가지고 있는지 선확인(없으면 403)
+     * channel == "admin" 인 경우, 해당 카카오 계정이 ADMIN_VIEWER 또는 ADMIN_EDITOR 권한을
+     * 이미 보유하고 있는지 선확인하고, 없으면 403으로 거부한다.
      */
     public ResponseEntity<AccessTokenResponse> authenticate(
             String authorizationCode,
@@ -67,23 +69,26 @@ public class KakaoAuthService extends AbstractSocialAuthService {
             userInfo = kakaoAuthClient.fetch(null, accessToken);
         }
 
-        // ===== ADMIN 채널 권한 검사 =====
+        // admin 채널 선권한 검증 (미보유시 관리자 시스템 로그인 불가)
         if ("admin".equalsIgnoreCase(channel)) {
-            // 기존 소셜 링크가 없으면 관리자 로그인 불가
-            var link = socialAuthRepository
-                    .findByProviderAndProviderUserId(kakaoAuthClient.provider(), userInfo.sub())
-                    .orElseThrow(() ->
-                            new ForbiddenException("관리자 권한이 없는 계정입니다 (미등록 계정)"));
+            SocialProviderType provider = kakaoAuthClient.provider();
 
-            var hasAdminRole = userRoleRepository.findByUser(link.getUser()).stream()
-                    .anyMatch(ur -> ur.getRole() == UserRoleType.ADMIN);
+            var link = socialAuthRepository
+                    .findByProviderAndProviderUserId(provider, userInfo.sub())
+                    .orElseThrow(() -> new ForbiddenException("관리자 권한이 없는 계정입니다."));
+
+            boolean hasAdminRole = userRoleRepository.findByUser(link.getUser()).stream()
+                    .anyMatch(ur ->
+                            ur.getRole() == UserRoleType.ADMIN_VIEWER
+                                    || ur.getRole() == UserRoleType.ADMIN_EDITOR
+                    );
 
             if (!hasAdminRole) {
-                throw new ForbiddenException("관리자 권한이 없는 계정입니다");
+                throw new ForbiddenException("관리자 권한이 없는 계정입니다. (ADMIN_VIEWER/ADMIN_EDITOR 필요)");
             }
         }
-        // =============================
 
+        // 이후 공통 후처리(토큰 발급, 쿠키 설정 등)는 상위 클래스에서 처리
         return authenticateWithUserInfo(userInfo, ci);
     }
 }
