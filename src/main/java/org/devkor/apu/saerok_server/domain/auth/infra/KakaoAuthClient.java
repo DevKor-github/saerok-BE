@@ -20,6 +20,7 @@ public class KakaoAuthClient implements SocialAuthClient {
         return SocialProviderType.KAKAO;
     }
 
+    /** 기존: 고정 redirect_uri 경로 */
     @Override
     public SocialUserInfo fetch(String authorizationCode, String accessToken) {
 
@@ -46,5 +47,22 @@ public class KakaoAuthClient implements SocialAuthClient {
         }
 
         throw new UnauthorizedException("로그인하려면 인가 코드 또는 액세스 토큰이 필요해요");
+    }
+
+    /** 신규: 호출 시점에 redirect_uri를 오버라이드하는 경로 */
+    public SocialUserInfo fetchWithRedirect(String authorizationCode, String accessToken, String redirectUriOverride) {
+
+        if (authorizationCode != null) {
+            String idToken = kakaoApiClient.requestIdToken(authorizationCode, redirectUriOverride);
+            DecodedJWT jwt = JWT.decode(idToken);
+            return new SocialUserInfo(
+                    jwt.getClaim("sub").asString(),
+                    jwt.getClaim("email").asString(),
+                    null
+            );
+        }
+
+        // accessToken 경로는 redirect_uri가 관여하지 않으므로 기존 처리 재사용
+        return fetch(null, accessToken);
     }
 }

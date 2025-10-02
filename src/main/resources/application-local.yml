@@ -49,6 +49,13 @@ kakao:
   client-secret: ${KAKAO_CLIENT_SECRET}
   admin-key: ${KAKAO_ADMIN_KEY}
 
+oauth:
+  kakao:
+    redirect-routing:
+      default-redirect-uri: ${KAKAO_REDIRECT_URI}
+      channels:
+        admin: ${KAKAO_REDIRECT_URI_ADMIN}
+
 app:
   cookie:
     secure: false
