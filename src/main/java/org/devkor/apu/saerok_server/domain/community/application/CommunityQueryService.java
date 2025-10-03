@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityMainResponse;
-import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityPendingCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchUsersResponse;
 import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
@@ -20,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommunityQueryService {
 
-    private static final int POPULAR_MIN_LIKES = 10;
+    private static final int POPULAR_MIN_LIKES = 3;
 
     private final CommunityRepository communityRepository;
     private final CommunityDataAssembler dataAssembler;
@@ -36,7 +35,7 @@ public class CommunityQueryService {
         return new GetCommunityMainResponse(
                 dataAssembler.toCollectionInfos(recentCollections, userId),
                 dataAssembler.toCollectionInfos(popularCollections, userId),
-                dataAssembler.toPendingCollectionInfos(pendingCollections, userId)
+                dataAssembler.toCollectionInfos(pendingCollections, userId)
         );
     }
 
@@ -50,9 +49,9 @@ public class CommunityQueryService {
         return new GetCommunityCollectionsResponse(dataAssembler.toCollectionInfos(collections, userId));
     }
 
-    public GetCommunityPendingCollectionsResponse getPendingBirdIdCollections(Long userId, CommunityQueryCommand command) {
+    public GetCommunityCollectionsResponse getPendingBirdIdCollections(Long userId, CommunityQueryCommand command) {
         List<UserBirdCollection> collections = communityRepository.findPendingBirdIdCollections(command);
-        return new GetCommunityPendingCollectionsResponse(dataAssembler.toPendingCollectionInfos(collections, userId));
+        return new GetCommunityCollectionsResponse(dataAssembler.toCollectionInfos(collections, userId));
     }
 
     public GetCommunitySearchResponse searchAll(String query, Long userId) {

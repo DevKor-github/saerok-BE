@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.community.mapper;
 
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
-import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityPendingCollectionInfo;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityUserInfo;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.mapstruct.Mapper;
@@ -23,32 +22,10 @@ public interface CommunityWebMapper {
     @Mapping(target = "likeCount", source = "likeCount")
     @Mapping(target = "commentCount", source = "commentCount")
     @Mapping(target = "isLiked", source = "isLiked")
+    @Mapping(target = "suggestionUserCount", source = "suggestionUserCount")
     @Mapping(target = "bird", expression = "java(mapBirdInfo(collection))")
     @Mapping(target = "user", expression = "java(mapUserInfo(collection, userProfileImageUrl))")
     CommunityCollectionInfo toCommunityCollectionInfo(
-            UserBirdCollection collection,
-            String imageUrl,
-            String userProfileImageUrl,
-            Long likeCount,
-            Long commentCount,
-            Boolean isLiked
-    );
-
-    @Mapping(target = "collectionId", source = "collection.id")
-    @Mapping(target = "imageUrl", source = "imageUrl")
-    @Mapping(target = "discoveredDate", source = "collection.discoveredDate")
-    @Mapping(target = "latitude", source = "collection.latitude")
-    @Mapping(target = "longitude", source = "collection.longitude")
-    @Mapping(target = "locationAlias", source = "collection.locationAlias")
-    @Mapping(target = "address", source = "collection.address")
-    @Mapping(target = "note", source = "collection.note")
-    @Mapping(target = "likeCount", source = "likeCount")
-    @Mapping(target = "commentCount", source = "commentCount")
-    @Mapping(target = "isLiked", source = "isLiked")
-    @Mapping(target = "suggestionUserCount", source = "suggestionUserCount")
-    @Mapping(target = "bird", expression = "java(mapPendingBirdInfo(collection))")
-    @Mapping(target = "user", expression = "java(mapPendingUserInfo(collection, userProfileImageUrl))")
-    CommunityPendingCollectionInfo toCommunityPendingCollectionInfo(
             UserBirdCollection collection,
             String imageUrl,
             String userProfileImageUrl,
@@ -78,27 +55,6 @@ public interface CommunityWebMapper {
             return null;
         }
         return new CommunityCollectionInfo.UserInfo(
-                collection.getUser().getId(),
-                collection.getUser().getNickname(),
-                profileImageUrl
-        );
-    }
-
-    default CommunityPendingCollectionInfo.BirdInfo mapPendingBirdInfo(UserBirdCollection collection) {
-        if (collection.getBird() == null) {
-            return null;
-        }
-        return new CommunityPendingCollectionInfo.BirdInfo(
-                collection.getBird().getId(),
-                collection.getBird().getName() != null ? collection.getBird().getName().getKoreanName() : null
-        );
-    }
-
-    default CommunityPendingCollectionInfo.UserInfo mapPendingUserInfo(UserBirdCollection collection, String profileImageUrl) {
-        if (collection.getUser() == null) {
-            return null;
-        }
-        return new CommunityPendingCollectionInfo.UserInfo(
                 collection.getUser().getId(),
                 collection.getUser().getNickname(),
                 profileImageUrl

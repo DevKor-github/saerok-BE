@@ -10,7 +10,6 @@ import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityMainResponse;
-import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityPendingCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchUsersResponse;
 import org.devkor.apu.saerok_server.domain.community.application.CommunityQueryService;
@@ -136,10 +135,10 @@ public class CommunityController {
             """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "조회 성공",
-                            content = @Content(schema = @Schema(implementation = GetCommunityPendingCollectionsResponse.class)))
+                            content = @Content(schema = @Schema(implementation = GetCommunityCollectionsResponse.class)))
             }
     )
-    public GetCommunityPendingCollectionsResponse getPendingCollections(
+    public GetCommunityCollectionsResponse getPendingCollections(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(required = false) Integer page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(required = false) Integer size
