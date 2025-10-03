@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.community.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
-import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityPendingCollectionInfo;
 
 import java.util.List;
 
@@ -15,5 +14,5 @@ public record GetCommunityMainResponse(
         List<CommunityCollectionInfo> popularCollections,
         
         @Schema(description = "동정 요청 새록 목록 (최대 3개)")
-        List<CommunityPendingCollectionInfo> pendingCollections
+        List<CommunityCollectionInfo> pendingCollections
 ) {}
