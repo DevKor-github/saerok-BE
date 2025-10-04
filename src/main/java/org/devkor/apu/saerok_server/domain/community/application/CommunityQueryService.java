@@ -19,8 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommunityQueryService {
 
-    private static final int POPULAR_MIN_LIKES = 3;
-
     private final CommunityRepository communityRepository;
     private final CommunityDataAssembler dataAssembler;
 
@@ -29,7 +27,7 @@ public class CommunityQueryService {
         CommunityQueryCommand mainCommand = new CommunityQueryCommand(1, 3, null);
 
         List<UserBirdCollection> recentCollections = communityRepository.findRecentPublicCollections(mainCommand);
-        List<UserBirdCollection> popularCollections = communityRepository.findPopularCollections(mainCommand, POPULAR_MIN_LIKES);
+        List<UserBirdCollection> popularCollections = communityRepository.findPopularCollections(mainCommand);
         List<UserBirdCollection> pendingCollections = communityRepository.findPendingBirdIdCollections(mainCommand);
 
         return new GetCommunityMainResponse(
@@ -45,7 +43,7 @@ public class CommunityQueryService {
     }
 
     public GetCommunityCollectionsResponse getPopularCollections(Long userId, CommunityQueryCommand command) {
-        List<UserBirdCollection> collections = communityRepository.findPopularCollections(command, POPULAR_MIN_LIKES);
+        List<UserBirdCollection> collections = communityRepository.findPopularCollections(command);
         return new GetCommunityCollectionsResponse(dataAssembler.toCollectionInfos(collections, userId));
     }
 
