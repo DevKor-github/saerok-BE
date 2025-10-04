@@ -4,6 +4,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelTyp
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
+import org.devkor.apu.saerok_server.domain.community.core.entity.PopularCollection;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdTaxonomy;
@@ -169,22 +170,30 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
-    @DisplayName("최소 좋아요 수 이상의 PUBLIC 컬렉션만 조회")
-    void findPopular_returnsWithMinLikes() throws Exception {
+    @DisplayName("PopularCollection 테이블에 등록된 PUBLIC 컬렉션만 조회")
+    void findPopular_returnsRegisteredPopular() throws Exception {
         // given
         User user = newUser("user");
         Bird bird = newBird("참새");
-        int minLikes = 5;
 
-        UserBirdCollection popular = newCollection(user, bird, AccessLevelType.PUBLIC, null);
-        UserBirdCollection notPopular = newCollection(user, bird, AccessLevelType.PUBLIC, null);
+        OffsetDateTime now = OffsetDateTime.now();
+        UserBirdCollection popularOld = newCollection(user, bird, AccessLevelType.PUBLIC, null);
+        UserBirdCollection popularNew = newCollection(user, bird, AccessLevelType.PUBLIC, null);
         UserBirdCollection privatePopular = newCollection(user, bird, AccessLevelType.PRIVATE, null);
 
         em.flush();
         
-        addLikes(popular, 10);
-        addLikes(notPopular, 3);
-        addLikes(privatePopular, 10);
+        // PopularCollection 에 등록
+        PopularCollection pc1 = new PopularCollection(popularOld);
+        ReflectionTestUtils.setField(pc1, "createdAt", now.minusDays(1));
+        em.persist(pc1);
+        
+        PopularCollection pc2 = new PopularCollection(popularNew);
+        ReflectionTestUtils.setField(pc2, "createdAt", now);
+        em.persist(pc2);
+        
+        PopularCollection pc3 = new PopularCollection(privatePopular);
+        em.persist(pc3);
 
         CommunityQueryCommand command = new CommunityQueryCommand(1, 10, null);
 
@@ -192,11 +201,12 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
         em.clear();
 
         // when
-        List<UserBirdCollection> result = communityRepository.findPopularCollections(command, minLikes);
+        List<UserBirdCollection> result = communityRepository.findPopularCollections(command);
 
         // then
-        assertEquals(1, result.size(), "최소 좋아요 수 이상의 PUBLIC 컬렉션만");
-        assertEquals(popular.getId(), result.getFirst().getId());
+        assertEquals(2, result.size(), "PopularCollection에 등록된 PUBLIC 컬렉션만");
+        assertEquals(popularNew.getId(), result.get(0).getId(), "최근에 등록된 컬렉션이 먼저");
+        assertEquals(popularOld.getId(), result.get(1).getId(), "이전에 등록된 컬렉션이 다음");
     }
 
     @Test

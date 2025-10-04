@@ -65,6 +65,7 @@ class CommunityQueryServiceTest {
             String note,
             Long likeCount,
             Long commentCount,
+            Boolean isPopular,
             Long suggestionUserCount,
             CommunityCollectionInfo.BirdInfo birdInfo,
             CommunityCollectionInfo.UserInfo userInfo
@@ -81,6 +82,7 @@ class CommunityQueryServiceTest {
                 likeCount,
                 commentCount,
                 false,
+                isPopular,
                 suggestionUserCount,
                 birdInfo,
                 userInfo
@@ -133,7 +135,7 @@ class CommunityQueryServiceTest {
         
         given(communityRepository.findRecentPublicCollections(org.mockito.ArgumentMatchers.any()))
                 .willReturn(List.of());
-        given(communityRepository.findPopularCollections(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyInt()))
+        given(communityRepository.findPopularCollections(org.mockito.ArgumentMatchers.any()))
                 .willReturn(List.of());
         given(communityRepository.findPendingBirdIdCollections(org.mockito.ArgumentMatchers.any()))
                 .willReturn(List.of());
@@ -173,13 +175,13 @@ class CommunityQueryServiceTest {
         
         CommunityCollectionInfo pendingInfo = collectionInfo(
                 1L, "https://example.com/image1.jpg", "이게 무슨 새일까요?",
-                10L, 5L, 3L, null, userInfo
+                10L, 5L, false, 3L, null, userInfo
         );
         
         CommunityCollectionInfo.BirdInfo birdInfo = new CommunityCollectionInfo.BirdInfo(100L, "까치");
         CommunityCollectionInfo normalInfo = collectionInfo(
                 2L, "https://example.com/image2.jpg", "까치를 발견했어요!",
-                15L, 7L, null, birdInfo, userInfo
+                15L, 7L, false, null, birdInfo, userInfo
         );
         
         given(dataAssembler.toCollectionInfos(collections, userId))
