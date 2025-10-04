@@ -39,6 +39,9 @@ public record CommunityCollectionInfo(
         @Schema(description = "내가 좋아요 눌렀는지 여부", example = "true")
         Boolean isLiked,
         
+        @Schema(description = "인기 컬렉션 여부", example = "true")
+        Boolean isPopular,
+        
         @Schema(description = "동정 돕기에 참여한 유저 수 (동정 요청 컬렉션인 경우에만)", example = "5", nullable = true)
         Long suggestionUserCount,
         

@@ -22,6 +22,7 @@ public interface CommunityWebMapper {
     @Mapping(target = "likeCount", source = "likeCount")
     @Mapping(target = "commentCount", source = "commentCount")
     @Mapping(target = "isLiked", source = "isLiked")
+    @Mapping(target = "isPopular", source = "isPopular")
     @Mapping(target = "suggestionUserCount", source = "suggestionUserCount")
     @Mapping(target = "bird", expression = "java(mapBirdInfo(collection))")
     @Mapping(target = "user", expression = "java(mapUserInfo(collection, userProfileImageUrl))")
@@ -32,6 +33,7 @@ public interface CommunityWebMapper {
             Long likeCount,
             Long commentCount,
             Boolean isLiked,
+            Boolean isPopular,
             Long suggestionUserCount
     );
 
