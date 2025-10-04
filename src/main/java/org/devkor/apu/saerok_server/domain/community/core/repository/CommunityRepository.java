@@ -33,16 +33,16 @@ public class CommunityRepository {
     }
 
     // 인기 있는 컬렉션들을 조회 (좋아요 수가 minLikes 이상인 것들 최신순)
-    public List<UserBirdCollection> findPopularCollections(CommunityQueryCommand command, int minLikes) {
+    public List<UserBirdCollection> findPopularCollections(CommunityQueryCommand command) {
         Query query = em.createQuery("""
             SELECT c FROM UserBirdCollection c
             JOIN FETCH c.user u
             LEFT JOIN FETCH c.bird b
-            WHERE c.accessLevel = :public AND (SELECT COUNT(l) FROM UserBirdCollectionLike l WHERE l.collection.id = c.id) >= :minLikes
-            ORDER BY c.createdAt DESC
+            JOIN PopularCollection pc ON pc.collection.id = c.id
+            WHERE c.accessLevel = :public
+            ORDER BY pc.createdAt DESC
             """, UserBirdCollection.class)
-                .setParameter("public", AccessLevelType.PUBLIC)
-                .setParameter("minLikes", minLikes);
+                .setParameter("public", AccessLevelType.PUBLIC);
 
         applyPagination(query, command);
         return query.getResultList();
