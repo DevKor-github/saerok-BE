@@ -28,11 +28,8 @@ public class AdminReportQueryService {
     private final CollectionReportRepository collectionReportRepository;
     private final CollectionCommentReportRepository commentReportRepository;
 
-    private final CollectionRepository collectionRepository;
-    private final CollectionCommentRepository commentRepository;
     private final CollectionLikeRepository collectionLikeRepository;
     private final CollectionCommentRepository collectionCommentRepository;
-    private final CollectionImageRepository collectionImageRepository;
 
     private final CollectionWebMapper collectionWebMapper;
     private final CollectionCommentQueryService commentQueryService;
