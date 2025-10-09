@@ -60,6 +60,7 @@ public class AdminReportCommandService {
         // 3) 컬렉션 삭제
         UserBirdCollection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new NotFoundException("해당 컬렉션이 존재하지 않아요"));
+        collectionImageRepository.removeByCollectionId(collection.getId());
         collectionRepository.remove(collection);
 
         // 4) 트랜잭션 커밋 후 S3 이미지 삭제
