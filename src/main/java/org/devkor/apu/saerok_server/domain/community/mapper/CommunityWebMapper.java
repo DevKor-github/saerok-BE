@@ -4,16 +4,18 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityUserInfo;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
+import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, imports = OffsetDateTimeLocalizer.class)
 public interface CommunityWebMapper {
 
     @Mapping(target = "collectionId", source = "collection.id")
     @Mapping(target = "imageUrl", source = "imageUrl")
     @Mapping(target = "discoveredDate", source = "collection.discoveredDate")
+    @Mapping(target = "uploadedDate", expression = "java(OffsetDateTimeLocalizer.toSeoulLocalDateTime(collection.getCreatedAt()))")
     @Mapping(target = "latitude", source = "collection.latitude")
     @Mapping(target = "longitude", source = "collection.longitude")
     @Mapping(target = "locationAlias", source = "collection.locationAlias")
