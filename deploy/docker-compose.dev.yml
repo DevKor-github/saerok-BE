@@ -19,9 +19,9 @@ services:
       SPRING_PROFILES_ACTIVE: "dev"
       JAVA_OPTS: >-
         -Duser.timezone=Asia/Seoul
-        -Xms256m -Xmx320m         # 힙을 '고정'으로 잡아 총량 예측 가능하게
+        -Xms256m -Xmx320m
         -XX:MaxMetaspaceSize=96m
         -XX:MaxDirectMemorySize=32m
         -XX:ReservedCodeCacheSize=64m
-        -XX:+UseSerialGC          # 소형 힙에 유리
+        -XX:+UseSerialGC
         -XX:+ExitOnOutOfMemoryError
