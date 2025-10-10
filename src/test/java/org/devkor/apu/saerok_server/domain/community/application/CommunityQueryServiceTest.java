@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,6 +75,7 @@ class CommunityQueryServiceTest {
                 collectionId,
                 imageUrl,
                 LocalDate.of(2024, 3, 15),
+                LocalDateTime.of(2024, 3, 15, 10, 30, 0),
                 37.5665,
                 126.9780,
                 null,

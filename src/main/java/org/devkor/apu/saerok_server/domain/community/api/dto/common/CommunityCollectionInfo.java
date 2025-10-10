@@ -16,7 +16,7 @@ public record CommunityCollectionInfo(
         @Schema(description = "발견 날짜", example = "2024-03-15")
         LocalDate discoveredDate,
 
-        @Schema(description = "생성 시각", example = "2024-03-15T10:30:00")
+        @Schema(description = "업로드 날짜", example = "2024-03-15T10:30:00")
         LocalDateTime uploadedDate,
         
         @Schema(description = "위도", example = "37.987654")
