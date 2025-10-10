@@ -109,6 +109,7 @@ jobs:
             add_kv KAKAO_ADMIN_KEY "${{ secrets.KAKAO_ADMIN_KEY }}"
             add_kv KAKAO_CLIENT_ID "${{ secrets.KAKAO_CLIENT_ID }}"
             add_kv KAKAO_REDIRECT_URI "${{ secrets.KAKAO_REDIRECT_URI }}"
+            add_kv KAKAO_REDIRECT_URI_ADMIN "${{ secrets.KAKAO_REDIRECT_URI_ADMIN }}"
             add_kv KAKAO_CLIENT_SECRET "${{ secrets.KAKAO_CLIENT_SECRET }}"
             add_kv KMS_KEY_ID "${{ secrets.KMS_KEY_ID }}"
 
