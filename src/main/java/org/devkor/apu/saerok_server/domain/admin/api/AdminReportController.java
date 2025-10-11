@@ -13,8 +13,10 @@ import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCommen
 import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCommentListResponse;
 import org.devkor.apu.saerok_server.domain.admin.application.AdminReportCommandService;
 import org.devkor.apu.saerok_server.domain.admin.application.AdminReportQueryService;
+import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Admin Reports API", description = "관리자용 신고 관리 API")
@@ -100,24 +102,6 @@ public class AdminReportController {
 
     /* ──────────────── 처리 (ADMIN_EDITOR) ──────────────── */
 
-    @PostMapping("/collections/{reportId}/ignore")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
-    @Operation(
-            summary = "신고 무시(새록 신고 단건 삭제)",
-            description = "관리자 권한 필요: ADMIN_EDITOR",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            responses = {
-                    @ApiResponse(responseCode = "204", description = "무시 처리 성공(신고 삭제)"),
-                    @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-                    @ApiResponse(responseCode = "403", description = "관리자 권한 없음", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "해당 신고 없음", content = @Content)
-            }
-    )
-    public void ignoreCollectionReport(@PathVariable Long reportId) {
-        commandService.ignoreCollectionReport(reportId);
-    }
-
     @DeleteMapping("/collections/{reportId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN_EDITOR')")
@@ -129,19 +113,20 @@ public class AdminReportController {
                     @ApiResponse(responseCode = "204", description = "삭제 성공"),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "해당 신고/컬렉션 없음", content = @Content)
+                    @ApiResponse(responseCode = "404", description = "해당 신고/새록 없음", content = @Content)
             }
     )
-    public void deleteCollectionByReport(@PathVariable Long reportId) {
-        commandService.deleteCollectionByReport(reportId);
+    public void deleteCollectionByReport(@PathVariable Long reportId,
+                                         @AuthenticationPrincipal UserPrincipal admin) {
+        commandService.deleteCollectionByReport(admin.getId(), reportId);
     }
 
-    @PostMapping("/comments/{reportId}/ignore")
+    @PostMapping("/collections/{reportId}/ignore")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
     @Operation(
-            summary = "신고 무시(댓글 신고 단건 삭제)",
-            description = "관리자 권한 필요: ADMIN_EDITOR",
+            summary = "새록 신고 무시(신고 삭제)",
+            description = "관리자 권한 필요: ADMIN_VIEWER 또는 ADMIN_EDITOR",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "204", description = "무시 처리 성공(신고 삭제)"),
@@ -150,8 +135,28 @@ public class AdminReportController {
                     @ApiResponse(responseCode = "404", description = "해당 신고 없음", content = @Content)
             }
     )
-    public void ignoreCommentReport(@PathVariable Long reportId) {
-        commandService.ignoreCommentReport(reportId);
+    public void ignoreCollectionReport(@PathVariable Long reportId,
+                                       @AuthenticationPrincipal UserPrincipal admin) {
+        commandService.ignoreCollectionReport(admin.getId(), reportId);
+    }
+
+    @PostMapping("/comments/{reportId}/ignore")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @Operation(
+            summary = "댓글 신고 무시(신고 삭제)",
+            description = "관리자 권한 필요: ADMIN_VIEWER 또는 ADMIN_EDITOR",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "무시 처리 성공(신고 삭제)"),
+                    @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "관리자 권한 없음", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "해당 신고 없음", content = @Content)
+            }
+    )
+    public void ignoreCommentReport(@PathVariable Long reportId,
+                                    @AuthenticationPrincipal UserPrincipal admin) {
+        commandService.ignoreCommentReport(admin.getId(), reportId);
     }
 
     @DeleteMapping("/comments/{reportId}")
@@ -168,7 +173,8 @@ public class AdminReportController {
                     @ApiResponse(responseCode = "404", description = "해당 신고/댓글 없음", content = @Content)
             }
     )
-    public void deleteCommentByReport(@PathVariable Long reportId) {
-        commandService.deleteCommentByReport(reportId);
+    public void deleteCommentByReport(@PathVariable Long reportId,
+                                      @AuthenticationPrincipal UserPrincipal admin) {
+        commandService.deleteCommentByReport(admin.getId(), reportId);
     }
 }
