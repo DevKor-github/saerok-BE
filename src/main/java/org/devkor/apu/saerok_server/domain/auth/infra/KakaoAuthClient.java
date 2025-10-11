@@ -39,6 +39,7 @@ public class KakaoAuthClient implements SocialAuthClient {
         if (accessToken != null) {
             log.info("accessToken: {}", accessToken);
             KakaoUserInfoResponse userInfo = kakaoApiClient.fetchUserInfo(accessToken);
+            log.info("email: {}", userInfo.getKakaoAccount().getEmail());
             if (userInfo.getKakaoAccount().getIsEmailValid() && userInfo.getKakaoAccount().getIsEmailVerified()) {
                 return new SocialUserInfo(
                         userInfo.getId().toString(),
