@@ -37,12 +37,16 @@ public class KakaoAuthClient implements SocialAuthClient {
         }
 
         if (accessToken != null) {
-            // ✅ 앱 키 섞임 방지: access_token_info 로 appId 검증
-            kakaoApiClient.validateAccessTokenAppId(accessToken);
 
             log.info("accessToken: {}", accessToken);
             KakaoUserInfoResponse userInfo = kakaoApiClient.fetchUserInfo(accessToken);
             log.info("email: {}", userInfo.getKakaoAccount().getEmail());
+
+            // ✅ 앱 키 섞임 방지: access_token_info 로 appId 검증
+            kakaoApiClient.validateAccessTokenAppId(accessToken);
+            // TODO: validateAccessTokenAppId가 fetchUserInfo보다 먼저 오는 게 맞는데,
+            //  개발 서버 DB의 잘못된 sub 값 수정을 위해 임시 조치함. 롤백하기
+
             if (userInfo.getKakaoAccount().getIsEmailValid() && userInfo.getKakaoAccount().getIsEmailVerified()) {
                 return new SocialUserInfo(
                         userInfo.getId().toString(),
