@@ -3,12 +3,14 @@ package org.devkor.apu.saerok_server.domain.auth.infra;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoUserInfoResponse;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
 import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KakaoAuthClient implements SocialAuthClient {
@@ -35,6 +37,7 @@ public class KakaoAuthClient implements SocialAuthClient {
         }
 
         if (accessToken != null) {
+            log.info("accessToken: {}", accessToken);
             KakaoUserInfoResponse userInfo = kakaoApiClient.fetchUserInfo(accessToken);
             if (userInfo.getKakaoAccount().getIsEmailValid() && userInfo.getKakaoAccount().getIsEmailVerified()) {
                 return new SocialUserInfo(
