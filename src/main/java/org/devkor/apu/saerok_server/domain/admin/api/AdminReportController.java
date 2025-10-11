@@ -123,10 +123,10 @@ public class AdminReportController {
 
     @PostMapping("/collections/{reportId}/ignore")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("hasAnyRole('ADMIN_EDITOR')")
     @Operation(
             summary = "새록 신고 무시(신고 삭제)",
-            description = "관리자 권한 필요: ADMIN_VIEWER 또는 ADMIN_EDITOR",
+            description = "관리자 권한 필요: ADMIN_EDITOR",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "204", description = "무시 처리 성공(신고 삭제)"),
@@ -142,10 +142,10 @@ public class AdminReportController {
 
     @PostMapping("/comments/{reportId}/ignore")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("hasAnyRole('ADMIN_EDITOR')")
     @Operation(
             summary = "댓글 신고 무시(신고 삭제)",
-            description = "관리자 권한 필요: ADMIN_VIEWER 또는 ADMIN_EDITOR",
+            description = "관리자 권한 필요: ADMIN_EDITOR",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "204", description = "무시 처리 성공(신고 삭제)"),
