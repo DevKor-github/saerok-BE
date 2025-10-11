@@ -13,7 +13,10 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.ProfileImageDefaultService;
 import org.devkor.apu.saerok_server.global.shared.exception.SocialAuthAlreadyExistsException;
+import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,10 +36,30 @@ public class UserProvisioningService {
      */
     public SocialAuth provisionNewUser(SocialProviderType provider, SocialUserInfo userInfo) {
 
+        // 같은 provider + 같은 sub가 이미 등록되어 있으면 보호
         if (socialAuthRepository.findByProviderAndProviderUserId(provider, userInfo.sub()).isPresent()) {
             throw new SocialAuthAlreadyExistsException(provider, userInfo.sub());
         }
 
+        // (추가) 같은 이메일의 유저가 이미 있는데, 같은 provider에 다른 sub가 등록된 경우 → 명시적 401
+        if (userInfo.email() != null && !userInfo.email().isBlank()) {
+            userRepository.findByEmail(userInfo.email()).ifPresent(existing -> {
+                List<SocialAuth> links = socialAuthRepository.findByUserId(existing.getId());
+                boolean sameProviderDifferentSub = links.stream()
+                        .anyMatch(l -> l.getProvider() == provider && !userInfo.sub().equals(l.getProviderUserId()));
+
+                if (sameProviderDifferentSub) {
+                    // FE에 바로 보여줄 수 있도록 명시적인 메시지
+                    throw new UnauthorizedException(
+                            "이 이메일로 이미 가입된 계정이 있어요. "
+                                    + provider.name() + " 로그인 정보가 기존 계정과 일치하지 않아 로그인할 수 없습니다. "
+                                    + "기존에 연결된 카카오 계정으로 로그인하거나, 관리자를 통해 계정 연결을 요청해 주세요."
+                    );
+                }
+            });
+        }
+
+        // 정상 신규 프로비저닝
         User user = userRepository.save(User.createUser(userInfo.email()));
         profileImageDefaultService.setRandomVariant(user);
 

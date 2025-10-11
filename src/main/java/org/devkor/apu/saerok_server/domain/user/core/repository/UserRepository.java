@@ -38,4 +38,11 @@ public class UserRepository {
                 .getResultStream()
                 .findFirst();
     }
+
+    public Optional<User> findByEmail(String email) {
+        return em.createQuery("SELECT u FROM User u WHERE u.email = :email AND u.deletedAt IS NULL", User.class)
+                .setParameter("email", email)
+                .getResultStream()
+                .findFirst();
+    }
 }
