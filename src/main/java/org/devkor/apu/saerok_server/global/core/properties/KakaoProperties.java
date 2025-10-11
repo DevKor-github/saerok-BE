@@ -15,4 +15,11 @@ public class KakaoProperties {
     private String redirectUri;
     private String clientSecret;
     private String adminKey;
+
+    /**
+     * Kakao 앱의 고유 숫자 ID.
+     * /v1/user/access_token_info 응답의 appId와 일치해야 한다.
+     * application.yml 에서는 kakao.app-id 로 설정한다.
+     */
+    private Long appId;
 }

@@ -1,7 +1,9 @@
+// ===== ./src/main/java/org/devkor/apu/saerok_server/domain/auth/infra/KakaoApiClient.java =====
 package org.devkor.apu.saerok_server.domain.auth.infra;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoAccessTokenInfoResponse;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoErrorResponse;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoTokenResponse;
 import org.devkor.apu.saerok_server.domain.auth.infra.dto.KakaoUserInfoResponse;
@@ -50,21 +52,17 @@ public class KakaoApiClient {
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response ->
                         response.bodyToMono(KakaoErrorResponse.class).flatMap(error -> {
-                            log.error("Kakao 인증 에러: {} (code: {}), redirect_uri={}", error.getErrorCode(), authorizationCode, redirectUri);
+                                    log.error("Kakao 인증 에러: {} (code: {}), redirect_uri={}", error.getErrorCode(), authorizationCode, redirectUri);
 
-                            RuntimeException ex = switch (error.getErrorCode()) {
-                                case "KOE320"
-                                        -> new OAuthException("유효하지 않거나 만료된 인가 토큰", 401);
-                                case "KOE101"
-                                        -> new OAuthException("Kakao client_id 등 서버 설정 오류", 401);
-                                case "KOE303"
-                                        -> new OAuthException("Redirect URI mismatch", 401);
-                                default
-                                        -> new OAuthException("Kakao 인증 실패: " + error.getError() + " / " + error.getErrorCode(), 401);
-                            };
-                            return Mono.error(ex);
-                        }))
-                .bodyToMono(KakaoTokenResponse.class);
+                                    RuntimeException ex = switch (error.getErrorCode()) {
+                                        case "KOE320" -> new OAuthException("유효하지 않거나 만료된 인가 토큰", 401);
+                                        case "KOE101" -> new OAuthException("Kakao client_id 등 서버 설정 오류", 401);
+                                        case "KOE303" -> new OAuthException("Redirect URI mismatch", 401);
+                                        default -> new OAuthException("Kakao 인증 실패: " + error.getError() + " / " + error.getErrorCode(), 401);
+                                    };
+                                    return Mono.error(ex);
+                                }))
+                                .bodyToMono(KakaoTokenResponse.class);
 
         KakaoTokenResponse response;
         try {
@@ -74,14 +72,62 @@ public class KakaoApiClient {
             throw e;
         }
 
-        log.info(response.toString());
-
         if (response == null || response.getIdToken() == null) {
             log.error("Kakao 인증 서버 응답 오류: idToken 없음 (code: {})", authorizationCode);
             throw new IllegalStateException("Kakao 인증 서버 응답 오류");
         }
 
         return response.getIdToken();
+    }
+
+    /**
+     * 토큰이 어떤 Kakao 앱에서 발급되었는지 확인하기 위한 조회.
+     * Authorization: Bearer {accessToken}
+     */
+    public KakaoAccessTokenInfoResponse fetchAccessTokenInfo(String accessToken) {
+
+        Mono<KakaoAccessTokenInfoResponse> mono = webClient.get()
+                .uri("https://kapi.kakao.com/v1/user/access_token_info")
+                .header("Authorization", "Bearer " + accessToken)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response ->
+                        response.bodyToMono(KakaoErrorResponse.class).flatMap(error -> {
+                            log.error("카카오 access_token_info 조회 실패: {}", error.getMsg());
+                            return Mono.error(new OAuthException("카카오 access_token_info 조회 실패: " + error.getMsg(), 401));
+                        })
+                )
+                .bodyToMono(KakaoAccessTokenInfoResponse.class);
+
+        try {
+            KakaoAccessTokenInfoResponse info = mono.block();
+            if (info == null) {
+                log.error("카카오 access_token_info 응답이 null임");
+                throw new IllegalStateException("카카오 access_token_info 응답 오류");
+            }
+            return info;
+        } catch (RuntimeException e) {
+            log.error("카카오 access_token_info 조회 중 예외 발생", e);
+            throw e;
+        }
+    }
+
+    /**
+     * accessToken 이 서버가 신뢰하는 Kakao 앱(appId)에서 발급되었는지 검증.
+     * 불일치 시 401(OAuthException)로 거부.
+     */
+    public void validateAccessTokenAppId(String accessToken) {
+        Long expected = kakaoProperties.getAppId();
+        if (expected == null) {
+            log.warn("kakao.app-id 가 설정되지 않아서 access_token appId 검증을 건너뜁니다. 설정을 추가하세요.");
+            return;
+        }
+        KakaoAccessTokenInfoResponse info = fetchAccessTokenInfo(accessToken);
+        Long actual = info.getAppId();
+
+        if (!expected.equals(actual)) {
+            log.error("Kakao accessToken appId 불일치: expected={}, actual={}", expected, actual);
+            throw new OAuthException("카카오 액세스 토큰이 서버 앱과 일치하지 않아요", 401);
+        }
     }
 
     public KakaoUserInfoResponse fetchUserInfo(String accessToken) {
