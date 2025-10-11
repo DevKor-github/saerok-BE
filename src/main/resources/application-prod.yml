@@ -63,6 +63,7 @@ kakao:
   redirect-uri: ${KAKAO_REDIRECT_URI}
   client-secret: ${KAKAO_CLIENT_SECRET}
   admin-key: ${KAKAO_ADMIN_KEY}
+  app-id: ${KAKAO_APP_ID}
 
 oauth:
   kakao:
