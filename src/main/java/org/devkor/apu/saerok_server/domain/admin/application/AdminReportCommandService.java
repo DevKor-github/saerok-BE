@@ -98,7 +98,7 @@ public class AdminReportCommandService {
 
     /* ───────────── 신고 대상 삭제 ───────────── */
 
-    public void deleteCollectionByReport(Long adminUserId, Long reportId) {
+    public void deleteCollectionByReport(Long adminUserId, Long reportId, String reason) {
         UserBirdCollectionReport report = collectionReportRepository.findById(reportId)
                 .orElseThrow(() -> new NotFoundException("해당 ID의 새록 신고가 없어요"));
 
@@ -111,9 +111,10 @@ public class AdminReportCommandService {
         // 2) 이미지 삭제 준비
         List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(collectionId);
 
-        // 3) 컬렉션 삭제
+        // 3) 컬렉션 삭제 (노트 스냅샷 추출을 위해 먼저 로드)
         UserBirdCollection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new NotFoundException("해당 컬렉션이 존재하지 않아요"));
+        String noteSnapshot = collection.getNote(); // 한 줄 평 스냅샷
         collectionImageRepository.removeByCollectionId(collection.getId());
         collectionRepository.remove(collection);
 
@@ -125,6 +126,8 @@ public class AdminReportCommandService {
         metadata.put("reporterId", report.getReporter().getId());
         metadata.put("reportedUserId", report.getReportedUser().getId());
         metadata.put("deletedImageObjectKeyCount", objectKeys.size());
+        metadata.put("reason", reason);
+        metadata.put("collectionNoteSnapshot", noteSnapshot);
 
         adminAuditLogRepository.save(AdminAuditLog.of(
                 admin,
@@ -141,7 +144,7 @@ public class AdminReportCommandService {
         }
     }
 
-    public void deleteCommentByReport(Long adminUserId, Long reportId) {
+    public void deleteCommentByReport(Long adminUserId, Long reportId, String reason) {
         UserBirdCollectionCommentReport report = commentReportRepository.findById(reportId)
                 .orElseThrow(() -> new NotFoundException("해당 ID의 댓글 신고가 없어요"));
 
@@ -164,6 +167,7 @@ public class AdminReportCommandService {
         metadata.put("reportedUserId", report.getReportedUser().getId());
         metadata.put("reporterId", report.getReporter().getId());
         metadata.put("commentContentSnapshot", report.getCommentContent());
+        metadata.put("reason", reason);
 
         adminAuditLogRepository.save(AdminAuditLog.of(
                 admin,

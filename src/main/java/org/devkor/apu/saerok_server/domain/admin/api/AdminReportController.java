@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.admin.api.dto.request.AdminDeleteReasonRequest;
 import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCollectionListResponse;
 import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCommentDetailResponse;
@@ -14,6 +15,7 @@ import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCommen
 import org.devkor.apu.saerok_server.domain.admin.application.AdminReportCommandService;
 import org.devkor.apu.saerok_server.domain.admin.application.AdminReportQueryService;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
+import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -106,19 +108,24 @@ public class AdminReportController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN_EDITOR')")
     @Operation(
-            summary = "신고 대상 새록 삭제(관련 신고 정리 포함)",
-            description = "관리자 권한 필요: ADMIN_EDITOR",
+            summary = "신고 대상 새록 삭제(관련 신고 정리 포함) + 사유 필수",
+            description = "관리자 권한 필요: ADMIN_EDITOR. 요청 바디에 삭제 사유(reason)를 반드시 포함해야 합니다.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "204", description = "삭제 성공"),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청(사유 누락 등)", content = @Content),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음", content = @Content),
                     @ApiResponse(responseCode = "404", description = "해당 신고/새록 없음", content = @Content)
             }
     )
     public void deleteCollectionByReport(@PathVariable Long reportId,
-                                         @AuthenticationPrincipal UserPrincipal admin) {
-        commandService.deleteCollectionByReport(admin.getId(), reportId);
+                                         @AuthenticationPrincipal UserPrincipal admin,
+                                         @RequestBody AdminDeleteReasonRequest request) {
+        if (request == null || request.reason() == null || request.reason().isBlank()) {
+            throw new BadRequestException("삭제 사유를 입력해주세요.");
+        }
+        commandService.deleteCollectionByReport(admin.getId(), reportId, request.reason().trim());
     }
 
     @PostMapping("/collections/{reportId}/ignore")
@@ -163,18 +170,23 @@ public class AdminReportController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN_EDITOR')")
     @Operation(
-            summary = "신고 대상 댓글 삭제(관련 신고 정리 포함)",
-            description = "관리자 권한 필요: ADMIN_EDITOR",
+            summary = "신고 대상 댓글 삭제(관련 신고 정리 포함) + 사유 필수",
+            description = "관리자 권한 필요: ADMIN_EDITOR. 요청 바디에 삭제 사유(reason)를 반드시 포함해야 합니다.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "204", description = "삭제 성공"),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청(사유 누락 등)", content = @Content),
                     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음", content = @Content),
                     @ApiResponse(responseCode = "404", description = "해당 신고/댓글 없음", content = @Content)
             }
     )
     public void deleteCommentByReport(@PathVariable Long reportId,
-                                      @AuthenticationPrincipal UserPrincipal admin) {
-        commandService.deleteCommentByReport(admin.getId(), reportId);
+                                      @AuthenticationPrincipal UserPrincipal admin,
+                                      @RequestBody AdminDeleteReasonRequest request) {
+        if (request == null || request.reason() == null || request.reason().isBlank()) {
+            throw new BadRequestException("삭제 사유를 입력해주세요.");
+        }
+        commandService.deleteCommentByReport(admin.getId(), reportId, request.reason().trim());
     }
 }
