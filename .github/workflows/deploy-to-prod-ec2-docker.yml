@@ -60,7 +60,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           source: deploy/docker-compose.yml,deploy/docker-compose.prod.yml
           target: ~/saerok-prod
-          strip_components: 0
+          strip_components: 1
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1
