@@ -1,0 +1,146 @@
+name: Deploy to Prod (EC2 Docker Compose via GHCR)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    environment: prod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Normalize image repo (GHCR)
+        id: normalize
+        run: echo "image_repo=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Docker meta (prod tags)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.normalize.outputs.image_repo }}
+          tags: |
+            type=raw,value=prod-latest
+            type=sha,format=long,prefix=prod-
+
+      - name: Build & Push (BE image)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache
+          cache-to:   type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache,mode=max
+
+      - name: Copy compose to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: docker-compose.prod.yml
+          target: ~/saerok-prod
+          strip_components: 0
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            mkdir -p ~/saerok-prod && cd ~/saerok-prod
+
+            docker --version
+            docker compose version
+
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+            # 이번 릴리스의 고정된 참조값 (이미지@sha256:...)
+            IMAGE_REF="${{ steps.normalize.outputs.image_repo }}@${{ steps.build.outputs.digest }}"
+            echo "Using image: $IMAGE_REF"
+
+            # env 파일은 그대로 두되, compose에 IMAGE_REF 주입
+            sudo install -d -m 0700 -o "$(id -un)" -g "$(id -gn)" /run/saerok
+            ENV_FILE="/run/saerok/env.prod"
+            umask 177
+            : > "$ENV_FILE"
+            cleanup() { rm -f "$ENV_FILE"; }
+            trap cleanup EXIT
+
+            add_kv() { printf '%s=%s\n' "$1" "$2" >> "$ENV_FILE"; }
+
+            add_kv SPRING_PROFILES_ACTIVE "prod"
+            add_kv DB_URL "${{ secrets.DB_URL }}"
+            add_kv DB_USERNAME "${{ secrets.DB_USERNAME }}"
+            add_kv DB_PASSWORD "${{ secrets.DB_PASSWORD }}"
+            add_kv APPLE_CLIENT_ID "${{ secrets.APPLE_CLIENT_ID }}"
+            add_kv APPLE_TEAM_ID "${{ secrets.APPLE_TEAM_ID }}"
+            add_kv APPLE_KEY_ID "${{ secrets.APPLE_KEY_ID }}"
+            add_kv FIREBASE_ADMIN_KEY "${{ secrets.FIREBASE_ADMIN_KEY }}"
+            add_kv APPLE_PRIVATE_KEY "${{ secrets.APPLE_PRIVATE_KEY }}"
+            add_kv JWT_SECRET "${{ secrets.JWT_SECRET }}"
+            add_kv IAM_ACCESS_KEY "${{ secrets.IAM_ACCESS_KEY }}"
+            add_kv IAM_SECRET_KEY "${{ secrets.IAM_SECRET_KEY }}"
+            add_kv UPLOAD_IMAGE_BUCKET_NAME "${{ vars.UPLOAD_IMAGE_BUCKET_NAME }}"
+            add_kv UPLOAD_IMAGE_DOMAIN "${{ vars.UPLOAD_IMAGE_DOMAIN }}"
+            add_kv DEX_IMAGE_BUCKET_NAME "${{ vars.DEX_IMAGE_BUCKET_NAME }}"
+            add_kv DEX_IMAGE_DOMAIN "${{ vars.DEX_IMAGE_DOMAIN }}"
+            add_kv KAKAO_ADMIN_KEY "${{ secrets.KAKAO_ADMIN_KEY }}"
+            add_kv KAKAO_CLIENT_ID "${{ secrets.KAKAO_CLIENT_ID }}"
+            add_kv KAKAO_REDIRECT_URI "${{ secrets.KAKAO_REDIRECT_URI }}"
+            add_kv KAKAO_REDIRECT_URI_ADMIN "${{ secrets.KAKAO_REDIRECT_URI_ADMIN }}"
+            add_kv KAKAO_CLIENT_SECRET "${{ secrets.KAKAO_CLIENT_SECRET }}"
+            add_kv KAKAO_APP_ID "${{ secrets.KAKAO_APP_ID }}"
+            add_kv KMS_KEY_ID "${{ secrets.KMS_KEY_ID }}"
+            add_kv IMAGE_REF "$IMAGE_REF"
+
+            # 필요한 이미지만 선행 pull (네트워크/다운타임 최소화)
+            docker pull "$IMAGE_REF"
+
+            # 이번 릴리스 digest를 사용해 재기동
+            docker compose --env-file "$ENV_FILE" -f docker-compose.prod.yml up -d --force-recreate --quiet-pull app
+
+            echo "Waiting for BE /health..."
+            for i in {1..40}; do
+              if curl -fsS --max-time 2 http://127.0.0.1:8080/health >/dev/null; then
+                echo "✅ BE is healthy"
+                break
+              fi
+              echo "⏳ ($i/40)"; sleep 3
+            done
+
+            docker image prune -af --filter "until=168h" || true
+            docker builder prune -af --filter "until=168h" || true
+
+      - name: Summarize release
+        if: ${{ success() }}
+        run: |
+          {
+            echo "## Prod deploy"
+            echo "- Image: ${{ steps.normalize.outputs.image_repo }}@${{ steps.build.outputs.digest }}"
+            echo "- Commit: ${{ github.sha }}"
+            echo "- Actor: ${{ github.actor }}"
+            echo "- Time:  $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          } >> "$GITHUB_STEP_SUMMARY"
