@@ -1,5 +1,6 @@
 package org.devkor.apu.saerok_server.domain.auth.application;
 
+import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResponse;
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
@@ -17,6 +18,7 @@ import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class KakaoAuthService extends AbstractSocialAuthService {
 
@@ -68,6 +70,8 @@ public class KakaoAuthService extends AbstractSocialAuthService {
         } else {
             userInfo = kakaoAuthClient.fetch(null, accessToken);
         }
+
+        log.info("[fixlog] sub: {}, email: {}, channel: {}", userInfo.sub(), userInfo.email(), channel);
 
         // admin 채널 선권한 검증 (미보유시 관리자 시스템 로그인 불가)
         if ("admin".equalsIgnoreCase(channel)) {
