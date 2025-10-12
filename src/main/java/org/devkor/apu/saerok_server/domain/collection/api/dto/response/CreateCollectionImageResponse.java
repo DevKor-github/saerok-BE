@@ -15,5 +15,4 @@ public record CreateCollectionImageResponse(
                 example = "https://d123456abcdef.cloudfront.net/collection-images/42/uuid.jpg"
         )
         String url
-
 ) {}

@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.community.core.repository.PopularCollectionRepository;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
@@ -39,6 +40,7 @@ class CollectionLikeCommandServiceTest {
     @Mock CollectionLikeRepository collectionLikeRepository;
     @Mock CollectionRepository collectionRepository;
     @Mock UserRepository userRepository;
+    @Mock PopularCollectionRepository popularCollectionRepository;
     @Mock NotificationPublisher publisher;
 
     @BeforeEach
@@ -55,7 +57,7 @@ class CollectionLikeCommandServiceTest {
                 }
         );
         collectionLikeCommandService = new CollectionLikeCommandService(
-                collectionLikeRepository, collectionRepository, userRepository, notifyActionDsl
+                collectionLikeRepository, collectionRepository, userRepository, popularCollectionRepository, notifyActionDsl
         );
     }
 
@@ -76,6 +78,7 @@ class CollectionLikeCommandServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(collection));
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId)).willReturn(false);
+        given(collectionLikeRepository.countByCollectionId(collectionId)).willReturn(5L);
 
         LikeStatusResponse response = collectionLikeCommandService.toggleLikeResponse(userId, collectionId);
 

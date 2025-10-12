@@ -50,17 +50,25 @@ DB_PASSWORD=your_password
 
 ### 5. 애플리케이션 실행
 
-- `SaerokServerApplication.java` 우클릭 → `Run`
-- 또는 `Shift + F10` 단축키로 실행
+이제는 IDE에서 Shift + F10으로 실행하지 않고, Docker 컨테이너로 실행합니다.
+실행 전 Docker Desktop을 켜 두어야 합니다.
+
+```bash
+# 서버 올리기
+./up.sh
+
+# 서버 내리기
+./down.sh
+```
 
 ---
 
 ## 🌐 배포 환경, 인프라
 
-- 개발 서버와 운영 서버에 자동으로 배포하고 있습니다.
+- Docker 기반 컨테이너 배포를 사용하고 있습니다.
   - GitHub Actions를 통해 브랜치 푸시 시 자동 배포
-    - develop push -> 개발 서버 배포
-    - main push -> 운영 서버 배포
+    - develop push -> 개발 서버 배포 (Docker compose)
+    - main push -> 운영 서버 배포 (Docker compose)
 - 사용 중인 AWS 서비스
   - EC2: 서버를 돌리는 컴퓨터
   - RDS: DB를 제공하는 컴퓨터

@@ -102,7 +102,13 @@ public class AuthController {
             HttpServletRequest httpServletRequest
     ) {
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        return kakaoAuthService.authenticate(request.getAuthorizationCode(), request.getAccessToken(), clientInfo);
+        // channel(요청 주체)에 따라 redirect_uri를 선택적으로 매핑
+        return kakaoAuthService.authenticate(
+                request.getAuthorizationCode(),
+                request.getAccessToken(),
+                request.getChannel(),
+                clientInfo
+        );
     }
 
     @PostMapping("/refresh")

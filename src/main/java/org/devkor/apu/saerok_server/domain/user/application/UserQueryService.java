@@ -6,12 +6,15 @@ import org.devkor.apu.saerok_server.domain.user.api.response.GetMyUserProfileRes
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.dto.NicknameValidationResult;
+import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.NicknamePolicy;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -21,15 +24,22 @@ public class UserQueryService {
     private final UserRepository userRepository;
     private final NicknamePolicy nicknamePolicy;
     private final UserProfileImageUrlService userProfileImageUrlService;
+    private final UserRoleRepository userRoleRepository;
 
     public GetMyUserProfileResponse getMyUserProfile(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 id의 사용자가 존재하지 않아요"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("해당 id의 사용자가 존재하지 않아요"));
+
+        List<String> roles = userRoleRepository.findByUser(user).stream()
+                .map(ur -> ur.getRole().name())
+                .toList();
 
         return new GetMyUserProfileResponse(
                 user.getNickname(),
                 user.getEmail(),
                 OffsetDateTimeLocalizer.toSeoulLocalDate(user.getJoinedAt()),
-                userProfileImageUrlService.getProfileImageUrlFor(user)
+                userProfileImageUrlService.getProfileImageUrlFor(user),
+                roles
         );
     }
 

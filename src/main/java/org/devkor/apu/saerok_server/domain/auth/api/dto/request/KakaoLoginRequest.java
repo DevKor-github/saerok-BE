@@ -12,4 +12,6 @@ public class KakaoLoginRequest {
     @Schema(description = "액세스 토큰")
     private String accessToken;
 
+    @Schema(description = "로그인 요청 주체 채널 (예: 'admin', 'user' 등)")
+    private String channel;
 }

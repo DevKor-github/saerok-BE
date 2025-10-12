@@ -56,7 +56,7 @@ public class CollectionImageCommandService {
                 .objectKey(command.objectKey())
                 .contentType(command.contentType())
                 .build();
-
+        
         return new CreateCollectionImageResponse(
                 collectionImageRepository.save(image),
                 imageDomainService.toUploadImageUrl(image.getObjectKey())
