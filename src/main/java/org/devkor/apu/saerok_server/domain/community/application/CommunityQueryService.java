@@ -25,10 +25,11 @@ public class CommunityQueryService {
     public GetCommunityMainResponse getCommunityMain(Long userId) {
         // 메인 페이지용으로 각각 3개씩 조회
         CommunityQueryCommand mainCommand = new CommunityQueryCommand(1, 3, null);
+        CommunityQueryCommand pendingCommand = new CommunityQueryCommand(1, 5, null);
 
         List<UserBirdCollection> recentCollections = communityRepository.findRecentPublicCollections(mainCommand);
         List<UserBirdCollection> popularCollections = communityRepository.findPopularCollections(mainCommand);
-        List<UserBirdCollection> pendingCollections = communityRepository.findPendingBirdIdCollections(mainCommand);
+        List<UserBirdCollection> pendingCollections = communityRepository.findPendingBirdIdCollections(pendingCommand);
 
         return new GetCommunityMainResponse(
                 dataAssembler.toCollectionInfos(recentCollections, userId),
