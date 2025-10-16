@@ -35,4 +35,17 @@ public class CollectionImageUrlService {
         return result;
     }
 
+    public Map<Long, String> getPrimaryImageThumbnailUrlsFor(List<UserBirdCollection> collections) {
+        Map<Long, String> result = new LinkedHashMap<>();
+        Map<Long, String> objectKeyMap = collectionImageSelector.selectPrimaryImageKeyMap(collections);
+
+        for (Map.Entry<Long, String> entry : objectKeyMap.entrySet()) {
+            String objectKey = entry.getValue();
+            String thumbnailUrl = objectKey != null ? imageDomainService.toThumbnailUrl(objectKey) : null;
+            result.put(entry.getKey(), thumbnailUrl);
+        }
+
+        return result;
+    }
+
 }

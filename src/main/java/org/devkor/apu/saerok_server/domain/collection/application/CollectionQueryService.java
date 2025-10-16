@@ -77,15 +77,18 @@ public class CollectionQueryService {
 
         List<UserBirdCollection> collections = collectionRepository.findByUserId(userId);
         Map<Long, String> urlMap = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
+        Map<Long, String> thumbnailUrlMap = collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(collections);
 
         List<MyCollectionsResponse.Item> items = collections.stream()
                 .map(c -> {
                     String imageUrl = urlMap.get(c.getId());
+                    String thumbnailUrl = thumbnailUrlMap.get(c.getId());
                     long likeCount = collectionLikeRepository.countByCollectionId(c.getId());
                     long commentCount = collectionCommentRepository.countByCollectionId(c.getId());
                     return new MyCollectionsResponse.Item(
                             c.getId(),
                             imageUrl,
+                            thumbnailUrl,
                             c.getBird() == null ? null : c.getBird().getName().getKoreanName(),
                             likeCount,
                             commentCount
@@ -134,16 +137,18 @@ public class CollectionQueryService {
         List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId(), command.isMineOnly());
 
         Map<Long, String> urlMap = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
+        Map<Long, String> thumbnailUrlMap = collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(collections);
 
         List<GetNearbyCollectionsResponse.Item> items = collections.stream()
                 .map(collection -> {
                     String imageUrl = urlMap.get(collection.getId());
+                    String thumbnailUrl = thumbnailUrlMap.get(collection.getId());
                     long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
                     long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
                     boolean isLikedByMe = command.userId() != null && collectionLikeRepository.existsByUserIdAndCollectionId(command.userId(), collection.getId());
                     String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
 
-                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLikedByMe);
+                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl, thumbnailUrl, userProfileImageUrl, likeCount, commentCount, isLikedByMe);
                 })
                 .toList();
         // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도

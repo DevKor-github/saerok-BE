@@ -17,6 +17,9 @@ public record MyCollectionsResponse(
         @Schema(description = "이미지 URL", example = "https://example.com/images/collection1.jpg")
         String imageUrl,
 
+        @Schema(description = "썸네일 이미지 URL (320px 너비)", example = "https://cdn.example.com/thumbnails/abc.webp")
+        String thumbnailImageUrl,
+
         @Schema(description = "새의 한국 이름", example = "까치")
         String koreanName,
 
