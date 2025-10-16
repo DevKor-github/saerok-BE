@@ -154,8 +154,7 @@ public class S3ImageService implements ImageService {
 
     @Override
     public String getThumbnailKey(String originalKey) {
-        String fileName = originalKey.substring(originalKey.lastIndexOf('/') + 1);
-        String fileNameWithoutExt = fileName.replaceFirst("\\.[^.]*$", "");
-        return "thumbnails/" + fileNameWithoutExt + ".webp";
+        String fileNameWithoutExt = originalKey.replaceFirst("\\.[^.]*$", "");
+        return fileNameWithoutExt.replace("collection-images/", "thumbnails/") + ".webp";
     }
 }
