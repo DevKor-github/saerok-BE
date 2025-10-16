@@ -1,10 +1,14 @@
 package org.devkor.apu.saerok_server.global.shared.infra;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ImageDomainService {
+
+    private final S3ImageService s3ImageService;
 
     @Value("${aws.cloudfront.upload-image-domain}")
     private String uploadImageDomain;
@@ -21,6 +25,10 @@ public class ImageDomainService {
      */
     public String toUploadImageUrl(String objectKey) {
         return uploadImageDomain + "/" + objectKey;
+    }
+
+    public String toThumbnailUrl(String objectKey) {
+        return toUploadImageUrl(s3ImageService.getThumbnailKey(objectKey));
     }
 
     public String toDexImageUrl(String objectKey) {

@@ -23,6 +23,9 @@ public class GetNearbyCollectionsResponse {
         @Schema(description = "이미지 URL", example = "https://cdn.example.com/collection-images/1.jpg")
         private String imageUrl;
 
+        @Schema(description = "썸네일 이미지 URL (320px 너비)", example = "https://cdn.example.com/thumbnails/abc.webp")
+        private String thumbnailImageUrl;
+
         @Schema(description = "새 한국어 이름", example = "까치")
         private String koreanName;
 
