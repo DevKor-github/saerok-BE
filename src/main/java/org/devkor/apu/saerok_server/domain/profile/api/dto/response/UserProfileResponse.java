@@ -41,6 +41,9 @@ public record UserProfileResponse(
             @Schema(description = "대표 이미지 URL (컬렉션의 첫 번째 이미지)", example = "https://cdn.saerok.dev/images/collection/101/main.jpg", nullable = true)
             String imageUrl,
 
+            @Schema(description = "썸네일 이미지 URL (320px 너비)", example = "https://cdn.saerok.dev/thumbnails/collection/101/main.webp", nullable = true)
+            String thumbnailImageUrl,
+
             @Schema(description = "사용자가 작성한 한줄평", example = "처음 본 새인데 정말 귀여웠다!", nullable = true)
             String note,
 
