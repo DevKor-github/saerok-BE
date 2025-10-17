@@ -33,7 +33,7 @@ public class CollectionTargetMetadataAdapter implements TargetMetadataPort {
         extras.put("collectionId", target.id());
 
         String imageUrl = collectionRepository.findById(target.id())
-                .flatMap(collectionImageUrlService::getPrimaryImageUrlFor)
+                .flatMap(collectionImageUrlService::getPrimaryImageThumbnailUrlFor)
                 .orElse(null);
         extras.put("collectionImageUrl", imageUrl);
 

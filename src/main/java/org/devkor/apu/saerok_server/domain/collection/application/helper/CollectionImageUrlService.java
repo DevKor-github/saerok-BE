@@ -22,6 +22,11 @@ public class CollectionImageUrlService {
                 .map(imageDomainService::toUploadImageUrl);
     }
 
+    public Optional<String> getPrimaryImageThumbnailUrlFor(UserBirdCollection collection) {
+        return collectionImageSelector.selectPrimaryImageKey(collection)
+                .map(imageDomainService::toThumbnailUrl);
+    }
+
     public Map<Long, String> getPrimaryImageUrlsFor(List<UserBirdCollection> collections) {
         Map<Long, String> result = new LinkedHashMap<>();
         Map<Long, String> objectKeyMap = collectionImageSelector.selectPrimaryImageKeyMap(collections);
