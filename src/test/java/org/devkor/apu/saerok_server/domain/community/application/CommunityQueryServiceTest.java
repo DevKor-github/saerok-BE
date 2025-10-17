@@ -63,6 +63,7 @@ class CommunityQueryServiceTest {
     private static CommunityCollectionInfo collectionInfo(
             Long collectionId,
             String imageUrl,
+            String thumbnailImageUrl,
             String note,
             Long likeCount,
             Long commentCount,
@@ -74,6 +75,7 @@ class CommunityQueryServiceTest {
         return new CommunityCollectionInfo(
                 collectionId,
                 imageUrl,
+                thumbnailImageUrl,
                 LocalDate.of(2024, 3, 15),
                 LocalDateTime.of(2024, 3, 15, 10, 30, 0),
                 37.5665,
@@ -176,13 +178,13 @@ class CommunityQueryServiceTest {
         );
         
         CommunityCollectionInfo pendingInfo = collectionInfo(
-                1L, "https://example.com/image1.jpg", "이게 무슨 새일까요?",
+                1L, "https://example.com/image1.jpg", "https://example.com/thumbnails/1", "이게 무슨 새일까요?",
                 10L, 5L, false, 3L, null, userInfo
         );
         
         CommunityCollectionInfo.BirdInfo birdInfo = new CommunityCollectionInfo.BirdInfo(100L, "까치");
         CommunityCollectionInfo normalInfo = collectionInfo(
-                2L, "https://example.com/image2.jpg", "까치를 발견했어요!",
+                2L, "https://example.com/image2.jpg", "https://example.com/thumbnails/2", "까치를 발견했어요!",
                 15L, 7L, false, null, birdInfo, userInfo
         );
         

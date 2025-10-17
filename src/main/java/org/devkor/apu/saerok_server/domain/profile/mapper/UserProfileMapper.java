@@ -40,6 +40,8 @@ public interface UserProfileMapper {
     ) {
         Map<Long, String> imageUrlMap =
                 collectionImageUrlService.getPrimaryImageUrlsFor(collections);
+        Map<Long, String> thumbnailUrlMap =
+                collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(collections);
 
         return collections.stream()
                 .map(c -> new UserProfileResponse.CollectionItem(
@@ -48,6 +50,7 @@ public interface UserProfileMapper {
                         c.getBird() == null ? null : c.getBird().getName().getKoreanName(),
                         c.getBird() == null ? null : c.getBird().getName().getScientificName(),
                         imageUrlMap.get(c.getId()),
+                        thumbnailUrlMap.get(c.getId()),
                         c.getNote(),
                         c.getDiscoveredDate(),
                         OffsetDateTimeLocalizer.toSeoulLocalDate(c.getCreatedAt())

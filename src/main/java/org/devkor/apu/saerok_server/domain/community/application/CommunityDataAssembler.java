@@ -35,6 +35,7 @@ public class CommunityDataAssembler {
         }
 
         Map<Long, String> imageUrls = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
+        Map<Long, String> thumbnailImageUrls = collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(collections);
 
         List<Long> collectionIds = collections.stream()
                 .map(UserBirdCollection::getId)
@@ -52,6 +53,7 @@ public class CommunityDataAssembler {
         return collections.stream()
                 .map(collection -> {
                     String imageUrl = imageUrls.get(collection.getId());
+                    String thumbnailImageUrl = thumbnailImageUrls.get(collection.getId());
                     String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
                     long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
                     long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
@@ -63,7 +65,7 @@ public class CommunityDataAssembler {
                             : null;
                     
                     return communityWebMapper.toCommunityCollectionInfo(
-                            collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLiked, isPopular, suggestionUserCount
+                            collection, imageUrl, thumbnailImageUrl, userProfileImageUrl, likeCount, commentCount, isLiked, isPopular, suggestionUserCount
                     );
                 })
                 .toList();
