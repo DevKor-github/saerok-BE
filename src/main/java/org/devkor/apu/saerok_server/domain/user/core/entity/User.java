@@ -48,7 +48,6 @@ public class User extends SoftDeletableAuditable {
     private Short defaultProfileImageVariant;
 
     public void anonymizeForWithdrawal() {
-        this.setNickname(null);
         this.email = null;
         this.phone = null;
         this.gender = null;
