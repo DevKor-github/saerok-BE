@@ -13,6 +13,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
+import org.devkor.apu.saerok_server.domain.stat.application.BirdIdRequestHistoryRecorder;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -20,12 +21,10 @@ import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
@@ -42,29 +41,19 @@ public class CollectionCommandService {
     private final ImageDomainService imageDomainService;
     private final CollectionWebMapper collectionWebMapper;
     private final ImageService imageService;
+    private final BirdIdRequestHistoryRecorder birdReqHistory;
 
     public Long createCollection(CreateCollectionCommand command) {
         User user = userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
-        Bird bird;
+        Bird bird = (command.birdId() != null)
+                ? birdRepository.findById(command.birdId()).orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"))
+                : null;
 
-        if (command.birdId() != null) {
-            bird = birdRepository.findById(command.birdId()).orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
-        } else {
-            bird = null;
-        }
-
-        if (command.discoveredDate() == null) {
-            throw new BadRequestException("관찰 날짜를 포함해주세요");
-        }
-
-        if (command.longitude() == null || command.latitude() == null) {
-            throw new BadRequestException("관찰 위치 정보를 포함해주세요");
-        }
-
-        if (command.note() != null && command.note().length() > UserBirdCollection.NOTE_MAX_LENGTH) {
+        if (command.discoveredDate() == null) throw new BadRequestException("관찰 날짜를 포함해주세요");
+        if (command.longitude() == null || command.latitude() == null) throw new BadRequestException("관찰 위치 정보를 포함해주세요");
+        if (command.note() != null && command.note().length() > UserBirdCollection.NOTE_MAX_LENGTH)
             throw new BadRequestException("한 줄 평 길이는 " + UserBirdCollection.NOTE_MAX_LENGTH + "자 이하여야 해요");
-        }
 
         Point location = PointFactory.create(command.latitude(), command.longitude());
 
@@ -80,7 +69,12 @@ public class CollectionCommandService {
                 .accessLevel(command.accessLevel())
                 .build();
 
-        return collectionRepository.save(collection);
+        Long id = collectionRepository.save(collection);
+
+        // 생성 직후 bird가 비어 있으면 '대기 시작' 기록
+        birdReqHistory.onCollectionCreatedIfPending(collection, collection.getCreatedAt());
+
+        return id;
     }
 
     public void deleteCollection(DeleteCollectionCommand command) {
@@ -90,11 +84,15 @@ public class CollectionCommandService {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
         }
 
-        List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId());
+        // 1) 열린 동정 요청 히스토리 사전 정리
+        birdReqHistory.onCollectionDeleted(collection.getId());
 
+        // 2) 연관 이미지 정리 후 컬렉션 삭제
+        List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId());
         collectionImageRepository.removeByCollectionId(command.collectionId());
         collectionRepository.remove(collection);
         runAfterCommitOrNow(() -> imageService.deleteAll(objectKeys));
+        // 3) 닫힌 히스토리는 FK가 SET NULL로 남는다 (DB가 처리)
     }
 
     public UpdateCollectionResponse updateCollection(UpdateCollectionCommand command) {
@@ -104,14 +102,25 @@ public class CollectionCommandService {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
         }
 
-        System.out.println(command.isBirdIdUpdated());
         if (command.isBirdIdUpdated() != null && command.isBirdIdUpdated()) {
+            Bird before = collection.getBird();
+            Bird after;
+
             if (command.birdId() != null) {
-                Bird bird = birdRepository.findById(command.birdId()).orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
-                collection.changeBird(bird);
+                after = birdRepository.findById(command.birdId()).orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
             } else {
-                collection.changeBird(null);
+                after = null;
             }
+
+            // null->not null : '수정(EDIT)' 경로 → 열린 history 삭제(해결로 간주하지 않음)
+            if (before == null && after != null) {
+                birdReqHistory.onResolvedByEdit(collection);
+            } else if (before != null && after == null) {
+                // not null->null : 다시 대기 시작
+                birdReqHistory.onBirdSetToUnknown(collection, OffsetDateTime.now());
+            }
+
+            collection.changeBird(after);
         }
 
         if (command.discoveredDate() != null) collection.setDiscoveredDate(command.discoveredDate());
@@ -119,21 +128,17 @@ public class CollectionCommandService {
         if ((command.latitude() == null) ^ (command.longitude() == null)) {
             throw new BadRequestException("위도와 경도 둘 중 하나만 수정할 수는 없어요");
         } else if (command.latitude() != null) {
-            GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-            Coordinate coordinate = new Coordinate(command.longitude(), command.latitude());
-            Point location = geometryFactory.createPoint(coordinate);
+            var location = PointFactory.create(command.latitude(), command.longitude());
             collection.setLocation(location);
         }
 
         if (command.locationAlias() != null) collection.setLocationAlias(command.locationAlias());
-
         if (command.address() != null) collection.setAddress(command.address());
 
         if (command.note() != null) {
             if (command.note().length() > UserBirdCollection.NOTE_MAX_LENGTH) {
                 throw new BadRequestException("한 줄 평 길이는 " + UserBirdCollection.NOTE_MAX_LENGTH + "자 이하여야 해요");
             }
-
             collection.setNote(command.note());
         }
 
