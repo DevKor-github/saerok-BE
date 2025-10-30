@@ -11,12 +11,15 @@ import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Ac
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
+import org.devkor.apu.saerok_server.domain.stat.application.BirdIdRequestHistoryRecorder;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.time.OffsetDateTime;
 
 @Service
 @Transactional
@@ -28,6 +31,7 @@ public class BirdIdSuggestionCommandService {
     private final BirdRepository             birdRepo;
     private final UserRepository             userRepo;
     private final NotifyActionDsl notifyAction;
+    private final BirdIdRequestHistoryRecorder birdReqHistory;
 
     public SuggestBirdIdResponse suggest(Long userId, Long collectionId, Long birdId) {
         User user = userRepo.findById(userId)
@@ -209,6 +213,9 @@ public class BirdIdSuggestionCommandService {
 
         Bird bird = birdRepo.findById(birdId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
+
+        // 채택(ADOPT) 경로로 해결 기록
+        birdReqHistory.onResolvedByAdopt(collection, OffsetDateTime.now());
 
         collection.changeBird(bird);
 
