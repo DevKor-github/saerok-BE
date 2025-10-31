@@ -52,9 +52,10 @@ public class DailyStatRepository {
     }
 
     public Optional<LocalDate> findLastDateOf(StatMetric metric) {
-        return em.createQuery("SELECT MAX(s.date) FROM DailyStat s WHERE s.metric = :m", LocalDate.class)
+        LocalDate max = em.createQuery(
+                        "SELECT MAX(s.date) FROM DailyStat s WHERE s.metric = :m", LocalDate.class)
                 .setParameter("m", metric)
-                .getResultStream()
-                .findFirst();
+                .getSingleResult(); // 없으면 null 반환
+        return Optional.ofNullable(max);
     }
 }
