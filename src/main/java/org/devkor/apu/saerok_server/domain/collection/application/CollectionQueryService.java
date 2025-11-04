@@ -17,6 +17,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
+import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -26,6 +27,7 @@ import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,7 +36,7 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CollectionQueryService {
-    
+
     private final CollectionRepository collectionRepository;
     private final CollectionImageRepository collectionImageRepository;
     private final CollectionLikeRepository collectionLikeRepository;
@@ -133,27 +135,57 @@ public class CollectionQueryService {
             throw new BadRequestException("비회원 사용자는 isMineOnly = false만 사용 가능해요.");
         }
 
+        // 1) 근거리 컬렉션 조회 (PostGIS native)
         Point refPoint = PointFactory.create(command.latitude(), command.longitude());
         List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId(), command.isMineOnly());
 
+        GetNearbyCollectionsResponse response = new GetNearbyCollectionsResponse();
+        if (collections.isEmpty()) {
+            response.setItems(List.of());
+            return response;
+        }
+
+        // 2) 연관(작성자/새) 엔티티를 미리 불러와(prefetch) LAZY N+1 차단
+        List<Long> collectionIds = collections.stream().map(UserBirdCollection::getId).toList();
+        collectionRepository.prefetchUserAndBirdByIds(collectionIds);
+
+        // 3) 이미지 URL(원본/썸네일) 배치 변환
         Map<Long, String> urlMap = collectionImageUrlService.getPrimaryImageUrlsFor(collections);
         Map<Long, String> thumbnailUrlMap = collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(collections);
 
-        List<GetNearbyCollectionsResponse.Item> items = collections.stream()
-                .map(collection -> {
-                    String imageUrl = urlMap.get(collection.getId());
-                    String thumbnailUrl = thumbnailUrlMap.get(collection.getId());
-                    long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
-                    long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
-                    boolean isLikedByMe = command.userId() != null && collectionLikeRepository.existsByUserIdAndCollectionId(command.userId(), collection.getId());
-                    String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
+        // 4) 좋아요/댓글 수 배치 집계
+        Map<Long, Long> likeCounts = collectionLikeRepository.countLikesByCollectionIds(collectionIds);
+        Map<Long, Long> commentCounts = collectionCommentRepository.countByCollectionIds(collectionIds);
 
-                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(collection, imageUrl, thumbnailUrl, userProfileImageUrl, likeCount, commentCount, isLikedByMe);
+        // 5) 내가 좋아요 눌렀는지 배치 조회
+        Map<Long, Boolean> myLikeMap = (command.userId() != null)
+                ? collectionLikeRepository.findLikeStatusByUserIdAndCollectionIds(command.userId(), collectionIds)
+                : new LinkedHashMap<>();
+
+        // 6) 작성자 프로필 이미지 배치 조회
+        List<User> authors = collections.stream().map(UserBirdCollection::getUser).toList();
+        Map<Long, String> profileImageMap = userProfileImageUrlService.getProfileImageUrlsFor(authors);
+
+        // 7) DTO 조립 (맵에서 누락 시 안전 기본값)
+        List<GetNearbyCollectionsResponse.Item> items = collections.stream()
+                .map(c -> {
+                    long likeCount = likeCounts.getOrDefault(c.getId(), 0L);
+                    long commentCount = commentCounts.getOrDefault(c.getId(), 0L);
+                    boolean isLikedByMe = command.userId() != null && myLikeMap.getOrDefault(c.getId(), false);
+                    String userProfileImageUrl = profileImageMap.get(c.getUser().getId());
+
+                    return collectionWebMapper.toGetNearbyCollectionsResponseItem(
+                            c,
+                            urlMap.get(c.getId()),
+                            thumbnailUrlMap.get(c.getId()),
+                            userProfileImageUrl,
+                            likeCount,
+                            commentCount,
+                            isLikedByMe
+                    );
                 })
                 .toList();
-        // TODO: 많은 쿼리로 인한 성능 이슈 우려됨. 나중에 개선해야 할지도
 
-        GetNearbyCollectionsResponse response = new GetNearbyCollectionsResponse();
         response.setItems(items);
         return response;
     }

@@ -28,11 +28,11 @@ public class CollectionRepository {
     public void remove(UserBirdCollection collection) {
         em.remove(collection);
     }
-    
+
     public List<UserBirdCollection> findByUserId(Long userId) {
         return em.createQuery(
-                "SELECT c FROM UserBirdCollection c " +
-                "WHERE c.user.id = :userId", UserBirdCollection.class)
+                        "SELECT c FROM UserBirdCollection c " +
+                                "WHERE c.user.id = :userId", UserBirdCollection.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }
@@ -53,7 +53,6 @@ public class CollectionRepository {
     @SuppressWarnings("unchecked")
     public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId, boolean isMineOnly) {
 
-        // 1) 주위의 "내 컬렉션"만 조회 (a.k.a 내 지도)
         if (isMineOnly && userId != null) {
             String sqlMineOnly = """
             SELECT *
@@ -76,8 +75,6 @@ public class CollectionRepository {
                     .getResultList();
         }
 
-        // 2) 주위의 PUBLIC 컬렉션 + 내 컬렉션 조회 (a.k.a 우리 지도)
-        // 비회원의 경우 PUBLIC 컬렉션만 조회 (내 컬렉션이라는 개념이 없으니까)
         String sqlAll = """
             SELECT *
             FROM user_bird_collection c
@@ -103,8 +100,23 @@ public class CollectionRepository {
     }
 
     /**
-     * bird_id 가 비어 있고 공개(PUBLIC)인 컬렉션 조회 + 작성자 fetch join
+     * 매핑 시 필요한 연관(User, Bird)을 ID 리스트 기준으로 한 번에 초기화 (LAZY N+1 방지)
+     * - 반환값은 사용하지 않아도, 동일 영속성 컨텍스트에서 연관이 프록시가 아닌 초기화된 상태가 된다.
      */
+    public void prefetchUserAndBirdByIds(List<Long> collectionIds) {
+        if (collectionIds == null || collectionIds.isEmpty()) return;
+
+        em.createQuery("""
+            SELECT c FROM UserBirdCollection c
+            JOIN FETCH c.user u
+            LEFT JOIN FETCH c.bird b
+            WHERE c.id IN :ids
+            """, UserBirdCollection.class)
+                .setParameter("ids", collectionIds)
+                .getResultList();
+    }
+
+    /** bird_id 가 비어 있고 공개(PUBLIC)인 컬렉션 조회 + 작성자 fetch join */
     public List<UserBirdCollection> findPublicPendingCollections() {
         return em.createQuery("""
             SELECT c FROM UserBirdCollection c
