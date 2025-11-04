@@ -6,6 +6,7 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCol
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.DeleteCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.UpdateCollectionCommand;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
@@ -71,7 +72,7 @@ public class CollectionCommandService {
 
         Long id = collectionRepository.save(collection);
 
-        // 생성 직후 bird가 비어 있으면 '대기 시작' 기록
+        // 생성 직후 bird가 비어 있고 PUBLIC이면 '대기 시작' 기록
         birdReqHistory.onCollectionCreatedIfPending(collection, collection.getCreatedAt());
 
         return id;
@@ -92,7 +93,7 @@ public class CollectionCommandService {
         collectionImageRepository.removeByCollectionId(command.collectionId());
         collectionRepository.remove(collection);
         runAfterCommitOrNow(() -> imageService.deleteAll(objectKeys));
-        // 3) 닫힌 히스토리는 FK가 SET NULL로 남는다 (DB가 처리)
+        // 3) 닫힌 히스토리는 FK가 SET NULL로 남는다
     }
 
     public UpdateCollectionResponse updateCollection(UpdateCollectionCommand command) {
@@ -102,22 +103,23 @@ public class CollectionCommandService {
             throw new ForbiddenException("해당 컬렉션에 대한 권한이 없어요");
         }
 
-        if (command.isBirdIdUpdated() != null && command.isBirdIdUpdated()) {
+        OffsetDateTime now = OffsetDateTime.now();
+        // 변경 전 상태 스냅샷
+        AccessLevelType oldLevel = collection.getAccessLevel();
+
+        // 새 ID 변경
+        if (Boolean.TRUE.equals(command.isBirdIdUpdated())) {
             Bird before = collection.getBird();
-            Bird after;
+            Bird after = (command.birdId() != null)
+                    ? birdRepository.findById(command.birdId()).orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"))
+                    : null;
 
-            if (command.birdId() != null) {
-                after = birdRepository.findById(command.birdId()).orElseThrow(() -> new NotFoundException("존재하지 않는 조류 id예요"));
-            } else {
-                after = null;
-            }
-
-            // null->not null : '수정(EDIT)' 경로 → 열린 history 삭제(해결로 간주하지 않음)
             if (before == null && after != null) {
+                // null -> not null : EDIT로 해결 → 열린 기록 삭제
                 birdReqHistory.onResolvedByEdit(collection);
             } else if (before != null && after == null) {
-                // not null->null : 다시 대기 시작
-                birdReqHistory.onBirdSetToUnknown(collection, OffsetDateTime.now());
+                // not null -> null : PUBLIC이면 다시 대기 시작
+                birdReqHistory.onBirdSetToUnknown(collection, now);
             }
 
             collection.changeBird(after);
@@ -142,8 +144,10 @@ public class CollectionCommandService {
             collection.setNote(command.note());
         }
 
+        // 액세스 레벨 변경 처리 (전/후 비교)
         if (command.accessLevel() != null) {
             collection.setAccessLevel(command.accessLevel());
+            birdReqHistory.onAccessLevelChanged(collection, oldLevel, now);
         }
 
         String imageUrl = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId()).stream()

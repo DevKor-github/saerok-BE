@@ -116,15 +116,14 @@ public class CollectionRepository {
                 .getResultList();
     }
 
-    /** bird_id 가 비어 있고 공개(PUBLIC)인 컬렉션 조회 + 작성자 fetch join */
     public List<UserBirdCollection> findPublicPendingCollections() {
         return em.createQuery("""
-            SELECT c FROM UserBirdCollection c
-            JOIN FETCH c.user u
-            WHERE c.accessLevel = :public
-              AND c.bird IS NULL
-            ORDER BY c.birdIdSuggestionRequestedAt DESC
-            """, UserBirdCollection.class)
+                SELECT c FROM UserBirdCollection c
+                JOIN FETCH c.user u
+                JOIN BirdIdRequestHistory h ON h.collection.id = c.id AND h.resolvedAt IS NULL
+                WHERE c.accessLevel = :public AND c.bird IS NULL
+                ORDER BY h.startedAt DESC
+                """, UserBirdCollection.class)
                 .setParameter("public", AccessLevelType.PUBLIC)
                 .getResultList();
     }

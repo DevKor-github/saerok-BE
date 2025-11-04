@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.stat.application;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.stat.core.entity.BirdIdRequestHistory;
 import org.devkor.apu.saerok_server.domain.stat.core.entity.ResolutionKind;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 
+import static org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType.*;
+import static org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType.PUBLIC;
+
 @Component
 @RequiredArgsConstructor
 @Transactional
@@ -17,9 +21,10 @@ public class BirdIdRequestHistoryRecorder {
 
     private final BirdIdRequestHistoryRepository repo;
 
-    /** 컬렉션 생성 직후, bird가 비어있는 경우 pending 시작을 기록 */
+    /** 컬렉션 생성 직후, bird가 비어있고 PUBLIC인 경우 pending 시작을 기록 */
     public void onCollectionCreatedIfPending(UserBirdCollection collection, OffsetDateTime startedAt) {
         if (collection.getBird() != null) return;
+        if (collection.getAccessLevel() != PUBLIC) return;
         if (repo.findOpenByCollectionId(collection.getId()).isPresent()) return;
         repo.save(BirdIdRequestHistory.start(collection, startedAt));
     }
@@ -35,10 +40,25 @@ public class BirdIdRequestHistoryRecorder {
         repo.deleteOpenByCollectionId(collection.getId());
     }
 
-    /** not null -> null 로 바뀌는 순간: 새 pending 시작 */
+    /** not null -> null 로 바뀌는 순간: PUBLIC이면 새 pending 시작 */
     public void onBirdSetToUnknown(UserBirdCollection collection, OffsetDateTime startedAt) {
+        if (collection.getAccessLevel() != PUBLIC) return;
         if (repo.findOpenByCollectionId(collection.getId()).isPresent()) return;
         repo.save(BirdIdRequestHistory.start(collection, startedAt));
+    }
+
+    /** 액세스 레벨 전환 시 후처리 */
+    public void onAccessLevelChanged(UserBirdCollection collection, AccessLevelType oldLevel, OffsetDateTime now) {
+        AccessLevelType newLevel = collection.getAccessLevel();
+        if (oldLevel == PUBLIC && newLevel == PRIVATE) {
+            // 열려 있던 동정 요청 취소(삭제)
+            repo.deleteOpenByCollectionId(collection.getId());
+        } else if (oldLevel == PRIVATE && newLevel == PUBLIC) {
+            // 공개로 바뀌었고 아직 미식별이면 새로 오픈
+            if (collection.getBird() == null && repo.findOpenByCollectionId(collection.getId()).isEmpty()) {
+                repo.save(BirdIdRequestHistory.start(collection, now));
+            }
+        }
     }
 
     /** 컬렉션을 삭제하기 직전: 열린 히스토리만 정리(삭제) */
