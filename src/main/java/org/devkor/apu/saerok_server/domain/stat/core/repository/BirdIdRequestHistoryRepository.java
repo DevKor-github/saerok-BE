@@ -7,7 +7,7 @@ import org.devkor.apu.saerok_server.domain.stat.core.entity.ResolutionKind;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -36,6 +36,25 @@ public class BirdIdRequestHistoryRepository {
                 """)
                 .setParameter("cid", collectionId)
                 .executeUpdate();
+    }
+
+    /** 여러 컬렉션에 대해 열린 히스토리의 startedAt을 한 번에 조회 */
+    public Map<Long, OffsetDateTime> findOpenStartedAtMapByCollectionIds(List<Long> collectionIds) {
+        if (collectionIds == null || collectionIds.isEmpty()) return Map.of();
+
+        List<Object[]> rows = em.createQuery("""
+                SELECT h.collection.id, h.startedAt
+                FROM BirdIdRequestHistory h
+                WHERE h.collection.id IN :ids AND h.resolvedAt IS NULL
+                """, Object[].class)
+                .setParameter("ids", collectionIds)
+                .getResultList();
+
+        Map<Long, OffsetDateTime> map = new HashMap<>();
+        for (Object[] row : rows) {
+            map.put((Long) row[0], (OffsetDateTime) row[1]);
+        }
+        return map;
     }
 
     public long countPendingAsOf(OffsetDateTime endExclusive) {
