@@ -23,6 +23,7 @@ import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrl
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,7 +94,9 @@ public class CollectionQueryService {
                             thumbnailUrl,
                             c.getBird() == null ? null : c.getBird().getName().getKoreanName(),
                             likeCount,
-                            commentCount
+                            commentCount,
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getCreatedAt()),
+                            c.getDiscoveredDate()
                     );
                 })
                 .toList();
