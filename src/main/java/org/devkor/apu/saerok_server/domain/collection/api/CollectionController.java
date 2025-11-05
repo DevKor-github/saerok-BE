@@ -240,7 +240,7 @@ public class CollectionController {
             - koreanName
             - likeCount
             - commentCount
-            - uploadedDate
+            - createdAt
             - discoveredDate
             """,
             responses = {
