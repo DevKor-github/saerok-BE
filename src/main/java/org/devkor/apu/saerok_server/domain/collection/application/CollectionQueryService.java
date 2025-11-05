@@ -91,7 +91,9 @@ public class CollectionQueryService {
                             thumbnailUrl,
                             c.getBird() == null ? null : c.getBird().getName().getKoreanName(),
                             likeCount,
-                            commentCount
+                            commentCount,
+                            c.getCreatedAt(),
+                            c.getDiscoveredDate()
                     );
                 })
                 .toList();
