@@ -31,8 +31,8 @@ public record MyCollectionsResponse(
         @Schema(description = "댓글 수", example = "7")
         Long commentCount,
 
-        @Schema(description = "업로드 날짜", example = "2024-03-15T10:30:00")
-        LocalDateTime uploadedDate,
+        @Schema(description = "생성 날짜", example = "2024-03-15T10:30:00")
+        LocalDateTime createdAt,
 
         @Schema(description = "새 발견 일시", example = "2025-01-15")
         LocalDate discoveredDate
