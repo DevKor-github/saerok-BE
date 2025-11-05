@@ -48,13 +48,14 @@ public class CommunityRepository {
         return query.getResultList();
     }
 
-    // 동정 요청 컬렉션들을 조회
+    // 동정 요청 컬렉션들을 조회 — 열린 히스토리 startedAt 최신순
     public List<UserBirdCollection> findPendingBirdIdCollections(CommunityQueryCommand command) {
         Query query = em.createQuery("""
             SELECT c FROM UserBirdCollection c
             JOIN FETCH c.user u
+            JOIN BirdIdRequestHistory h ON h.collection.id = c.id AND h.resolvedAt IS NULL
             WHERE c.accessLevel = :public AND c.bird IS NULL
-            ORDER BY c.birdIdSuggestionRequestedAt DESC
+            ORDER BY h.startedAt DESC
             """, UserBirdCollection.class)
                 .setParameter("public", AccessLevelType.PUBLIC);
 

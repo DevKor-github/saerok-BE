@@ -9,12 +9,14 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdId
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
+import org.devkor.apu.saerok_server.domain.stat.core.repository.BirdIdRequestHistoryRepository; // ★ 추가
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime; // ★ 추가
 import java.util.List;
 import java.util.Map;
 
@@ -26,9 +28,10 @@ public class BirdIdSuggestionQueryService {
     private final BirdIdSuggestionRepository suggestionRepo;
     private final CollectionRepository       collectionRepo;
     private final ImageDomainService         imageDomainService;
-    private final UserRepository userRepo;
+    private final UserRepository             userRepo;
     private final UserProfileImageUrlService userProfileImageUrlService;
-    private final CollectionImageUrlService collectionImageUrlService;
+    private final CollectionImageUrlService  collectionImageUrlService;
+    private final BirdIdRequestHistoryRepository birdIdRequestHistoryRepository; // ★ 추가
 
     /* 전체 PUBLIC + pending 컬렉션 조회 */
     public GetPendingCollectionsResponse getPendingCollections() {
@@ -47,18 +50,27 @@ public class BirdIdSuggestionQueryService {
                 .toList();
         Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
 
+        // ── 3.5단계: 열린 동정 요청 히스토리 startedAt 일괄 조회 (기존 c.getBirdIdSuggestionRequestedAt() 대체)
+        List<Long> ids = collections.stream().map(UserBirdCollection::getId).toList();
+        Map<Long, OffsetDateTime> startedAtMap = birdIdRequestHistoryRepository.findOpenStartedAtMapByCollectionIds(ids);
+
         // ── 4단계: DTO 조립
         List<GetPendingCollectionsResponse.Item> items = collections.stream()
-                .map(c -> new GetPendingCollectionsResponse.Item(
-                        c.getId(),
-                        thumbMap.getOrDefault(c.getId(), null) == null
-                                ? null
-                                : imageDomainService.toUploadImageUrl(thumbMap.get(c.getId())),
-                        c.getNote(),
-                        c.getUser().getNickname(),
-                        profileImageUrls.get(c.getUser().getId()),
-                        OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getBirdIdSuggestionRequestedAt())
-                ))
+                .map(c -> {
+                    OffsetDateTime startedAt = startedAtMap.get(c.getId()); // ★ 변경: 히스토리 기준
+                    return new GetPendingCollectionsResponse.Item(
+                            c.getId(),
+                            thumbMap.getOrDefault(c.getId(), null) == null
+                                    ? null
+                                    : imageDomainService.toUploadImageUrl(thumbMap.get(c.getId())),
+                            c.getNote(),
+                            c.getUser().getNickname(),
+                            profileImageUrls.get(c.getUser().getId()),
+                            startedAt != null
+                                    ? OffsetDateTimeLocalizer.toSeoulLocalDateTime(startedAt)
+                                    : null
+                    );
+                })
                 .toList();
 
         return new GetPendingCollectionsResponse(items);
