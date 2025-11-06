@@ -67,19 +67,6 @@ public class BirdIdRequestHistoryRepository {
                 .getSingleResult();
     }
 
-    public long countResolvedCumulativeAsOf(OffsetDateTime endExclusive) {
-        // ADOPT로 해결된 것만 누적
-        return em.createQuery("""
-                SELECT COUNT(h) FROM BirdIdRequestHistory h
-                WHERE h.resolvedAt IS NOT NULL
-                  AND h.resolutionKind = :kind
-                  AND h.resolvedAt < :end
-                """, Long.class)
-                .setParameter("kind", ResolutionKind.ADOPT)
-                .setParameter("end", endExclusive)
-                .getSingleResult();
-    }
-
     /** 누적(해당 시점까지) 해결 시간 통계 — 단위: "초" (ADOPT만) */
     public Object[] resolutionStatsCumulativeSecondsAsOf(OffsetDateTime endExclusive) {
         Object[] row = (Object[]) em.createNativeQuery("""
@@ -96,6 +83,20 @@ public class BirdIdRequestHistoryRepository {
                 .setParameter(1, endExclusive)
                 .getSingleResult();
         return row;
+    }
+
+    public long countResolvedOnDate(OffsetDateTime startInclusive, OffsetDateTime endExclusive) {
+        return em.createQuery("""
+                SELECT COUNT(h) FROM BirdIdRequestHistory h
+                WHERE h.resolvedAt IS NOT NULL
+                  AND h.resolutionKind = :kind
+                  AND h.resolvedAt >= :start
+                  AND h.resolvedAt < :end
+                """, Long.class)
+                .setParameter("kind", ResolutionKind.ADOPT)
+                .setParameter("start", startInclusive)
+                .setParameter("end", endExclusive)
+                .getSingleResult();
     }
 
 }
