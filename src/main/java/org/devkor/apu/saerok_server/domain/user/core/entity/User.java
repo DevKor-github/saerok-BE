@@ -43,6 +43,9 @@ public class User extends SoftDeletableAuditable {
     @Column(name = "joined_at")
     private OffsetDateTime joinedAt;
 
+    @Column(name = "signup_completed_at")
+    private OffsetDateTime signupCompletedAt;
+
     @Setter
     @Column(name = "default_profile_image_variant")
     private Short defaultProfileImageVariant;

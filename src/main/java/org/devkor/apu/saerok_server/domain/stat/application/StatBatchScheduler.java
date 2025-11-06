@@ -23,6 +23,7 @@ public class StatBatchScheduler {
 
     /**
      * 매일 새벽 03:30 KST, 전날 기준으로 집계 누락분을 모두 채운다.
+     * (신규 사용자 지표도 동일 정책: 마지막 집계 없으면 '어제'만 1회 집계)
      */
     @Scheduled(cron = "0 30 3 * * *", zone = "Asia/Seoul")
     public void runDailyAggregation() {
@@ -33,7 +34,14 @@ public class StatBatchScheduler {
                 StatMetric.COLLECTION_PRIVATE_RATIO,
                 StatMetric.BIRD_ID_PENDING_COUNT,
                 StatMetric.BIRD_ID_RESOLVED_COUNT,
-                StatMetric.BIRD_ID_RESOLUTION_STATS
+                StatMetric.BIRD_ID_RESOLUTION_STATS,
+
+                StatMetric.USER_COMPLETED_TOTAL,
+                StatMetric.USER_SIGNUP_DAILY,
+                StatMetric.USER_WITHDRAWAL_DAILY,
+                StatMetric.USER_DAU,
+                StatMetric.USER_WAU,
+                StatMetric.USER_MAU
         )) {
             var last = dailyRepo.findLastDateOf(metric).orElse(null);
             LocalDate from = (last == null) ? yesterday : last.plusDays(1);
