@@ -43,20 +43,25 @@ public class UserQueryService {
         );
     }
 
-    public CheckNicknameResponse checkNickname(String nickname) {
-        // 1. 유효성 검사 (길이, 형식, 금칙어 등)
+    /** 로그인 사용자의 기존 닉네임은 중복으로 보지 않도록 처리 */
+    public CheckNicknameResponse checkNickname(String nickname, Long currentUserId) {
+        // 1) 정책 유효성
         NicknameValidationResult validationResult = nicknamePolicy.validateNicknameWithReason(nickname);
         if (!validationResult.isValid()) {
             return new CheckNicknameResponse(false, validationResult.reason());
         }
-        
-        // 2. 중복 확인
-        boolean isDuplicated = userRepository.findByNickname(nickname).isPresent();
-        if (isDuplicated) {
+
+        // 2) 중복 확인 (본인 닉네임은 허용)
+        var existing = userRepository.findByNickname(nickname);
+        if (existing.isPresent()) {
+            if (currentUserId != null && existing.get().getId().equals(currentUserId)) {
+                // 본인이 현재 쓰고 있는 닉네임
+                return new CheckNicknameResponse(true, null);
+            }
             return new CheckNicknameResponse(false, "이미 사용 중인 닉네임입니다.");
         }
-        
-        // 3. 모든 검사 통과
+
+        // 3) 사용 가능
         return new CheckNicknameResponse(true, null);
     }
 }
