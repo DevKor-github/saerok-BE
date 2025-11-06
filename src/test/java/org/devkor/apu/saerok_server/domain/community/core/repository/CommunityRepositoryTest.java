@@ -9,6 +9,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdTaxonomy;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdDescription;
+import org.devkor.apu.saerok_server.domain.stat.core.entity.BirdIdRequestHistory;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.testsupport.AbstractPostgresContainerTest;
 import org.devkor.apu.saerok_server.testsupport.builder.CollectionBuilder;
@@ -16,9 +17,6 @@ import org.devkor.apu.saerok_server.testsupport.builder.UserBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -43,12 +41,10 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
     @Autowired
     TestEntityManager em;
 
-    GeometryFactory gf;
     Field birdNameField;
 
     @BeforeEach
     void setUp() throws NoSuchFieldException {
-        gf = new GeometryFactory();
         birdNameField = Bird.class.getDeclaredField("name");
         birdNameField.setAccessible(true);
     }
@@ -56,7 +52,7 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
     /* ------------------------------------------------------------------
      * helpers
      * ------------------------------------------------------------------ */
-    
+
     private User newUser(String nickname) {
         return new UserBuilder(em)
                 .nickname(nickname)
@@ -113,17 +109,13 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
                 .owner(owner)
                 .accessLevel(accessLevel)
                 .build();
-        
-        // bird 설정 (null일 수도 있음)
+
         if (bird != null) {
             ReflectionTestUtils.setField(collection, "bird", bird);
         }
-        
-        // createdAt 설정이 필요한 경우
         if (createdAt != null) {
             ReflectionTestUtils.setField(collection, "createdAt", createdAt);
         }
-        
         em.merge(collection);
         return collection;
     }
@@ -138,13 +130,19 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
         }
     }
 
+    /** pending 컬렉션용: 열린 동정 요청 히스토리 한 줄 생성 (resolvedAt=NULL) */
+    private void openPending(UserBirdCollection collection, OffsetDateTime startedAt) {
+        BirdIdRequestHistory h = BirdIdRequestHistory.start(collection, startedAt);
+        em.persist(h);
+    }
+
     /* ------------------------------------------------------------------
      * tests
      * ------------------------------------------------------------------ */
 
     @Test
     @DisplayName("PUBLIC 컬렉션만 최신순으로 조회")
-    void findRecent_returnsPublicOnly() throws Exception {
+    void findRecent_returnsPublicOnly() {
         // given
         User user1 = newUser("user1");
         User user2 = newUser("user2");
@@ -171,7 +169,7 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
 
     @Test
     @DisplayName("PopularCollection 테이블에 등록된 PUBLIC 컬렉션만 조회")
-    void findPopular_returnsRegisteredPopular() throws Exception {
+    void findPopular_returnsRegisteredPopular() {
         // given
         User user = newUser("user");
         Bird bird = newBird("참새");
@@ -182,16 +180,15 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
         UserBirdCollection privatePopular = newCollection(user, bird, AccessLevelType.PRIVATE, null);
 
         em.flush();
-        
-        // PopularCollection 에 등록
+
         PopularCollection pc1 = new PopularCollection(popularOld);
         ReflectionTestUtils.setField(pc1, "createdAt", now.minusDays(1));
         em.persist(pc1);
-        
+
         PopularCollection pc2 = new PopularCollection(popularNew);
         ReflectionTestUtils.setField(pc2, "createdAt", now);
         em.persist(pc2);
-        
+
         PopularCollection pc3 = new PopularCollection(privatePopular);
         em.persist(pc3);
 
@@ -211,14 +208,17 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
 
     @Test
     @DisplayName("새 정보가 없는 PUBLIC 컬렉션을 조회")
-    void findPending_returnsWithoutBird() throws Exception {
+    void findPending_returnsWithoutBird() {
         // given
         User user = newUser("user");
         Bird bird = newBird("참새");
 
-        newCollection(user, bird, AccessLevelType.PUBLIC, null);
-        UserBirdCollection withoutBirdPublic = newCollection(user, null, AccessLevelType.PUBLIC, null);
-        newCollection(user, null, AccessLevelType.PRIVATE, null);
+        newCollection(user, bird, AccessLevelType.PUBLIC, null);                 // resolved (bird!=null)
+        UserBirdCollection withoutBirdPublic = newCollection(user, null, AccessLevelType.PUBLIC, null); // pending 대상
+        newCollection(user, null, AccessLevelType.PRIVATE, null);               // PRIVATE → 제외
+
+        // ★ 핵심: pending 조회는 열린 BirdIdRequestHistory가 있어야 잡힌다
+        openPending(withoutBirdPublic, OffsetDateTime.now().minusMinutes(1));
 
         CommunityQueryCommand command = new CommunityQueryCommand(1, 10, null);
 
@@ -235,7 +235,7 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
 
     @Test
     @DisplayName("새 이름으로 PUBLIC 컬렉션 검색")
-    void searchCollections_searchesByBirdName() throws Exception {
+    void searchCollections_searchesByBirdName() {
         // given
         User user = newUser("user");
         Bird sparrow = newBird("참새");
@@ -260,12 +260,12 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
 
     @Test
     @DisplayName("닉네임으로 사용자 검색 시 삭제된 사용자는 제외")
-    void searchUsers_excludesDeletedUsers() throws Exception {
+    void searchUsers_excludesDeletedUsers() {
         // given
         User kim = newUser("김철수");
         newUser("박영희");
         newUser("이민수");
-        
+
         User deleted = newUser("김영수");
         deleted.softDelete();
 

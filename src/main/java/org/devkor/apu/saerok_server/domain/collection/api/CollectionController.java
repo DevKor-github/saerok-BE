@@ -240,7 +240,8 @@ public class CollectionController {
             - koreanName
             - likeCount
             - commentCount
-
+            - createdAt
+            - discoveredDate
             """,
             responses = {
                     @ApiResponse(

@@ -33,7 +33,7 @@ public class UserRepository {
     }
 
     public Optional<User> findByNickname(String nickname) {
-        return em.createQuery("SELECT u FROM User u WHERE u.nickname = :nickname AND u.deletedAt IS NULL", User.class)
+        return em.createQuery("SELECT u FROM User u WHERE u.nickname = :nickname", User.class)
                 .setParameter("nickname", nickname)
                 .getResultStream()
                 .findFirst();

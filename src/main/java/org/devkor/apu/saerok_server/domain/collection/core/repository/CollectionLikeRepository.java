@@ -7,7 +7,9 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.springframework.stereotype.Repository;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -25,14 +27,14 @@ public class CollectionLikeRepository {
      */
     public Optional<UserBirdCollectionLike> findByUserIdAndCollectionId(Long userId, Long collectionId) {
         List<UserBirdCollectionLike> results = em.createQuery(
-                "SELECT l FROM UserBirdCollectionLike l " +
-                "WHERE l.user.id = :userId AND l.collection.id = :collectionId", 
-                UserBirdCollectionLike.class)
+                        "SELECT l FROM UserBirdCollectionLike l " +
+                                "WHERE l.user.id = :userId AND l.collection.id = :collectionId",
+                        UserBirdCollectionLike.class)
                 .setParameter("userId", userId)
                 .setParameter("collectionId", collectionId)
                 .setMaxResults(1)
                 .getResultList();
-        
+
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
     }
 
@@ -41,9 +43,9 @@ public class CollectionLikeRepository {
      */
     public boolean existsByUserIdAndCollectionId(Long userId, Long collectionId) {
         return !em.createQuery(
-                "SELECT 1 FROM UserBirdCollectionLike l " +
-                "WHERE l.user.id = :userId AND l.collection.id = :collectionId",
-                Integer.class)
+                        "SELECT 1 FROM UserBirdCollectionLike l " +
+                                "WHERE l.user.id = :userId AND l.collection.id = :collectionId",
+                        Integer.class)
                 .setParameter("userId", userId)
                 .setParameter("collectionId", collectionId)
                 .setMaxResults(1)
@@ -56,10 +58,10 @@ public class CollectionLikeRepository {
      */
     public List<User> findLikersByCollectionId(Long collectionId) {
         return em.createQuery(
-                "SELECT l.user FROM UserBirdCollectionLike l " +
-                "WHERE l.collection.id = :collectionId " +
-                "ORDER BY l.createdAt DESC", 
-                User.class)
+                        "SELECT l.user FROM UserBirdCollectionLike l " +
+                                "WHERE l.collection.id = :collectionId " +
+                                "ORDER BY l.createdAt DESC",
+                        User.class)
                 .setParameter("collectionId", collectionId)
                 .getResultList();
     }
@@ -69,10 +71,10 @@ public class CollectionLikeRepository {
      */
     public List<UserBirdCollection> findLikedCollectionsByUserId(Long userId) {
         return em.createQuery(
-                "SELECT l.collection FROM UserBirdCollectionLike l " +
-                "WHERE l.user.id = :userId " +
-                "ORDER BY l.createdAt DESC", 
-                UserBirdCollection.class)
+                        "SELECT l.collection FROM UserBirdCollectionLike l " +
+                                "WHERE l.user.id = :userId " +
+                                "ORDER BY l.createdAt DESC",
+                        UserBirdCollection.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }
@@ -82,10 +84,64 @@ public class CollectionLikeRepository {
      */
     public long countByCollectionId(Long collectionId) {
         return em.createQuery(
-                "SELECT COUNT(l) FROM UserBirdCollectionLike l " +
-                "WHERE l.collection.id = :collectionId", 
-                Long.class)
+                        "SELECT COUNT(l) FROM UserBirdCollectionLike l " +
+                                "WHERE l.collection.id = :collectionId",
+                        Long.class)
                 .setParameter("collectionId", collectionId)
                 .getSingleResult();
+    }
+
+    /* ────────────────────────────── 성능 최적화: 배치 메서드 ────────────────────────────── */
+
+    /**
+     * 여러 컬렉션의 좋아요 수를 한 번에 조회
+     * 반환 맵은 요청한 ID를 모두 포함하며, 없으면 0으로 채운다.
+     */
+    public Map<Long, Long> countLikesByCollectionIds(List<Long> collectionIds) {
+        if (collectionIds == null || collectionIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Object[]> rows = em.createQuery(
+                        "SELECT l.collection.id, COUNT(l) " +
+                                "FROM UserBirdCollectionLike l " +
+                                "WHERE l.collection.id IN :ids " +
+                                "GROUP BY l.collection.id",
+                        Object[].class)
+                .setParameter("ids", collectionIds)
+                .getResultList();
+
+        Map<Long, Long> result = new LinkedHashMap<>();
+        for (Long id : collectionIds) result.put(id, 0L);
+        for (Object[] row : rows) {
+            Long id = (Long) row[0];
+            Long cnt = (Long) row[1];
+            result.put(id, cnt);
+        }
+        return result;
+    }
+
+    /**
+     * 주어진 사용자 기준으로 여러 컬렉션에 대한 좋아요 여부를 한 번에 조회
+     * 반환 맵은 요청한 ID를 모두 포함하며, 없으면 false로 채운다.
+     */
+    public Map<Long, Boolean> findLikeStatusByUserIdAndCollectionIds(Long userId, List<Long> collectionIds) {
+        if (userId == null || collectionIds == null || collectionIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Long> likedIds = em.createQuery(
+                        "SELECT l.collection.id " +
+                                "FROM UserBirdCollectionLike l " +
+                                "WHERE l.user.id = :userId AND l.collection.id IN :ids",
+                        Long.class)
+                .setParameter("userId", userId)
+                .setParameter("ids", collectionIds)
+                .getResultList();
+
+        Map<Long, Boolean> result = new LinkedHashMap<>();
+        for (Long id : collectionIds) result.put(id, false);
+        for (Long id : likedIds) result.put(id, true);
+        return result;
     }
 }

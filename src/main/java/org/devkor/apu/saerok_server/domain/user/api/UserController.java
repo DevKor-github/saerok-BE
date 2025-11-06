@@ -168,31 +168,11 @@ public class UserController {
     @GetMapping("/check-nickname")
     @PermitAll
     @Operation(
-            summary = "닉네임 사용 가능 여부 조회",
+            summary = "닉네임 사용 가능 여부 조회 (인증: optional)",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = """
             닉네임이 사용 가능한지 종합적으로 검사합니다.
-            
-            검사 항목:
-            - 길이 제한 (2-9자)
-            - 형식 검사 (한글/영어/숫자, 공백 금지 등)
-            - 금칙어 포함 여부
-            - 다른 사용자 사용 여부
-            
-            응답 필드:
-            - isAvailable: 닉네임 정책에 따라 전체적으로 사용 가능한지 여부
-            - reason: 사용 불가능한 경우의 이유 (사용 가능한 경우 null)
-            
-            성공 시:
-                    {
-                      "isAvailable": true,
-                      "reason": null
-                    }
-            
-            실패 예시:
-                    {
-                      "isAvailable": false
-                      "reason": "사용할 수 없는 단어가 포함되어 있습니다."
-                    }
+            - 로그인 상태에서 자신의 현재 닉네임을 보내면 사용 가능으로 처리됩니다.
             """,
             responses = {
                     @ApiResponse(
@@ -208,9 +188,11 @@ public class UserController {
             }
     )
     public CheckNicknameResponse checkNickname(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam String nickname
     ) {
-        return userQueryService.checkNickname(nickname);
+        Long currentUserId = (userPrincipal != null) ? userPrincipal.getId() : null;
+        return userQueryService.checkNickname(nickname, currentUserId);
     }
 
     @DeleteMapping("/me")

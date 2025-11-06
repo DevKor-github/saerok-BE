@@ -14,8 +14,9 @@ public interface CommunityWebMapper {
 
     @Mapping(target = "collectionId", source = "collection.id")
     @Mapping(target = "imageUrl", source = "imageUrl")
+    @Mapping(target = "thumbnailImageUrl", source = "thumbnailImageUrl")
     @Mapping(target = "discoveredDate", source = "collection.discoveredDate")
-    @Mapping(target = "uploadedDate", expression = "java(OffsetDateTimeLocalizer.toSeoulLocalDateTime(collection.getCreatedAt()))")
+    @Mapping(target = "createdAt", expression = "java(OffsetDateTimeLocalizer.toSeoulLocalDateTime(collection.getCreatedAt()))")
     @Mapping(target = "latitude", source = "collection.latitude")
     @Mapping(target = "longitude", source = "collection.longitude")
     @Mapping(target = "locationAlias", source = "collection.locationAlias")
@@ -31,6 +32,7 @@ public interface CommunityWebMapper {
     CommunityCollectionInfo toCommunityCollectionInfo(
             UserBirdCollection collection,
             String imageUrl,
+            String thumbnailImageUrl,
             String userProfileImageUrl,
             Long likeCount,
             Long commentCount,

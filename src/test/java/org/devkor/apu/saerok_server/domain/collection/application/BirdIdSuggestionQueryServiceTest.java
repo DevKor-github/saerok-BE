@@ -4,8 +4,10 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetBirdId
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetPendingCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
-import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSuggestionRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
+import org.devkor.apu.saerok_server.domain.stat.core.repository.BirdIdRequestHistoryRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
@@ -17,7 +19,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -35,6 +39,7 @@ class BirdIdSuggestionQueryServiceTest {
     @Mock UserProfileImageUrlService userProfileImageUrlService;
     @Mock CollectionImageUrlService  collectionImageUrlService;
     @Mock ImageDomainService         imageDomainService;
+    @Mock BirdIdRequestHistoryRepository birdIdRequestHistoryRepository;
 
     BirdIdSuggestionQueryService sut;
 
@@ -46,7 +51,8 @@ class BirdIdSuggestionQueryServiceTest {
                 imageDomainService,
                 userRepo,
                 userProfileImageUrlService,
-                collectionImageUrlService
+                collectionImageUrlService,
+                birdIdRequestHistoryRepository
         );
     }
 
@@ -63,7 +69,7 @@ class BirdIdSuggestionQueryServiceTest {
         setField(c, "id", id);
         setField(c, "user", owner);
         setField(c, "note", note);
-        setField(c, "birdIdSuggestionRequestedAt", OffsetDateTime.now());
+        // birdIdSuggestionRequestedAt 필드는 제거되었으므로 더 이상 세팅하지 않음
         return c;
     }
 
@@ -95,6 +101,12 @@ class BirdIdSuggestionQueryServiceTest {
                             2L, "http://cdn/profile/default/default-1.png"
                     ));
 
+            // ④ 동정요청 시작 시각 맵 (BirdIdRequestHistory 기반)
+            OffsetDateTime t1 = OffsetDateTime.now().minusMinutes(2);
+            OffsetDateTime t2 = OffsetDateTime.now().minusMinutes(1);
+            given(birdIdRequestHistoryRepository.findOpenStartedAtMapByCollectionIds(List.of(1L, 2L)))
+                    .willReturn(Map.of(1L, t1, 2L, t2));
+
             // when
             GetPendingCollectionsResponse res = sut.getPendingCollections();
 
@@ -110,17 +122,25 @@ class BirdIdSuggestionQueryServiceTest {
             assertThat(second.collectionId()).isEqualTo(2L);
             assertThat(second.imageUrl()).isNull();
             assertThat(second.profileImageUrl()).isEqualTo("http://cdn/profile/default/default-1.png");
+
+            // 히스토리 조회가 호출됐는지까지 확인
+            verify(birdIdRequestHistoryRepository).findOpenStartedAtMapByCollectionIds(List.of(1L, 2L));
         }
 
         @Test @DisplayName("조회 결과 없음 → 빈 리스트 반환")
         void empty() {
             given(collectionRepo.findPublicPendingCollections()).willReturn(List.of());
 
+            // 빈 입력에서도 호출을 허용하도록 스텁
+            given(birdIdRequestHistoryRepository.findOpenStartedAtMapByCollectionIds(List.of()))
+                    .willReturn(Map.of());
+
             GetPendingCollectionsResponse res = sut.getPendingCollections();
 
             assertThat(res.items()).isEmpty();
             verify(userProfileImageUrlService).getProfileImageUrlsFor(List.of());
             verify(collectionImageUrlService).getPrimaryImageUrlsFor(List.of());
+            verify(birdIdRequestHistoryRepository).findOpenStartedAtMapByCollectionIds(List.of());
         }
     }
 

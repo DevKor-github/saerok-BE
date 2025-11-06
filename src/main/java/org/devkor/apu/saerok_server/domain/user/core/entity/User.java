@@ -43,12 +43,14 @@ public class User extends SoftDeletableAuditable {
     @Column(name = "joined_at")
     private OffsetDateTime joinedAt;
 
+    @Column(name = "signup_completed_at")
+    private OffsetDateTime signupCompletedAt;
+
     @Setter
     @Column(name = "default_profile_image_variant")
     private Short defaultProfileImageVariant;
 
     public void anonymizeForWithdrawal() {
-        this.setNickname(null);
         this.email = null;
         this.phone = null;
         this.gender = null;

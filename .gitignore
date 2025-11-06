@@ -35,6 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+.DS_Store
 
 # 환경 변수 파일은 절대 커밋하지 말 것!
 .env
