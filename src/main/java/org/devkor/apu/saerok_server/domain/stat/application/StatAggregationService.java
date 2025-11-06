@@ -35,7 +35,7 @@ public class StatAggregationService {
                 case COLLECTION_TOTAL_COUNT -> aggregateCollectionTotalCount(date);
                 case COLLECTION_PRIVATE_RATIO -> aggregateCollectionPrivateRatio(date);
                 case BIRD_ID_PENDING_COUNT -> aggregatePendingCount(date);
-                case BIRD_ID_RESOLVED_COUNT -> aggregateResolvedCumulative(date);
+                case BIRD_ID_RESOLVED_COUNT -> aggregateResolvedDaily(date);
                 case BIRD_ID_RESOLUTION_STATS -> aggregateResolutionStatsCumulative(date);
             }
         }
@@ -92,10 +92,11 @@ public class StatAggregationService {
         dailyRepo.upsertValue(StatMetric.BIRD_ID_PENDING_COUNT, date, open);
     }
 
-    private void aggregateResolvedCumulative(LocalDate date) {
+    private void aggregateResolvedDaily(LocalDate date) {
+        var start = date.atStartOfDay(KST).toOffsetDateTime();
         var end = endExclusive(date);
-        long resolved = histRepo.countResolvedCumulativeAsOf(end);
-        dailyRepo.upsertValue(StatMetric.BIRD_ID_RESOLVED_COUNT, date, resolved);
+        long resolvedDaily = histRepo.countResolvedOnDate(start, end);
+        dailyRepo.upsertValue(StatMetric.BIRD_ID_RESOLVED_COUNT, date, resolvedDaily);
     }
 
     /* Metric calculators (멀티값 → payload.{min/max/avg/stddev}_hours) */
