@@ -34,7 +34,7 @@ public class StatBatchScheduler {
                 StatMetric.COLLECTION_PRIVATE_RATIO,
                 StatMetric.BIRD_ID_PENDING_COUNT,
                 StatMetric.BIRD_ID_RESOLVED_COUNT,
-                StatMetric.BIRD_ID_RESOLUTION_STATS,
+                StatMetric.BIRD_ID_RESOLUTION_STATS_28D,
 
                 StatMetric.USER_COMPLETED_TOTAL,
                 StatMetric.USER_SIGNUP_DAILY,
