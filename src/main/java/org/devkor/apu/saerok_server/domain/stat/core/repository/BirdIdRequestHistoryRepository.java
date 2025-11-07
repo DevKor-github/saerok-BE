@@ -85,6 +85,26 @@ public class BirdIdRequestHistoryRepository {
         return row;
     }
 
+    /** 윈도우(구간) 해결 시간 통계 — 단위: "초" (ADOPT만) */
+    public Object[] resolutionStatsWindowSeconds(OffsetDateTime startInclusive, OffsetDateTime endExclusive) {
+        Object[] row = (Object[]) em.createNativeQuery("""
+        SELECT
+          MIN(resolution_seconds) AS min_s,
+          MAX(resolution_seconds) AS max_s,
+          AVG(resolution_seconds) AS avg_s,
+          STDDEV_POP(resolution_seconds) AS stddev_s
+        FROM bird_id_request_history
+        WHERE resolved_at IS NOT NULL
+          AND resolution_kind = 'ADOPT'
+          AND resolved_at >= ?1
+          AND resolved_at < ?2
+        """)
+                .setParameter(1, startInclusive)
+                .setParameter(2, endExclusive)
+                .getSingleResult();
+        return row;
+    }
+
     public long countResolvedOnDate(OffsetDateTime startInclusive, OffsetDateTime endExclusive) {
         return em.createQuery("""
                 SELECT COUNT(h) FROM BirdIdRequestHistory h
@@ -98,5 +118,4 @@ public class BirdIdRequestHistoryRepository {
                 .setParameter("end", endExclusive)
                 .getSingleResult();
     }
-
 }
