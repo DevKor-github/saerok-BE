@@ -37,7 +37,7 @@ public class StatAggregationService {
                 case COLLECTION_PRIVATE_RATIO -> aggregateCollectionPrivateRatio(date);
                 case BIRD_ID_PENDING_COUNT -> aggregatePendingCount(date);
                 case BIRD_ID_RESOLVED_COUNT -> aggregateResolvedDaily(date);
-                case BIRD_ID_RESOLUTION_STATS -> aggregateResolutionStatsCumulative(date);
+                case BIRD_ID_RESOLUTION_STATS_28D -> aggregateResolutionStatsRecent28d(date);
 
                 case USER_COMPLETED_TOTAL -> aggregateUserCompletedTotal(date);
                 case USER_SIGNUP_DAILY -> aggregateUserSignupDaily(date);
@@ -109,11 +109,13 @@ public class StatAggregationService {
 
     /* Metric calculators (멀티값 → payload.{min/max/avg/stddev}_hours) */
 
-    private void aggregateResolutionStatsCumulative(LocalDate date) {
+    /** 최근 28일: [end-28d, end) ADOPT 해결 시간 통계 */
+    private void aggregateResolutionStatsRecent28d(LocalDate date) {
         var end = endExclusive(date);
-        Object[] row = histRepo.resolutionStatsCumulativeSecondsAsOf(end); // [min,max,avg,stddev] in seconds
+        var start = end.minusDays(28);
+        Object[] row = histRepo.resolutionStatsWindowSeconds(start, end); // [min,max,avg,stddev] in seconds
 
-        // ADOPT 해결이 하나도 없으면 저장 생략
+        // 최근 28일 내 ADOPT 해결이 하나도 없으면 저장 생략
         if (row == null || row[0] == null || row[1] == null || row[2] == null || row[3] == null) return;
 
         double minH = ((Number) row[0]).doubleValue() / 3600.0;
@@ -127,7 +129,7 @@ public class StatAggregationService {
         p.put("avg_hours",    avgH);
         p.put("stddev_hours", stdH);
 
-        dailyRepo.upsertPayload(StatMetric.BIRD_ID_RESOLUTION_STATS, date, p);
+        dailyRepo.upsertPayload(StatMetric.BIRD_ID_RESOLUTION_STATS_28D, date, p);
     }
 
     /** 누적 가입자 수: COMPLETED 이고, day 끝 시점 기준으로 삭제되지 않은 사용자 */

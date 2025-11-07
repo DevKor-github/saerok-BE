@@ -24,7 +24,7 @@ public class StatQueryService {
         for (StatMetric m : metrics) {
             List<DailyStat> rows = dailyRepo.findSeriesByMetric(m);
 
-            if (m == StatMetric.BIRD_ID_RESOLUTION_STATS) {
+            if (m == StatMetric.BIRD_ID_RESOLUTION_STATS_28D) {
                 var minSeries = new StatSeriesResponse.ComponentSeries(
                         "min_hours",
                         rows.stream().map(s ->
