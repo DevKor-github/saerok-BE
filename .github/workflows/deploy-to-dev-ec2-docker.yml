@@ -57,7 +57,10 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          source: deploy/docker-compose.yml,deploy/docker-compose.dev.yml
+          source: |
+            deploy/docker-compose.yml
+            deploy/docker-compose.dev.yml
+            deploy/postgres-ko/**
           target: ~/saerok/
           strip_components: 1
 
@@ -113,6 +116,9 @@ jobs:
             add_kv KAKAO_CLIENT_SECRET "${{ secrets.KAKAO_CLIENT_SECRET }}"
             add_kv KAKAO_APP_ID "${{ secrets.KAKAO_APP_ID }}"
             add_kv KMS_KEY_ID "${{ secrets.KMS_KEY_ID }}"
+            
+            # 커스텀 postgres 이미지 빌드
+            docker build -t saerok-postgres:ko ./postgres-ko
 
             # 3) Pull & Recreate with resource limits from dev.yml
             docker compose \
@@ -120,7 +126,7 @@ jobs:
               -p saerok \
               -f docker-compose.yml \
               -f docker-compose.dev.yml \
-              pull --quiet
+              pull app --quiet
 
             docker compose \
               --env-file "$ENV_FILE" \
