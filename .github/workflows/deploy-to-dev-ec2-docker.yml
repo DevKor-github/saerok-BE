@@ -114,6 +114,10 @@ jobs:
             add_kv KAKAO_APP_ID "${{ secrets.KAKAO_APP_ID }}"
             add_kv KMS_KEY_ID "${{ secrets.KMS_KEY_ID }}"
             
+            # buildx 디렉터리 권한 정리
+            sudo mkdir -p /home/ubuntu/.docker/buildx/instances
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
+            
             # 커스텀 postgres 이미지 빌드
             docker build -t saerok-postgres:ko ./postgres-ko
 
