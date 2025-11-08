@@ -72,23 +72,21 @@ jobs:
 
             cd ~/saerok
 
-            # 0) Docker & Compose must exist already
+            # 0) Docker & Compose 확인
             docker --version
             docker compose version
 
-            # 1) Login to GHCR for pull
+            # 1) GHCR 로그인 (app 이미지 pull용)
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
-            # 2) Create ephemeral env file in RAM (no disk residue)
+            # 2) /run/saerok env 파일 생성
             sudo install -d -m 0700 -o "$(id -un)" -g "$(id -gn)" /run/saerok
             ENV_FILE="/run/saerok/env.dev"
             umask 177
             : > "$ENV_FILE"
-            # 어떤 경우에도 마지막에 지우도록 보장
             cleanup() { shred -u "$ENV_FILE" || rm -f "$ENV_FILE"; }
             trap cleanup EXIT
 
-            # 2-1) Write secrets safely (single-line values assumed)
             add_kv() { printf '%s\n' "$1=$2" >> "$ENV_FILE"; }
             add_kv SPRING_PROFILES_ACTIVE "dev"
             add_kv DB_URL "${{ secrets.DB_URL }}"
@@ -113,15 +111,16 @@ jobs:
             add_kv KAKAO_CLIENT_SECRET "${{ secrets.KAKAO_CLIENT_SECRET }}"
             add_kv KAKAO_APP_ID "${{ secrets.KAKAO_APP_ID }}"
             add_kv KMS_KEY_ID "${{ secrets.KMS_KEY_ID }}"
-            
-            # buildx 디렉터리 권한 정리
+
+            # 3) buildx 권한 문제 정리 (깨끗이 밀고 다시 생성)
+            sudo rm -rf /home/ubuntu/.docker/buildx || true
             sudo mkdir -p /home/ubuntu/.docker/buildx/instances
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
-            
-            # 커스텀 postgres 이미지 빌드
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker || true
+
+            # 4) 커스텀 PostGIS + ko_KR 이미지 빌드
             docker build -t saerok-postgres:ko ./postgres-ko
 
-            # 3) Pull & Recreate with resource limits from dev.yml
+            # 5) app 이미지만 pull
             docker compose \
               --env-file "$ENV_FILE" \
               -p saerok \
@@ -129,6 +128,7 @@ jobs:
               -f docker-compose.dev.yml \
               pull app --quiet
 
+            # 6) compose up (postgres는 로컬 saerok-postgres:ko 이미지 사용)
             docker compose \
               --env-file "$ENV_FILE" \
               -p saerok \
@@ -136,17 +136,15 @@ jobs:
               -f docker-compose.dev.yml \
               up -d --force-recreate --quiet-pull
 
-            # 4) Status & recent logs (env 파일은 trap으로 종료 시 삭제)
+            # 7) 상태 확인
             docker compose -p saerok -f docker-compose.yml -f docker-compose.dev.yml ps
             docker logs --tail=120 saerok-dev || true
 
-            # 5) Healthcheck
+            # 8) Healthcheck
             echo "Waiting for health endpoint..."
             for i in {1..30}; do
               if curl -fsS http://localhost:8080/health > /dev/null; then
                 echo "✅ Healthcheck passed"
-                # 6) SUCCESS: prune old images & build cache (not used in last 24h)
-                echo "Pruning unused images and build cache older than 24h..."
                 docker image prune -af --filter "until=24h" || true
                 docker builder prune -af --filter "until=24h" || true
                 exit 0
