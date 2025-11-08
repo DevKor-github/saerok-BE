@@ -60,7 +60,7 @@ jobs:
           source: |
             deploy/docker-compose.yml
             deploy/docker-compose.dev.yml
-            deploy/postgres-ko/**
+            deploy/postgres-ko/Dockerfile
           target: ~/saerok/
           strip_components: 1
 
