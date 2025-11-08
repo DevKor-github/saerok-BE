@@ -30,7 +30,7 @@ services:
       - postgres
 
   postgres:
-    image: postgres:17
+    image: postgis/postgis:17-3.5
     container_name: saerok-postgres-dev
     restart: unless-stopped
     stop_grace_period: 15s
