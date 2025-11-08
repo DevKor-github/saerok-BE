@@ -57,10 +57,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          source: |
-            deploy/docker-compose.yml
-            deploy/docker-compose.dev.yml
-            deploy/postgres-ko/Dockerfile
+          source: "deploy/docker-compose.yml,deploy/docker-compose.dev.yml,deploy/postgres-ko/Dockerfile"
           target: ~/saerok/
           strip_components: 1
 
