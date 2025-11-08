@@ -76,7 +76,7 @@ jobs:
             docker --version
             docker compose version
 
-            # 1) GHCR 로그인 (app 이미지 pull용)
+            # 1) GHCR 로그인 (app 이미지 pull 용)
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
             # 2) /run/saerok env 파일 생성
@@ -112,23 +112,18 @@ jobs:
             add_kv KAKAO_APP_ID "${{ secrets.KAKAO_APP_ID }}"
             add_kv KMS_KEY_ID "${{ secrets.KMS_KEY_ID }}"
 
-            # 3) buildx 권한 문제 정리 (깨끗이 밀고 다시 생성)
-            sudo rm -rf /home/ubuntu/.docker/buildx || true
-            sudo mkdir -p /home/ubuntu/.docker/buildx/instances
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker || true
+            # 3) 커스텀 PostGIS + ko_KR UTF-8 이미지 빌드 (BuildKit 끄고, buildx 안 씀)
+            DOCKER_BUILDKIT=0 docker build -t saerok-postgres:ko ./postgres-ko
 
-            # 4) 커스텀 PostGIS + ko_KR 이미지 빌드
-            docker build -t saerok-postgres:ko ./postgres-ko
-
-            # 5) app 이미지만 pull
+            # 4) app 이미지만 pull
             docker compose \
               --env-file "$ENV_FILE" \
               -p saerok \
               -f docker-compose.yml \
               -f docker-compose.dev.yml \
-              pull app --quiet
+              pull --quiet app
 
-            # 6) compose up (postgres는 로컬 saerok-postgres:ko 이미지 사용)
+            # 5) compose up (postgres는 로컬 saerok-postgres:ko 이미지 사용)
             docker compose \
               --env-file "$ENV_FILE" \
               -p saerok \
@@ -136,11 +131,11 @@ jobs:
               -f docker-compose.dev.yml \
               up -d --force-recreate --quiet-pull
 
-            # 7) 상태 확인
+            # 6) 상태 확인
             docker compose -p saerok -f docker-compose.yml -f docker-compose.dev.yml ps
             docker logs --tail=120 saerok-dev || true
 
-            # 8) Healthcheck
+            # 7) Healthcheck
             echo "Waiting for health endpoint..."
             for i in {1..30}; do
               if curl -fsS http://localhost:8080/health > /dev/null; then
@@ -155,5 +150,4 @@ jobs:
 
             echo "❌ Healthcheck failed after retries"
             docker logs --tail=200 saerok-dev || true
-            # 실패 시에는 이미지/캐시 정리하지 않음(디버깅 용도)
             exit 1
