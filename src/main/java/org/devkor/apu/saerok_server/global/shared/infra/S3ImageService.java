@@ -55,7 +55,7 @@ public class S3ImageService implements ImageService {
             s3Client.deleteObject(deleteRequest);
 
             // 썸네일이 있다면, 그것도 삭제
-            if (key.startsWith("collection-images/")) {
+            if (key.startsWith("collection-images/") || key.startsWith("user-profile-images/")) {
                 String thumbnailKey = getThumbnailKey(key);
                 try {
                     DeleteObjectRequest thumbnailDeleteRequest = DeleteObjectRequest.builder()
@@ -79,7 +79,7 @@ public class S3ImageService implements ImageService {
         // 원본 키 + 썸네일 키를 모두 포함한 리스트 생성
         List<String> allKeysToDelete = new ArrayList<>(objectKeys);
         for (String key : objectKeys) {
-            if (key.startsWith("collection-images/")) {
+            if (key.startsWith("collection-images/") || key.startsWith("user-profile-images/")) {
                 allKeysToDelete.add(getThumbnailKey(key));
             }
         }
@@ -155,6 +155,6 @@ public class S3ImageService implements ImageService {
     @Override
     public String getThumbnailKey(String originalKey) {
         String fileNameWithoutExt = originalKey.replaceFirst("\\.[^.]*$", "");
-        return fileNameWithoutExt.replace("collection-images/", "thumbnails/") + ".webp";
+        return "thumbnails/" + fileNameWithoutExt + ".webp";
     }
 }
