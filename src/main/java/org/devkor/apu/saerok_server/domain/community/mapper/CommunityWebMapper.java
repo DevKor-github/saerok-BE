@@ -28,12 +28,13 @@ public interface CommunityWebMapper {
     @Mapping(target = "isPopular", source = "isPopular")
     @Mapping(target = "suggestionUserCount", source = "suggestionUserCount")
     @Mapping(target = "bird", expression = "java(mapBirdInfo(collection))")
-    @Mapping(target = "user", expression = "java(mapUserInfo(collection, userProfileImageUrl))")
+    @Mapping(target = "user", expression = "java(mapUserInfo(collection, userProfileImageUrl, thumbnailProfileImageUrl))")
     CommunityCollectionInfo toCommunityCollectionInfo(
             UserBirdCollection collection,
             String imageUrl,
             String thumbnailImageUrl,
             String userProfileImageUrl,
+            String thumbnailProfileImageUrl,
             Long likeCount,
             Long commentCount,
             Boolean isLiked,
@@ -44,7 +45,8 @@ public interface CommunityWebMapper {
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "nickname", source = "user.nickname")
     @Mapping(target = "profileImageUrl", source = "profileImageUrl")
-    CommunityUserInfo toCommunityUserInfo(User user, String profileImageUrl);
+    @Mapping(target = "thumbnailProfileImageUrl", source = "thumbnailProfileImageUrl")
+    CommunityUserInfo toCommunityUserInfo(User user, String profileImageUrl, String thumbnailProfileImageUrl);
 
     default CommunityCollectionInfo.BirdInfo mapBirdInfo(UserBirdCollection collection) {
         if (collection.getBird() == null) {
@@ -56,14 +58,15 @@ public interface CommunityWebMapper {
         );
     }
 
-    default CommunityCollectionInfo.UserInfo mapUserInfo(UserBirdCollection collection, String profileImageUrl) {
+    default CommunityCollectionInfo.UserInfo mapUserInfo(UserBirdCollection collection, String profileImageUrl, String thumbnailProfileImageUrl) {
         if (collection.getUser() == null) {
             return null;
         }
         return new CommunityCollectionInfo.UserInfo(
                 collection.getUser().getId(),
                 collection.getUser().getNickname(),
-                profileImageUrl
+                profileImageUrl,
+                thumbnailProfileImageUrl
         );
     }
 }

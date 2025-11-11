@@ -49,6 +49,7 @@ public class BirdIdSuggestionQueryService {
                 .distinct()
                 .toList();
         Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
+        Map<Long, String> thumbnailProfileImageUrls = userProfileImageUrlService.getProfileThumbnailImageUrlsFor(users);
 
         // ── 3.5단계: 열린 동정 요청 히스토리 startedAt 일괄 조회 (기존 c.getBirdIdSuggestionRequestedAt() 대체)
         List<Long> ids = collections.stream().map(UserBirdCollection::getId).toList();
@@ -66,6 +67,7 @@ public class BirdIdSuggestionQueryService {
                             c.getNote(),
                             c.getUser().getNickname(),
                             profileImageUrls.get(c.getUser().getId()),
+                            thumbnailProfileImageUrls.get(c.getUser().getId()),
                             startedAt != null
                                     ? OffsetDateTimeLocalizer.toSeoulLocalDateTime(startedAt)
                                     : null
