@@ -170,7 +170,8 @@ class AdminReportQueryServiceTest {
         when(collectionLikeRepository.countByCollectionId(10L)).thenReturn(10L);
         when(collectionCommentRepository.countByCollectionId(10L)).thenReturn(2L);
         when(userProfileImageUrlService.getProfileImageUrlFor(owner)).thenReturn("profile");
-        when(collectionWebMapper.toGetCollectionDetailResponse(col, "img", "profile", 10L, 2L, false, false))
+        when(userProfileImageUrlService.getProfileThumbnailImageUrlFor(owner)).thenReturn("profile_thumb");
+        when(collectionWebMapper.toGetCollectionDetailResponse(col, "img", "profile", "profile_thumb", 10L, 2L, false, false))
                 .thenReturn(detail);
         when(commentQueryService.getComments(10L, null)).thenReturn(comments);
 
@@ -211,7 +212,8 @@ class AdminReportQueryServiceTest {
         when(collectionLikeRepository.countByCollectionId(100L)).thenReturn(5L);
         when(collectionCommentRepository.countByCollectionId(100L)).thenReturn(1L);
         when(userProfileImageUrlService.getProfileImageUrlFor(owner)).thenReturn("p");
-        when(collectionWebMapper.toGetCollectionDetailResponse(col, null, "p", 5L, 1L, false, false))
+        when(userProfileImageUrlService.getProfileThumbnailImageUrlFor(owner)).thenReturn("p_thumb");
+        when(collectionWebMapper.toGetCollectionDetailResponse(col, null, "p", "p_thumb", 5L, 1L, false, false))
                 .thenReturn(detail);
         when(commentQueryService.getComments(100L, null)).thenReturn(comments);
 

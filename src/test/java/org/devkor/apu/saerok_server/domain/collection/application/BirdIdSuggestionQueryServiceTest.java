@@ -100,6 +100,11 @@ class BirdIdSuggestionQueryServiceTest {
                             1L, "http://cdn/profile/1/profile.jpg",
                             2L, "http://cdn/profile/default/default-1.png"
                     ));
+            given(userProfileImageUrlService.getProfileThumbnailImageUrlsFor(anyList()))
+                    .willReturn(Map.of(
+                            1L, "http://cdn/profile/1/thumbnail.webp",
+                            2L, "http://cdn/profile/default/thumbnail-1.webp"
+                    ));
 
             // ④ 동정요청 시작 시각 맵 (BirdIdRequestHistory 기반)
             OffsetDateTime t1 = OffsetDateTime.now().minusMinutes(2);
@@ -117,11 +122,13 @@ class BirdIdSuggestionQueryServiceTest {
             assertThat(first.collectionId()).isEqualTo(1L);
             assertThat(first.imageUrl()).isEqualTo("http://cdn/img/thumb/key1.jpg");
             assertThat(first.profileImageUrl()).isEqualTo("http://cdn/profile/1/profile.jpg");
+            assertThat(first.thumbnailProfileImageUrl()).isEqualTo("http://cdn/profile/1/thumbnail.webp");
 
             GetPendingCollectionsResponse.Item second = res.items().get(1);
             assertThat(second.collectionId()).isEqualTo(2L);
             assertThat(second.imageUrl()).isNull();
             assertThat(second.profileImageUrl()).isEqualTo("http://cdn/profile/default/default-1.png");
+            assertThat(second.thumbnailProfileImageUrl()).isEqualTo("http://cdn/profile/default/thumbnail-1.webp");
 
             // 히스토리 조회가 호출됐는지까지 확인
             verify(birdIdRequestHistoryRepository).findOpenStartedAtMapByCollectionIds(List.of(1L, 2L));
@@ -139,6 +146,7 @@ class BirdIdSuggestionQueryServiceTest {
 
             assertThat(res.items()).isEmpty();
             verify(userProfileImageUrlService).getProfileImageUrlsFor(List.of());
+            verify(userProfileImageUrlService).getProfileThumbnailImageUrlsFor(List.of());
             verify(collectionImageUrlService).getPrimaryImageUrlsFor(List.of());
             verify(birdIdRequestHistoryRepository).findOpenStartedAtMapByCollectionIds(List.of());
         }

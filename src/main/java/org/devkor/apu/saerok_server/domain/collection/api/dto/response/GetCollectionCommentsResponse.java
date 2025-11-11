@@ -20,6 +20,8 @@ public record GetCollectionCommentsResponse(
             String nickname,
             @Schema(description = "작성자 프로필 이미지 URL", example = "https://cdn.example.com/user-profile-images/3.jpg", requiredMode = Schema.RequiredMode.REQUIRED)
             String profileImageUrl,
+            @Schema(description = "작성자 썸네일 프로필 이미지 URL (320px 너비)", example = "https://cdn.example.com/thumbnails/user-profile-images/3.webp", requiredMode = Schema.RequiredMode.REQUIRED)
+            String thumbnailProfileImageUrl,
             @Schema(description = "댓글 내용", example = "멋진 관찰 기록이네요!", requiredMode = Schema.RequiredMode.REQUIRED)
             String content,
             @Schema(description = "좋아요 수", example = "5", requiredMode = Schema.RequiredMode.REQUIRED)

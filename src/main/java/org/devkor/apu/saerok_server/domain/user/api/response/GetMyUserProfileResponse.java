@@ -8,5 +8,6 @@ public record GetMyUserProfileResponse(
         String email,
         LocalDate joinedDate,
         String profileImageUrl,
+        String thumbnailProfileImageUrl,
         List<String> roles
 ) { }

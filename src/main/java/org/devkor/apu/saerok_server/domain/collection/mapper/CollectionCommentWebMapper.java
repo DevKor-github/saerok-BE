@@ -19,6 +19,7 @@ public interface CollectionCommentWebMapper {
             Map<Long, Boolean> likeStatuses,
             Map<Long, Boolean> mineStatuses,
             Map<Long, String> profileImageUrls,
+            Map<Long, String> thumbnailProfileImageUrls,
             Boolean isMyCollection) {
         if (entities == null || entities.isEmpty()) {
             return new GetCollectionCommentsResponse(List.of(), isMyCollection);
@@ -42,6 +43,9 @@ public interface CollectionCommentWebMapper {
             if (!profileImageUrls.containsKey(userId)) {
                 throw new IllegalStateException("profileImageUrls에 사용자 ID " + userId + "가 없습니다.");
             }
+            if (!thumbnailProfileImageUrls.containsKey(userId)) {
+                throw new IllegalStateException("thumbnailProfileImageUrls에 사용자 ID " + userId + "가 없습니다.");
+            }
         }
         
         List<GetCollectionCommentsResponse.Item> items = entities.stream()
@@ -52,19 +56,21 @@ public interface CollectionCommentWebMapper {
                     Boolean isLiked = likeStatuses.get(commentId);
                     Boolean isMine = mineStatuses.get(commentId);
                     String profileImageUrl = profileImageUrls.get(userId);
-                    return toCommentItem(comment, likeCount, isLiked, isMine, profileImageUrl);
+                    String thumbnailProfileImageUrl = thumbnailProfileImageUrls.get(userId);
+                    return toCommentItem(comment, likeCount, isLiked, isMine, profileImageUrl, thumbnailProfileImageUrl);
                 })
                 .toList();
         return new GetCollectionCommentsResponse(items, isMyCollection);
     }
 
     /* 단일 엔티티 → Item DTO */
-    default GetCollectionCommentsResponse.Item toCommentItem(UserBirdCollectionComment c, int likeCount, Boolean isLiked, Boolean isMine, String profileImageUrl) {
+    default GetCollectionCommentsResponse.Item toCommentItem(UserBirdCollectionComment c, int likeCount, Boolean isLiked, Boolean isMine, String profileImageUrl, String thumbnailProfileImageUrl) {
         return new GetCollectionCommentsResponse.Item(
                 c.getId(),
                 c.getUser().getId(),
                 c.getUser().getNickname(),
                 profileImageUrl,
+                thumbnailProfileImageUrl,
                 c.getContent(),
                 likeCount,
                 isLiked,

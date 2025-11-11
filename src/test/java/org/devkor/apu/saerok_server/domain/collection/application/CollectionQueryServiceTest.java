@@ -100,8 +100,10 @@ class CollectionQueryServiceTest {
                 .willReturn(3L);
         given(userProfileImageUrlService.getProfileImageUrlFor(owner))
                 .willReturn(profileUrl);
+        given(userProfileImageUrlService.getProfileThumbnailImageUrlFor(owner))
+                .willReturn(profileUrl + "_thumb");
         given(collectionWebMapper.toGetCollectionDetailResponse(
-                collection, imageUrl, profileUrl, 5L, 3L, false, false))
+                collection, imageUrl, profileUrl, profileUrl + "_thumb", 5L, 3L, false, false))
                 .willReturn(expected);
 
         //-- When
@@ -141,8 +143,9 @@ class CollectionQueryServiceTest {
         given(collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId))
                 .willReturn(true);
         given(userProfileImageUrlService.getProfileImageUrlFor(owner)).willReturn(profileUrl);
+        given(userProfileImageUrlService.getProfileThumbnailImageUrlFor(owner)).willReturn(profileUrl + "_thumb");
         given(collectionWebMapper.toGetCollectionDetailResponse(
-                collection, null, profileUrl, 3L, 2L, true, true))
+                collection, null, profileUrl, profileUrl + "_thumb", 3L, 2L, true, true))
                 .willReturn(expected);
 
         //-- When

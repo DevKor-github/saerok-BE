@@ -11,5 +11,8 @@ public record CommunityUserInfo(
         String nickname,
         
         @Schema(description = "프로필 이미지 URL", example = "https://cdn.example.com/user-profile-images/10.jpg")
-        String profileImageUrl
+        String profileImageUrl,
+
+        @Schema(description = "썸네일 프로필 이미지 URL (320px 너비)", example = "https://cdn.example.com/thumbnails/user-profile-images/10.webp")
+        String thumbnailProfileImageUrl
 ) {}

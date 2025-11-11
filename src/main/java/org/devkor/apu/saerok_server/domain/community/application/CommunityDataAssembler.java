@@ -55,17 +55,18 @@ public class CommunityDataAssembler {
                     String imageUrl = imageUrls.get(collection.getId());
                     String thumbnailImageUrl = thumbnailImageUrls.get(collection.getId());
                     String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
+                    String thumbnailProfileImageUrl = userProfileImageUrlService.getProfileThumbnailImageUrlFor(collection.getUser());
                     long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
                     long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
                     boolean isLiked = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collection.getId());
                     boolean isPopular = popularStatusMap.getOrDefault(collection.getId(), false);
 
-                    Long suggestionUserCount = collection.getBird() == null 
-                            ? suggestionUserCounts.getOrDefault(collection.getId(), 0L) 
+                    Long suggestionUserCount = collection.getBird() == null
+                            ? suggestionUserCounts.getOrDefault(collection.getId(), 0L)
                             : null;
                     
                     return communityWebMapper.toCommunityCollectionInfo(
-                            collection, imageUrl, thumbnailImageUrl, userProfileImageUrl, likeCount, commentCount, isLiked, isPopular, suggestionUserCount
+                            collection, imageUrl, thumbnailImageUrl, userProfileImageUrl, thumbnailProfileImageUrl, likeCount, commentCount, isLiked, isPopular, suggestionUserCount
                     );
                 })
                 .toList();
@@ -75,7 +76,8 @@ public class CommunityDataAssembler {
         return users.stream()
                 .map(user -> {
                     String profileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(user);
-                    return communityWebMapper.toCommunityUserInfo(user, profileImageUrl);
+                    String thumbnailProfileImageUrl = userProfileImageUrlService.getProfileThumbnailImageUrlFor(user);
+                    return communityWebMapper.toCommunityUserInfo(user, profileImageUrl, thumbnailProfileImageUrl);
                 })
                 .toList();
     }

@@ -58,7 +58,8 @@ public class UserCommandService {
         return new UpdateUserProfileResponse(
                 user.getNickname(),
                 user.getEmail(),
-                userProfileImageUrlService.getProfileImageUrlFor(user)
+                userProfileImageUrlService.getProfileImageUrlFor(user),
+                userProfileImageUrlService.getProfileThumbnailImageUrlFor(user)
         );
     }
 
