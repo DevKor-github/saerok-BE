@@ -88,6 +88,7 @@ class UserCommandServiceTest {
                 return null;
             }).when(userProfileUpdateService).changeNickname(same(user), eq("newNick"));
             given(userProfileImageUrlService.getProfileImageUrlFor(user)).willReturn(null);
+            given(userProfileImageUrlService.getProfileThumbnailImageUrlFor(user)).willReturn(null);
 
             UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "newNick", null, null);
 
@@ -96,11 +97,13 @@ class UserCommandServiceTest {
             assertThat(res.nickname()).isEqualTo("newNick");
             assertThat(res.email()).isEqualTo("old@example.com");
             assertThat(res.profileImageUrl()).isNull();
+            assertThat(res.thumbnailProfileImageUrl()).isNull();
 
             verify(userRepository).findById(42L);
             verify(userProfileUpdateService).changeNickname(user, "newNick");
             verify(userSignupStatusService).tryCompleteSignup(user);
             verify(userProfileImageUrlService).getProfileImageUrlFor(user);
+            verify(userProfileImageUrlService).getProfileThumbnailImageUrlFor(user);
             verifyNoMoreInteractions(userProfileUpdateService);
         }
 

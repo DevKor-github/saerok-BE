@@ -168,13 +168,16 @@ class CollectionLikeQueryServiceTest {
         Long collectionId = 1L;
         List<User> likers = List.of(testUser);
         Map<Long, String> profileImageUrls = Map.of(1L, "https://example.com/profile/1.jpg");
+        Map<Long, String> thumbnailProfileImageUrls = Map.of(1L, "https://example.com/thumbnails/profile/1.webp");
         GetCollectionLikersResponse expectedResponse = new GetCollectionLikersResponse(List.of());
 
         given(collectionRepository.findById(collectionId)).willReturn(Optional.of(testCollection));
         given(collectionLikeRepository.findLikersByCollectionId(collectionId)).willReturn(likers);
         given(userProfileImageUrlService.getProfileImageUrlsFor(likers))
                 .willReturn(profileImageUrls);
-        given(collectionLikeWebMapper.toGetCollectionLikersResponse(likers, profileImageUrls))
+        given(userProfileImageUrlService.getProfileThumbnailImageUrlsFor(likers))
+                .willReturn(thumbnailProfileImageUrls);
+        given(collectionLikeWebMapper.toGetCollectionLikersResponse(likers, profileImageUrls, thumbnailProfileImageUrls))
                 .willReturn(expectedResponse);
 
         GetCollectionLikersResponse result = collectionLikeQueryService.getCollectionLikersResponse(collectionId);
@@ -183,7 +186,8 @@ class CollectionLikeQueryServiceTest {
         verify(collectionRepository).findById(collectionId);
         verify(collectionLikeRepository).findLikersByCollectionId(collectionId);
         verify(userProfileImageUrlService).getProfileImageUrlsFor(likers);
-        verify(collectionLikeWebMapper).toGetCollectionLikersResponse(likers, profileImageUrls);
+        verify(userProfileImageUrlService).getProfileThumbnailImageUrlsFor(likers);
+        verify(collectionLikeWebMapper).toGetCollectionLikersResponse(likers, profileImageUrls, thumbnailProfileImageUrls);
     }
 
     @Test
