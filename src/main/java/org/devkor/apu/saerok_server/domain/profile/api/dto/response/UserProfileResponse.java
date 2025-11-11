@@ -17,6 +17,9 @@ public record UserProfileResponse(
         @Schema(description = "프로필 이미지 URL", example = "https://cdn.saerok.dev/user-profile-images/42.jpg", requiredMode = Schema.RequiredMode.REQUIRED)
         String profileImageUrl,
 
+        @Schema(description = "썸네일 프로필 이미지 URL (320px 너비)", example = "https://cdn.saerok.dev/thumbnails/user-profile-images/42.webp", requiredMode = Schema.RequiredMode.REQUIRED)
+        String thumbnailProfileImageUrl,
+
         @Schema(description = "컬렉션(새록) 개수", example = "42", requiredMode = Schema.RequiredMode.REQUIRED)
         Long collectionCount,
 

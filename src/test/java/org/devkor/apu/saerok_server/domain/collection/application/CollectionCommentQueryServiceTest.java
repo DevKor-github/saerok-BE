@@ -83,12 +83,16 @@ class CollectionCommentQueryServiceTest {
             when(userProfileImageUrlService.getProfileImageUrlsFor(List.of()))
                     .thenReturn(profileImageUrls);
 
+            Map<Long, String> thumbnailProfileImageUrls = Map.of();
+            when(userProfileImageUrlService.getProfileThumbnailImageUrlsFor(List.of()))
+                    .thenReturn(thumbnailProfileImageUrls);
+
             GetCollectionCommentsResponse expected =
                     new GetCollectionCommentsResponse(List.of(), false);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     Map.of(), Map.of(),
-                    profileImageUrls, false
+                    profileImageUrls, thumbnailProfileImageUrls, false
             ))
                     .thenReturn(expected);
 
@@ -98,7 +102,7 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     Map.of(), Map.of(),
-                    profileImageUrls, false
+                    profileImageUrls, thumbnailProfileImageUrls, false
             );
         }
 
@@ -125,12 +129,16 @@ class CollectionCommentQueryServiceTest {
             when(userProfileImageUrlService.getProfileImageUrlsFor(List.of()))
                     .thenReturn(profileImageUrls);
 
+            Map<Long, String> thumbnailProfileImageUrls = Map.of();
+            when(userProfileImageUrlService.getProfileThumbnailImageUrlsFor(List.of()))
+                    .thenReturn(thumbnailProfileImageUrls);
+
             GetCollectionCommentsResponse expected =
                     new GetCollectionCommentsResponse(List.of(), false);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, false
+                    profileImageUrls, thumbnailProfileImageUrls, false
             ))
                     .thenReturn(expected);
 
@@ -140,7 +148,7 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, false
+                    profileImageUrls, thumbnailProfileImageUrls, false
             );
         }
 
@@ -167,12 +175,16 @@ class CollectionCommentQueryServiceTest {
             when(userProfileImageUrlService.getProfileImageUrlsFor(List.of()))
                     .thenReturn(profileImageUrls);
 
+            Map<Long, String> thumbnailProfileImageUrls = Map.of();
+            when(userProfileImageUrlService.getProfileThumbnailImageUrlsFor(List.of()))
+                    .thenReturn(thumbnailProfileImageUrls);
+
             GetCollectionCommentsResponse expected =
                     new GetCollectionCommentsResponse(List.of(), true);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, true
+                    profileImageUrls, thumbnailProfileImageUrls, true
             ))
                     .thenReturn(expected);
 
@@ -182,7 +194,7 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, true
+                    profileImageUrls, thumbnailProfileImageUrls, true
             );
         }
 

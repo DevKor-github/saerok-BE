@@ -88,10 +88,11 @@ public class AdminReportQueryService {
         long likeCount = collectionLikeRepository.countByCollectionId(collection.getId());
         long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
         String authorProfileImage = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
+        String thumbnailProfileImage = userProfileImageUrlService.getProfileThumbnailImageUrlFor(collection.getUser());
 
         GetCollectionDetailResponse collectionDetail =
                 collectionWebMapper.toGetCollectionDetailResponse(
-                        collection, imageUrl, authorProfileImage, likeCount, commentCount, false, false
+                        collection, imageUrl, authorProfileImage, thumbnailProfileImage, likeCount, commentCount, false, false
                 );
 
         // 댓글 목록 (관리자 기준 isLiked/isMine 계산 불필요)
@@ -114,10 +115,11 @@ public class AdminReportQueryService {
         long likeCount = collectionLikeRepository.countByCollectionId(parentCollection.getId());
         long commentCount = collectionCommentRepository.countByCollectionId(parentCollection.getId());
         String authorProfileImage = userProfileImageUrlService.getProfileImageUrlFor(parentCollection.getUser());
+        String thumbnailProfileImage = userProfileImageUrlService.getProfileThumbnailImageUrlFor(parentCollection.getUser());
 
         GetCollectionDetailResponse collectionDetail =
                 collectionWebMapper.toGetCollectionDetailResponse(
-                        parentCollection, imageUrl, authorProfileImage, likeCount, commentCount, false, false
+                        parentCollection, imageUrl, authorProfileImage, thumbnailProfileImage, likeCount, commentCount, false, false
                 );
 
         // 댓글 목록

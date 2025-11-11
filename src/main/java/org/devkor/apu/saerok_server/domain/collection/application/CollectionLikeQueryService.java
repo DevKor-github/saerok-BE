@@ -63,6 +63,7 @@ public class CollectionLikeQueryService {
 
         List<User> users = collectionLikeRepository.findLikersByCollectionId(collectionId);
         Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
-        return collectionLikeWebMapper.toGetCollectionLikersResponse(users, profileImageUrls);
+        Map<Long, String> thumbnailProfileImageUrls = userProfileImageUrlService.getProfileThumbnailImageUrlsFor(users);
+        return collectionLikeWebMapper.toGetCollectionLikersResponse(users, profileImageUrls, thumbnailProfileImageUrls);
     }
 }

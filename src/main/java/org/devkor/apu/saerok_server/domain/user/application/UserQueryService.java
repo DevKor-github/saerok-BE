@@ -39,6 +39,7 @@ public class UserQueryService {
                 user.getEmail(),
                 OffsetDateTimeLocalizer.toSeoulLocalDate(user.getJoinedAt()),
                 userProfileImageUrlService.getProfileImageUrlFor(user),
+                userProfileImageUrlService.getProfileThumbnailImageUrlFor(user),
                 roles
         );
     }

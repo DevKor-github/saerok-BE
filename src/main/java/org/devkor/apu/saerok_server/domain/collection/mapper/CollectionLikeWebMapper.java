@@ -32,7 +32,7 @@ public interface CollectionLikeWebMapper {
     GetLikedCollectionsResponse.Item toLikedCollectionItem(UserBirdCollection collection);
 
     // 컬렉션을 좋아요한 사용자 목록 조회
-    default GetCollectionLikersResponse toGetCollectionLikersResponse(List<User> users, Map<Long, String> profileImageUrls) {
+    default GetCollectionLikersResponse toGetCollectionLikersResponse(List<User> users, Map<Long, String> profileImageUrls, Map<Long, String> thumbnailProfileImageUrls) {
         if (users == null || users.isEmpty()) {
             return new GetCollectionLikersResponse(List.of());
         }
@@ -41,7 +41,8 @@ public interface CollectionLikeWebMapper {
                 .map(user -> new GetCollectionLikersResponse.Item(
                     user.getId(),
                     user.getNickname(),
-                    profileImageUrls.get(user.getId())
+                    profileImageUrls.get(user.getId()),
+                    thumbnailProfileImageUrls.get(user.getId())
                 ))
                 .toList();
         return new GetCollectionLikersResponse(items);

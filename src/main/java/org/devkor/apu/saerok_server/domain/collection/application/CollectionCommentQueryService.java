@@ -69,9 +69,10 @@ public class CollectionCommentQueryService {
                 .toList();
 
         Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
+        Map<Long, String> thumbnailProfileImageUrls = userProfileImageUrlService.getProfileThumbnailImageUrlsFor(users);
 
         // 7. 응답 생성
-        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, profileImageUrls, isMyCollection);
+        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, isMyCollection);
     }
 
     /* 댓글 개수 */

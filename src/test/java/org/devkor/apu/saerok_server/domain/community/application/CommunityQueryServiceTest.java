@@ -174,7 +174,7 @@ class CommunityQueryServiceTest {
                 .willReturn(collections);
         
         CommunityCollectionInfo.UserInfo userInfo = new CommunityCollectionInfo.UserInfo(
-                1L, "테스트유저", "https://example.com/profile.jpg"
+                1L, "테스트유저", "https://example.com/profile.jpg", "https://example.com/thumbnails/profile.webp"
         );
         
         CommunityCollectionInfo pendingInfo = collectionInfo(

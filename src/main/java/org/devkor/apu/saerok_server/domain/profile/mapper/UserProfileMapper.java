@@ -22,6 +22,8 @@ public interface UserProfileMapper {
             expression = "java(OffsetDateTimeLocalizer.toSeoulLocalDate(user.getJoinedAt()))")
     @Mapping(target = "profileImageUrl",
             expression = "java(userProfileImageUrlService.getProfileImageUrlFor(user))")
+    @Mapping(target = "thumbnailProfileImageUrl",
+            expression = "java(userProfileImageUrlService.getProfileThumbnailImageUrlFor(user))")
     @Mapping(target = "collectionCount",
             expression = "java((long) collections.size())")
     @Mapping(target = "collections",

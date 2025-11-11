@@ -7,8 +7,8 @@ services:
     ports: ["8080:8080"]
 
     # t2.micro 안전 제한
-    cpus: "0.20"
-    mem_limit: "600m"
+    cpus: "0.25"
+    mem_limit: "512m"
 
     # 런타임에 생성한 RAM env 파일을 컨테이너로 그대로 주입
     env_file:
@@ -25,3 +25,29 @@ services:
         -XX:ReservedCodeCacheSize=48m
         -XX:+UseSerialGC
         -XX:+ExitOnOutOfMemoryError
+
+    depends_on:
+      - postgres
+
+  postgres:
+    image: saerok-postgres:ko
+    container_name: saerok-postgres-dev
+    restart: unless-stopped
+    stop_grace_period: 15s
+
+    # 로컬 개발/디버깅도 필요하면 열어두고, 진짜 막고 싶으면 나중에 빼면 됨
+    ports:
+      - "5432:5432"
+
+    environment:
+      POSTGRES_DB: saerok
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--locale=ko_KR.utf8 --encoding=UTF8"
+
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+    # t2.micro 고려한 소박한 리소스
+    cpus: "0.25"
+    mem_limit: "256m"

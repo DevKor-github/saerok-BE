@@ -125,8 +125,9 @@ public class CollectionQueryService {
         boolean isLikedByMe = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collectionId);
         boolean isMine = userId != null && userId.equals(collection.getUser().getId());
         String userProfileImageUrl = userProfileImageUrlService.getProfileImageUrlFor(collection.getUser());
+        String thumbnailProfileImageUrl = userProfileImageUrlService.getProfileThumbnailImageUrlFor(collection.getUser());
 
-        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, userProfileImageUrl, likeCount, commentCount, isLikedByMe, isMine);
+        return collectionWebMapper.toGetCollectionDetailResponse(collection, imageUrl, userProfileImageUrl, thumbnailProfileImageUrl, likeCount, commentCount, isLikedByMe, isMine);
     }
 
     public GetNearbyCollectionsResponse getNearbyCollections(GetNearbyCollectionsCommand command) {
@@ -168,6 +169,7 @@ public class CollectionQueryService {
         // 6) 작성자 프로필 이미지 배치 조회
         List<User> authors = collections.stream().map(UserBirdCollection::getUser).toList();
         Map<Long, String> profileImageMap = userProfileImageUrlService.getProfileImageUrlsFor(authors);
+        Map<Long, String> thumbnailProfileImageMap = userProfileImageUrlService.getProfileThumbnailImageUrlsFor(authors);
 
         // 7) DTO 조립 (맵에서 누락 시 안전 기본값)
         List<GetNearbyCollectionsResponse.Item> items = collections.stream()
@@ -176,12 +178,14 @@ public class CollectionQueryService {
                     long commentCount = commentCounts.getOrDefault(c.getId(), 0L);
                     boolean isLikedByMe = command.userId() != null && myLikeMap.getOrDefault(c.getId(), false);
                     String userProfileImageUrl = profileImageMap.get(c.getUser().getId());
+                    String thumbnailProfileImageUrl = thumbnailProfileImageMap.get(c.getUser().getId());
 
                     return collectionWebMapper.toGetNearbyCollectionsResponseItem(
                             c,
                             urlMap.get(c.getId()),
                             thumbnailUrlMap.get(c.getId()),
                             userProfileImageUrl,
+                            thumbnailProfileImageUrl,
                             likeCount,
                             commentCount,
                             isLikedByMe
