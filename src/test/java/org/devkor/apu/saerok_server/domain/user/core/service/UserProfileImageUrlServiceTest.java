@@ -2,7 +2,9 @@ package org.devkor.apu.saerok_server.domain.user.core.service;
 
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
-import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
+import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantService;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainRouter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,15 +28,17 @@ class UserProfileImageUrlServiceTest {
     UserProfileImageUrlService sut;
 
     @Mock UserProfileImageRepository userProfileImageRepository;
-    @Mock ImageDomainService imageDomainService;
     @Mock ProfileImageDefaultService profileImageDefaultService;
+    @Mock ImageVariantService imageVariantService;
+    @Mock ImageDomainRouter imageDomainRouter;
 
     @BeforeEach
     void setUp() {
         sut = new UserProfileImageUrlService(
                 userProfileImageRepository,
-                imageDomainService,
-                profileImageDefaultService
+                profileImageDefaultService,
+                imageVariantService,
+                imageDomainRouter
         );
     }
 
@@ -49,13 +53,13 @@ class UserProfileImageUrlServiceTest {
     void getProfileImageUrlFor_hasCustom() {
         User u = user(1L);
         given(userProfileImageRepository.findObjectKeyByUserId(1L)).willReturn(Optional.of("k1"));
-        given(imageDomainService.toUploadImageUrl("k1")).willReturn("cdn://k1");
+        given(imageDomainRouter.toUrlFor(ImageKind.USER_PROFILE_IMAGE, "k1")).willReturn("cdn://k1");
 
         String url = sut.getProfileImageUrlFor(u);
 
         assertThat(url).isEqualTo("cdn://k1");
         verify(userProfileImageRepository).findObjectKeyByUserId(1L);
-        verify(imageDomainService).toUploadImageUrl("k1");
+        verify(imageDomainRouter).toUrlFor(ImageKind.USER_PROFILE_IMAGE, "k1");
         // 기본 이미지 서비스 호출 여부는 구현에 따라 달라질 수 있으므로 검증하지 않음
     }
 
@@ -65,14 +69,14 @@ class UserProfileImageUrlServiceTest {
         User u = user(2L);
         given(userProfileImageRepository.findObjectKeyByUserId(2L)).willReturn(Optional.empty());
         given(profileImageDefaultService.getDefaultObjectKeyFor(u)).willReturn("default2");
-        given(imageDomainService.toUploadImageUrl("default2")).willReturn("cdn://default2");
+        given(imageDomainRouter.toUrlFor(ImageKind.USER_PROFILE_IMAGE, "default2")).willReturn("cdn://default2");
 
         String url = sut.getProfileImageUrlFor(u);
 
         assertThat(url).isEqualTo("cdn://default2");
         verify(userProfileImageRepository).findObjectKeyByUserId(2L);
         verify(profileImageDefaultService).getDefaultObjectKeyFor(u);
-        verify(imageDomainService).toUploadImageUrl("default2");
+        verify(imageDomainRouter).toUrlFor(ImageKind.USER_PROFILE_IMAGE, "default2");
     }
 
     @Test
@@ -80,7 +84,7 @@ class UserProfileImageUrlServiceTest {
     void getProfileImageUrlsFor_empty() {
         var result = sut.getProfileImageUrlsFor(List.of());
         assertThat(result).isEmpty();
-        verifyNoInteractions(userProfileImageRepository, imageDomainService, profileImageDefaultService);
+        verifyNoInteractions(userProfileImageRepository, imageDomainRouter, profileImageDefaultService, imageVariantService);
     }
 
     @Test
@@ -98,9 +102,9 @@ class UserProfileImageUrlServiceTest {
 
         given(profileImageDefaultService.getDefaultObjectKeyFor(u2)).willReturn("def2");
 
-        given(imageDomainService.toUploadImageUrl("k1")).willReturn("cdn://k1");
-        given(imageDomainService.toUploadImageUrl("def2")).willReturn("cdn://def2");
-        given(imageDomainService.toUploadImageUrl("k3")).willReturn("cdn://k3");
+        given(imageDomainRouter.toUrlFor(ImageKind.USER_PROFILE_IMAGE, "k1")).willReturn("cdn://k1");
+        given(imageDomainRouter.toUrlFor(ImageKind.USER_PROFILE_IMAGE, "def2")).willReturn("cdn://def2");
+        given(imageDomainRouter.toUrlFor(ImageKind.USER_PROFILE_IMAGE, "k3")).willReturn("cdn://k3");
 
         Map<Long,String> urls = sut.getProfileImageUrlsFor(users);
 
@@ -111,8 +115,9 @@ class UserProfileImageUrlServiceTest {
 
         verify(userProfileImageRepository).findObjectKeysByUserIds(List.of(1L,2L,3L));
         verify(profileImageDefaultService).getDefaultObjectKeyFor(u2);
-        verify(imageDomainService).toUploadImageUrl("k1");
-        verify(imageDomainService).toUploadImageUrl("def2");
-        verify(imageDomainService).toUploadImageUrl("k3");
+        verify(imageDomainRouter).toUrlFor(ImageKind.USER_PROFILE_IMAGE, "k1");
+        verify(imageDomainRouter).toUrlFor(ImageKind.USER_PROFILE_IMAGE, "def2");
+        verify(imageDomainRouter).toUrlFor(ImageKind.USER_PROFILE_IMAGE, "k3");
+        verifyNoInteractions(imageVariantService);
     }
 }

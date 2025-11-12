@@ -33,7 +33,4 @@ public interface ImageService {
      * @return true면 존재
      */
     boolean exists(String objectKey);
-
-    // 썸네일 url을 만드는 헬퍼
-    String getThumbnailKey(String originalKey);
 }

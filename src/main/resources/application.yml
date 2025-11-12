@@ -25,6 +25,7 @@ spring:
       - "classpath:config/reserved-nicknames.yml"
       - "classpath:config/user-profile-images-default.yml"
       - "classpath:config/notification-messages.yml"
+      - "classpath:config/image-variants.yml"
 
 api_prefix: /api/v1
 

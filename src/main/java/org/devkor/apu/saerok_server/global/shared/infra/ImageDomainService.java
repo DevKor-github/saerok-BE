@@ -1,14 +1,14 @@
 package org.devkor.apu.saerok_server.global.shared.infra;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+/**
+ * CDN 도메인과 objectKey를 합성하여 최종 접근 URL을 만들어주는 서비스.
+ * - 이 클래스는 오직 "도메인 + objectKey → URL" 합성만을 책임집니다.
+ */
 @Service
-@RequiredArgsConstructor
 public class ImageDomainService {
-
-    private final S3ImageService s3ImageService;
 
     @Value("${aws.cloudfront.upload-image-domain}")
     private String uploadImageDomain;
@@ -17,20 +17,16 @@ public class ImageDomainService {
     private String dexImageDomain;
 
     /**
-     * 사용자가 업로드한 이미지 전용 (컬렉션 이미지, 프로필 사진, ...) <br>
-     * 현재 "도감 이미지"와 "사용자 업로드 이미지" 버킷을 나누어서 관리하고 있어서, toUploadImageUrl을 쓰면 "사용자 업로드 이미지 버킷"에 해당하는 CloudFront 도메인을 붙여줍니다.
-     *
-     * @param objectKey 해당 이미지의 objectKey
-     * @return 해당 이미지에 접근할 수 있는 URL
+     * 업로드된 '원본' 이미지의 URL을 반환합니다.
+     * @param objectKey S3 object key
      */
     public String toUploadImageUrl(String objectKey) {
         return uploadImageDomain + "/" + objectKey;
     }
 
-    public String toThumbnailUrl(String objectKey) {
-        return toUploadImageUrl(s3ImageService.getThumbnailKey(objectKey));
-    }
-
+    /**
+     * 도감(Bird Dex) 이미지의 URL을 반환합니다.
+     */
     public String toDexImageUrl(String objectKey) {
         return dexImageDomain + "/" + objectKey;
     }

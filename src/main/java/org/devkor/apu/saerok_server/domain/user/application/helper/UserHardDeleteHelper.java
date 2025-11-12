@@ -10,8 +10,12 @@ import org.devkor.apu.saerok_server.domain.notification.core.repository.Notifica
 import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
+import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
 
@@ -28,6 +32,8 @@ public class UserHardDeleteHelper {
     private final UserDeviceRepository userDeviceRepository;
     private final ImageService imageService;
     private final NotificationRepository notificationRepository;
+    private final ImageVariantService imageVariantService;
+
 
     /**
      * 회원 탈퇴 시 영구 삭제가 필요한 리소스를 일괄 정리한다.
@@ -52,7 +58,10 @@ public class UserHardDeleteHelper {
         userProfileImageRepository.findByUserId(userId).ifPresent(img -> {
             String oldKey = img.getObjectKey();
             userProfileImageRepository.remove(img); // DB row 삭제
-            runAfterCommitOrNow(() -> imageService.delete(oldKey)); // 커밋 이후 S3 삭제
+            runAfterCommitOrNow(() -> {
+                List<String> associatedKeys = imageVariantService.associatedKeys(ImageKind.USER_PROFILE_IMAGE, oldKey);
+                imageService.deleteAll(associatedKeys);
+            });
             log.info("[Withdrawal][HardDelete] userId={}, profileImageKey={}", userId, oldKey);
         });
     }

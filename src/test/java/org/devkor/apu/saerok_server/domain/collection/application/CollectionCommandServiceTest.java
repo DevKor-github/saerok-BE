@@ -9,12 +9,14 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
-import org.devkor.apu.saerok_server.domain.stat.application.BirdIdRequestHistoryRecorder; // ★ 추가
+import org.devkor.apu.saerok_server.domain.stat.application.BirdIdRequestHistoryRecorder; // ★ 유지
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -32,7 +35,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.any;
 
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -46,7 +48,8 @@ class CollectionCommandServiceTest {
     @Mock private ImageDomainService imageDomainService;
     @Mock private CollectionWebMapper collectionWebMapper;
     @Mock private ImageService imageService;
-    @Mock private BirdIdRequestHistoryRecorder birdReqHistory; // ★ 추가
+    @Mock private BirdIdRequestHistoryRecorder birdReqHistory; // ★ 유지
+    @Mock private ImageVariantService imageVariantService;     // ★ 추가
 
     private CollectionCommandService service;
 
@@ -60,7 +63,8 @@ class CollectionCommandServiceTest {
                 imageDomainService,
                 collectionWebMapper,
                 imageService,
-                birdReqHistory // ★ 추가
+                birdReqHistory,        // ★ 유지
+                imageVariantService    // ★ 추가
         );
     }
 
@@ -116,6 +120,9 @@ class CollectionCommandServiceTest {
             assertThat(saved.getAddress()).isEqualTo(address);
             assertThat(saved.getNote()).isEqualTo(note);
             assertThat(saved.getAccessLevel()).isEqualTo(accessLevel);
+
+            // ‘대기 시작’ 기록 호출 여부는 상황에 따라 다를 수 있어 엄격 검증은 생략
+            then(birdReqHistory).should().onCollectionCreatedIfPending(eq(saved), any());
         }
 
         @Test
@@ -164,7 +171,7 @@ class CollectionCommandServiceTest {
     class DeleteCollectionTests {
 
         @Test
-        @DisplayName("정상 삭제 흐름")
+        @DisplayName("정상 삭제 흐름(연관 썸네일까지 삭제)")
         void deleteCollection_success() {
             Long userId = 1L;
             Long collId = 2L;
@@ -184,17 +191,27 @@ class CollectionCommandServiceTest {
                     .build();
             ReflectionTestUtils.setField(coll, "id", collId);
 
+            List<String> originalKeys = List.of("k1", "k2");
+            List<String> associated = List.of("k1", "k2", "thumbnails/k1.webp", "thumbnails/k2.webp");
+
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
             given(collectionRepository.findById(collId)).willReturn(Optional.of(coll));
-            given(collectionImageRepository.findObjectKeysByCollectionId(collId)).willReturn(List.of("k1", "k2"));
+            given(collectionImageRepository.findObjectKeysByCollectionId(collId)).willReturn(originalKeys);
+            given(imageVariantService.associatedKeys(ImageKind.USER_COLLECTION_IMAGE, originalKeys)).willReturn(associated);
 
             // when
             service.deleteCollection(new DeleteCollectionCommand(userId, collId));
 
             // then
-            then(imageService).should().deleteAll(List.of("k1", "k2"));
+            then(birdReqHistory).should().onCollectionDeleted(collId);
             then(collectionImageRepository).should().removeByCollectionId(collId);
             then(collectionRepository).should().remove(coll);
+
+            ArgumentCaptor<List<String>> keysCaptor = ArgumentCaptor.forClass(List.class);
+            then(imageService).should().deleteAll(keysCaptor.capture());
+            assertThat(keysCaptor.getValue()).containsExactlyElementsOf(associated);
+
+            then(imageVariantService).should().associatedKeys(ImageKind.USER_COLLECTION_IMAGE, originalKeys);
         }
 
         @Test
@@ -244,5 +261,5 @@ class CollectionCommandServiceTest {
         }
     }
 
-    // updateCollection 관련 기존 테스트들은 그대로 유지…
+    // updateCollection 관련 기존 테스트들은 이 변경과 무관하므로 그대로 유지합니다.
 }
