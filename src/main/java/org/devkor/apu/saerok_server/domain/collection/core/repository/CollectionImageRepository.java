@@ -52,7 +52,7 @@ public class CollectionImageRepository {
      * 여러 컬렉션의 '첫번째 이미지' objectKey 를 한 방에 가져옴
      * (orderIndex 가장 작은 것 1개)
      */
-    public Map<Long, String> findThumbKeysByCollectionIds(List<Long> collectionIds) {
+    public Map<Long, String> findPrimaryKeysByCollectionIds(List<Long> collectionIds) {
         if (collectionIds.isEmpty()) return Map.of();
 
         // 먼저 실제로 대표 이미지가 있는 것들만 쿼리로 가져옴
