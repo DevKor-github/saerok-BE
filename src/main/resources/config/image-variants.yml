@@ -1,0 +1,16 @@
+image-variants:
+  kinds:
+    USER_COLLECTION_IMAGE:
+      variants:
+        - name: THUMBNAIL
+          strategy: REPLACE_EXTENSION
+          target-extension: webp
+          prefix: thumbnails/
+    USER_PROFILE_IMAGE:
+      variants:
+        - name: THUMBNAIL
+          strategy: REPLACE_EXTENSION
+          target-extension: webp
+          prefix: thumbnails/
+    DEX_BIRD_IMAGE:
+      variants: []
