@@ -6,7 +6,6 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImage
 import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
 import org.devkor.apu.saerok_server.global.shared.image.ImageVariantService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainRouter;
-import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
