@@ -20,6 +20,7 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantResolver;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.locationtech.jts.geom.Point;
@@ -43,6 +44,7 @@ public class CollectionCommandService {
     private final CollectionWebMapper collectionWebMapper;
     private final ImageService imageService;
     private final BirdIdRequestHistoryRecorder birdReqHistory;
+    private final ImageVariantResolver imageVariantResolver;
 
     public Long createCollection(CreateCollectionCommand command) {
         User user = userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
@@ -92,7 +94,7 @@ public class CollectionCommandService {
         List<String> objectKeys = collectionImageRepository.findObjectKeysByCollectionId(command.collectionId());
         collectionImageRepository.removeByCollectionId(command.collectionId());
         collectionRepository.remove(collection);
-        runAfterCommitOrNow(() -> imageService.deleteAll(objectKeys));
+        runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantResolver.associatedKeysOf(objectKeys)));
         // 3) 닫힌 히스토리는 FK가 SET NULL로 남는다
     }
 
