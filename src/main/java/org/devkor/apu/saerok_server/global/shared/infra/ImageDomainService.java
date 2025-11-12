@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.global.shared.infra;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ImageDomainService {
 
-    private final S3ImageService s3ImageService;
+    private final ImageVariantResolver imageVariantResolver;
 
     @Value("${aws.cloudfront.upload-image-domain}")
     private String uploadImageDomain;
@@ -28,7 +29,8 @@ public class ImageDomainService {
     }
 
     public String toThumbnailUrl(String objectKey) {
-        return toUploadImageUrl(s3ImageService.getThumbnailKey(objectKey));
+        String thumbKey = imageVariantResolver.thumbnailKeyOf(objectKey);
+        return toUploadImageUrl(thumbKey);
     }
 
     public String toDexImageUrl(String objectKey) {
