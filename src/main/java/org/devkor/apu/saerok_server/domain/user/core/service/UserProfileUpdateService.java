@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserProfileImage;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantResolver;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class UserProfileUpdateService {
     private final UserRepository userRepository;
     private final UserProfileImageRepository userProfileImageRepository;
     private final ImageService imageService;
+    private final ImageVariantResolver imageVariantResolver;
     private final ProfileImageDefaultService profileImageDefaultService;
 
     public void changeNickname(User user, String nickname) {
@@ -33,7 +35,7 @@ public class UserProfileUpdateService {
         }
 
         if (userRepository.findByNickname(nickname).isPresent()) {
-            throw new IllegalArgumentException("해당 닉네임은 다른 사용자가 사용 중입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 닉네임이에요.");
         }
 
         user.setNickname(nickname);
@@ -46,7 +48,7 @@ public class UserProfileUpdateService {
                             String oldObjectKey = image.getObjectKey();
                             if (!oldObjectKey.equals(objectKey)) {
                                 image.change(objectKey, contentType);
-                                runAfterCommitOrNow(() -> imageService.delete(oldObjectKey));
+                                runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantResolver.associatedKeysOf(oldObjectKey)));
                             }
                         },
                         () -> userProfileImageRepository.save(UserProfileImage.of(user, objectKey, contentType))
@@ -62,7 +64,7 @@ public class UserProfileUpdateService {
             String oldObjectKey = image.getObjectKey();
             userProfileImageRepository.remove(image);
             profileImageDefaultService.setRandomVariant(user);
-            runAfterCommitOrNow(() -> imageService.delete(oldObjectKey));
+            runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantResolver.associatedKeysOf(oldObjectKey)));
         });
     }
 }

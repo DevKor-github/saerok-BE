@@ -13,6 +13,7 @@ import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantResolver;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -28,6 +29,7 @@ public class CollectionImageCommandService {
     private final CollectionImageRepository collectionImageRepository;
     private final ImageDomainService imageDomainService;
     private final ImageService imageService;
+    private final ImageVariantResolver imageVariantResolver;
 
     public PresignResponse generatePresignedUploadUrl(Long userId, Long collectionId, String contentType) {
 
@@ -56,7 +58,7 @@ public class CollectionImageCommandService {
                 .objectKey(command.objectKey())
                 .contentType(command.contentType())
                 .build();
-        
+
         return new CreateCollectionImageResponse(
                 collectionImageRepository.save(image),
                 imageDomainService.toUploadImageUrl(image.getObjectKey())
@@ -76,6 +78,6 @@ public class CollectionImageCommandService {
         String objectKey = image.getObjectKey();
 
         collectionImageRepository.remove(image);
-        runAfterCommitOrNow(() -> imageService.delete(objectKey));
+        runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantResolver.associatedKeysOf(objectKey)));
     }
 }
