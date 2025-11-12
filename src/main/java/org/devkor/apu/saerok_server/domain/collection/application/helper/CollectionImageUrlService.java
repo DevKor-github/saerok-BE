@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.collection.application.helper;
 
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class CollectionImageUrlService {
 
     public Optional<String> getPrimaryImageThumbnailUrlFor(UserBirdCollection collection) {
         return collectionImageSelector.selectPrimaryImageKey(collection)
-                .map(imageDomainService::toThumbnailUrl);
+                .map(key -> imageDomainService.toThumbnailUrl(ImageKind.USER_COLLECTION_IMAGE, key));
     }
 
     public Map<Long, String> getPrimaryImageUrlsFor(List<UserBirdCollection> collections) {
@@ -46,7 +47,7 @@ public class CollectionImageUrlService {
 
         for (Map.Entry<Long, String> entry : objectKeyMap.entrySet()) {
             String objectKey = entry.getValue();
-            String thumbnailUrl = objectKey != null ? imageDomainService.toThumbnailUrl(objectKey) : null;
+            String thumbnailUrl = objectKey != null ? imageDomainService.toThumbnailUrl(ImageKind.USER_COLLECTION_IMAGE, objectKey) : null;
             result.put(entry.getKey(), thumbnailUrl);
         }
 

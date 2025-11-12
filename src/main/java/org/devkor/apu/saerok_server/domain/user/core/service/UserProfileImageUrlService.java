@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.user.core.service;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
+import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,7 @@ public class UserProfileImageUrlService {
         String objectKey = userProfileImageRepository.findObjectKeyByUserId(user.getId())
                 .orElse(profileImageDefaultService.getDefaultObjectKeyFor(user));
 
-        return imageDomainService.toThumbnailUrl(objectKey);
+        return imageDomainService.toThumbnailUrl(ImageKind.USER_PROFILE_IMAGE, objectKey);
     }
 
     public Map<Long, String> getProfileImageUrlsFor(List<User> users) {
@@ -66,7 +67,7 @@ public class UserProfileImageUrlService {
             if (objectKey == null) {
                 objectKey = profileImageDefaultService.getDefaultObjectKeyFor(user);
             }
-            urlsByUserId.put(id, imageDomainService.toThumbnailUrl(objectKey));
+            urlsByUserId.put(id, imageDomainService.toThumbnailUrl(ImageKind.USER_PROFILE_IMAGE, objectKey));
         }
         return urlsByUserId;
     }

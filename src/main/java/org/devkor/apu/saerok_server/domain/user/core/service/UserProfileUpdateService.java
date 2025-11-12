@@ -5,9 +5,12 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserProfileImage;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserProfileImageRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.global.shared.image.ImageVariantResolver;
+import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
 
@@ -23,8 +26,8 @@ public class UserProfileUpdateService {
     private final UserRepository userRepository;
     private final UserProfileImageRepository userProfileImageRepository;
     private final ImageService imageService;
-    private final ImageVariantResolver imageVariantResolver;
     private final ProfileImageDefaultService profileImageDefaultService;
+    private final ImageVariantService imageVariantService;
 
     public void changeNickname(User user, String nickname) {
 
@@ -48,7 +51,10 @@ public class UserProfileUpdateService {
                             String oldObjectKey = image.getObjectKey();
                             if (!oldObjectKey.equals(objectKey)) {
                                 image.change(objectKey, contentType);
-                                runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantResolver.associatedKeysOf(oldObjectKey)));
+                                runAfterCommitOrNow(() -> {
+                                    List<String> associatedKeys = imageVariantService.associatedKeys(ImageKind.USER_PROFILE_IMAGE, oldObjectKey);
+                                    imageService.deleteAll(associatedKeys);
+                                });
                             }
                         },
                         () -> userProfileImageRepository.save(UserProfileImage.of(user, objectKey, contentType))
@@ -64,7 +70,10 @@ public class UserProfileUpdateService {
             String oldObjectKey = image.getObjectKey();
             userProfileImageRepository.remove(image);
             profileImageDefaultService.setRandomVariant(user);
-            runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantResolver.associatedKeysOf(oldObjectKey)));
+            runAfterCommitOrNow(() -> {
+                List<String> associatedKeys = imageVariantService.associatedKeys(ImageKind.USER_PROFILE_IMAGE, oldObjectKey);
+                imageService.deleteAll(associatedKeys);
+            });
         });
     }
 }
