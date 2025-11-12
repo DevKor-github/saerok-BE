@@ -9,11 +9,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.connection.RedisConnection;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 @Hidden
 @Tag(name = "System API", description = "시스템 상태 점검 관련 API")
 @RestController
 @RequestMapping
+@RequiredArgsConstructor
 public class SystemController {
+
+    private final StringRedisTemplate redisTemplate;
+
 
     @GetMapping("/health")
     @PermitAll
@@ -28,22 +42,52 @@ public class SystemController {
         return "I am healthy";
     }
 
-    // TODO: 이 로직 활용해서 회원 탈퇴 구현에 써먹기
-//    public void 리프레시토큰 복구 로직() {
-//        SocialAuthRefreshToken refreshToken = socialAuthRepository.findByProviderAndProviderUserId(SocialProviderType.APPLE, 어쩌고저쩌고)
-//                .get()
-//                .getRefreshToken();
-//
-//        EncryptedPayload encryptedPayload = new EncryptedPayload(
-//                refreshToken.getCiphertext(),
-//                refreshToken.getKey(),
-//                refreshToken.getIv(),
-//                refreshToken.getTag()
-//        );
-//
-//        System.out.println(encryptedPayload);
-//
-//        byte[] decrypted = dataCryptoService.decrypt(encryptedPayload);
-//        String decryptedRefreshToken = new String(decrypted, StandardCharsets.UTF_8); <- 이렇게 UTF-8로 인코딩하면 원본 데이터 복원 완료
-//    }
+    @GetMapping("/internal/redis")
+    @PermitAll
+    @Hidden
+    @Operation(
+            summary = "Redis 동작 확인 (internal)",
+            description = "Redis ping 및 set/get 검증을 수행합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "정상 응답")
+            }
+    )
+    public ResponseEntity<Map<String, Object>> redisHealth() {
+        Map<String, Object> body = new HashMap<>();
+        Instant start = Instant.now();
+        String ping = null;
+        boolean kvOk = false;
+
+        try (RedisConnection conn = redisTemplate.getRequiredConnectionFactory().getConnection()) {
+            // ping
+            ping = conn.ping();
+        } catch (Exception ex) {
+            body.put("ok", false);
+            body.put("error", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+            return ResponseEntity.internalServerError().body(body);
+        }
+
+        // set/get with TTL
+        String key = "system:health:redis:" + UUID.randomUUID();
+        try {
+            redisTemplate.opsForValue().set(key, "ok", Duration.ofSeconds(5));
+            String val = redisTemplate.opsForValue().get(key);
+            kvOk = "ok".equals(val);
+            redisTemplate.delete(key);
+        } catch (Exception ex) {
+            body.put("ok", false);
+            body.put("ping", ping);
+            body.put("error", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+            return ResponseEntity.internalServerError().body(body);
+        }
+
+        long latencyMillis = java.time.Duration.between(start, Instant.now()).toMillis();
+        body.put("ok", "PONG".equalsIgnoreCase(ping) && kvOk);
+        body.put("ping", ping);
+        body.put("kv", kvOk);
+        body.put("latencyMs", latencyMillis);
+        body.put("now", Instant.now().toString());
+        return ResponseEntity.ok(body);
+    }
+
 }
