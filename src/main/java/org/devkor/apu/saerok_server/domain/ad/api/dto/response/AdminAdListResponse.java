@@ -17,11 +17,10 @@ public record AdminAdListResponse(
             Long id,
             String name,
             String memo,
-            String objectKey,
+            String imageUrl,
             String contentType,
             String targetUrl,
             OffsetDateTime createdAt,
             OffsetDateTime updatedAt
-    ) {
-    }
+    ) {}
 }

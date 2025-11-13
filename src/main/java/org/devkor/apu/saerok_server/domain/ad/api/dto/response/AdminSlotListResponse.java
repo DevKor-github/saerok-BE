@@ -16,6 +16,7 @@ public record AdminSlotListResponse(
     public record Item(
             Long id,
             String name,
+            String memo,
             Double fallbackRatio,
             Integer ttlSeconds,
             OffsetDateTime createdAt,

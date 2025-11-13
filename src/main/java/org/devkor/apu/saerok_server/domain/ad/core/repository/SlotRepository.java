@@ -40,4 +40,8 @@ public class SlotRepository {
                 Slot.class
         ).getResultList();
     }
+
+    public void delete(Slot slot) {
+        em.remove(slot);
+    }
 }

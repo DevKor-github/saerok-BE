@@ -20,7 +20,7 @@ public class ImageDomainRouter {
      */
     public String toUrlFor(ImageKind kind, String objectKey) {
         return switch (kind) {
-            case USER_COLLECTION_IMAGE, USER_PROFILE_IMAGE -> imageDomainService.toUploadImageUrl(objectKey);
+            case USER_COLLECTION_IMAGE, USER_PROFILE_IMAGE, AD_IMAGE -> imageDomainService.toUploadImageUrl(objectKey);
             case DEX_BIRD_IMAGE -> imageDomainService.toDexImageUrl(objectKey);
         };
     }

@@ -18,6 +18,7 @@ public record AdminAdPlacementListResponse(
             Long id,
             Long adId,
             String adName,
+            String adImageUrl,
             Long slotId,
             String slotName,
             LocalDate startDate,
@@ -26,6 +27,5 @@ public record AdminAdPlacementListResponse(
             Boolean enabled,
             OffsetDateTime createdAt,
             OffsetDateTime updatedAt
-    ) {
-    }
+    ) {}
 }

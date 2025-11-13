@@ -1,12 +1,6 @@
 package org.devkor.apu.saerok_server.domain.ad.core.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,28 +22,44 @@ public class Slot extends Auditable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
+    /**
+     * 슬롯 이름 (예: HOME_TOP) - 유니크
+     */
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    /**
+     * 관리자용 메모 (optional)
+     */
+    @Column(name = "memo")
+    private String memo;
+
+    /**
+     * 기본 광고(fallback)로 폴백할 확률 (0.0 ~ 1.0)
+     */
     @Column(name = "fallback_ratio", nullable = false)
     private Double fallbackRatio;
 
+    /**
+     * 클라이언트가 동일 광고를 유지해야 하는 TTL(초)
+     */
     @Column(name = "ttl_seconds", nullable = false)
     private Integer ttlSeconds;
 
-    private Slot(String name, Double fallbackRatio, Integer ttlSeconds) {
+    private Slot(String name, String memo, Double fallbackRatio, Integer ttlSeconds) {
         this.name = name;
+        this.memo = memo;
         this.fallbackRatio = fallbackRatio;
         this.ttlSeconds = ttlSeconds;
     }
 
-    public static Slot create(String name, Double fallbackRatio, Integer ttlSeconds) {
+    public static Slot create(String name, String memo, Double fallbackRatio, Integer ttlSeconds) {
         validateFallbackRatio(fallbackRatio);
         validateTtl(ttlSeconds);
-        return new Slot(name, fallbackRatio, ttlSeconds);
+        return new Slot(name, memo, fallbackRatio, ttlSeconds);
     }
 
-    public void update(Double fallbackRatio, Integer ttlSeconds) {
+    public void update(String memo, Double fallbackRatio, Integer ttlSeconds) {
         if (fallbackRatio != null) {
             validateFallbackRatio(fallbackRatio);
             this.fallbackRatio = fallbackRatio;
@@ -58,6 +68,7 @@ public class Slot extends Auditable {
             validateTtl(ttlSeconds);
             this.ttlSeconds = ttlSeconds;
         }
+        this.memo = memo;
     }
 
     private static void validateFallbackRatio(Double value) {
