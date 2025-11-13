@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CollectionLikeCommandService {
 
-    private static final int POPULAR_COLLECTION_THRESHOLD = 3;
+    private static final int POPULAR_COLLECTION_THRESHOLD = 5;
 
     private final CollectionLikeRepository collectionLikeRepository;
     private final CollectionRepository collectionRepository;
