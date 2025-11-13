@@ -9,7 +9,7 @@ services:
     ports:
       - "8080:8080"
 
-    # t3.small 자원 컷
+    # t3.small 자원 컷 (기존 값 유지)
     cpus: "1.0"
     cpu_shares: 768
     mem_limit: "1100m"
@@ -31,9 +31,52 @@ services:
         -XX:ReservedCodeCacheSize=96m
         -XX:+UseG1GC
         -XX:+ExitOnOutOfMemoryError
+      # Redis 연결 정보 (prod에서도 명시)
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+
+    depends_on:
+      - redis
 
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "5"
+
+  redis:
+    image: redis:7-alpine
+    container_name: saerok-redis-prod
+    restart: unless-stopped
+    # 외부 노출 금지(내부 네트워크만). 필요 시에만 열 것
+    # ports:
+    #   - "6379:6379"
+    command:
+      - "redis-server"
+      # 운영: 내구성 보장(AOF), 성능 타협은 everysec로
+      - "--appendonly"
+      - "yes"
+      - "--appendfsync"
+      - "everysec"
+      - "--auto-aof-rewrite-percentage"
+      - "100"
+      - "--auto-aof-rewrite-min-size"
+      - "64mb"
+      # 캐시 특성: 메모리 상한과 축출 정책
+      - "--maxmemory"
+      - "256mb"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    cpus: "0.4"
+    mem_limit: "384m"
+
+volumes:
+  redis-data:

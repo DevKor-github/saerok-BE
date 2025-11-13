@@ -78,6 +78,9 @@ dependencies {
 
 	// FCM admin SDK 추가
 	implementation 'com.google.firebase:firebase-admin:9.5.0'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {

@@ -53,20 +53,6 @@ public class S3ImageService implements ImageService {
                     .key(key)
                     .build();
             s3Client.deleteObject(deleteRequest);
-
-            // 썸네일이 있다면, 그것도 삭제
-            if (key.startsWith("collection-images/") || key.startsWith("user-profile-images/")) {
-                String thumbnailKey = getThumbnailKey(key);
-                try {
-                    DeleteObjectRequest thumbnailDeleteRequest = DeleteObjectRequest.builder()
-                            .bucket(bucket)
-                            .key(thumbnailKey)
-                            .build();
-                    s3Client.deleteObject(thumbnailDeleteRequest);
-                } catch (S3Exception e) {
-                    log.warn("썸네일 삭제 실패: key={}, code={}", thumbnailKey, e.statusCode());
-                }
-            }
         } catch (S3Exception e) {
             throw new RuntimeException("S3 이미지 삭제 실패: key=" + key, e);
         }
@@ -76,19 +62,11 @@ public class S3ImageService implements ImageService {
     public void deleteAll(List<String> objectKeys) {
         if (objectKeys == null || objectKeys.isEmpty()) return;
 
-        // 원본 키 + 썸네일 키를 모두 포함한 리스트 생성
-        List<String> allKeysToDelete = new ArrayList<>(objectKeys);
-        for (String key : objectKeys) {
-            if (key.startsWith("collection-images/") || key.startsWith("user-profile-images/")) {
-                allKeysToDelete.add(getThumbnailKey(key));
-            }
-        }
-
         final int BATCH_SIZE = 1000;
         List<String> hardFailed = new ArrayList<>();
 
-        for (int i = 0; i < allKeysToDelete.size(); i += BATCH_SIZE) {
-            List<String> batch = allKeysToDelete.subList(i, Math.min(i + BATCH_SIZE, allKeysToDelete.size()));
+        for (int i = 0; i < objectKeys.size(); i += BATCH_SIZE) {
+            List<String> batch = objectKeys.subList(i, Math.min(i + BATCH_SIZE, objectKeys.size()));
             List<ObjectIdentifier> toDelete = batch.stream()
                     .map(k -> ObjectIdentifier.builder().key(k).build())
                     .toList();
@@ -150,11 +128,5 @@ public class S3ImageService implements ImageService {
             }
             throw e;
         }
-    }
-
-    @Override
-    public String getThumbnailKey(String originalKey) {
-        String fileNameWithoutExt = originalKey.replaceFirst("\\.[^.]*$", "");
-        return "thumbnails/" + fileNameWithoutExt + ".webp";
     }
 }

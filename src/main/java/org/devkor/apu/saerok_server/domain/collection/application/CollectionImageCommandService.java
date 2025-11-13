@@ -11,10 +11,13 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
+import org.devkor.apu.saerok_server.global.shared.image.ImageVariantService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
@@ -28,6 +31,7 @@ public class CollectionImageCommandService {
     private final CollectionImageRepository collectionImageRepository;
     private final ImageDomainService imageDomainService;
     private final ImageService imageService;
+    private final ImageVariantService imageVariantService;
 
     public PresignResponse generatePresignedUploadUrl(Long userId, Long collectionId, String contentType) {
 
@@ -56,7 +60,7 @@ public class CollectionImageCommandService {
                 .objectKey(command.objectKey())
                 .contentType(command.contentType())
                 .build();
-        
+
         return new CreateCollectionImageResponse(
                 collectionImageRepository.save(image),
                 imageDomainService.toUploadImageUrl(image.getObjectKey())
@@ -76,6 +80,9 @@ public class CollectionImageCommandService {
         String objectKey = image.getObjectKey();
 
         collectionImageRepository.remove(image);
-        runAfterCommitOrNow(() -> imageService.delete(objectKey));
+        runAfterCommitOrNow(() -> {
+            List<String> associatedKeys = imageVariantService.associatedKeys(ImageKind.USER_COLLECTION_IMAGE, objectKey);
+            imageService.deleteAll(associatedKeys);
+        });
     }
 }

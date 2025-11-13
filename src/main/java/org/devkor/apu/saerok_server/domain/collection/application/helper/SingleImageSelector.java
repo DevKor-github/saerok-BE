@@ -27,6 +27,6 @@ public class SingleImageSelector implements CollectionImageSelector {
                 .map(UserBirdCollection::getId)
                 .toList();
 
-        return collectionImageRepository.findThumbKeysByCollectionIds(ids);
+        return collectionImageRepository.findPrimaryKeysByCollectionIds(ids);
     }
 }
