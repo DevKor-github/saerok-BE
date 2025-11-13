@@ -265,7 +265,7 @@ public class AdminAdController {
     /* ───────────── 광고 배치(AdPlacement) 관리 ───────────── */
 
     @GetMapping("/placement")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
     @Operation(
             summary = "광고 배치 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth")
