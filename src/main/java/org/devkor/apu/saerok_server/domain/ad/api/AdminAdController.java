@@ -25,8 +25,10 @@ import org.devkor.apu.saerok_server.domain.ad.application.AdminSlotService;
 import org.devkor.apu.saerok_server.domain.ad.core.entity.Ad;
 import org.devkor.apu.saerok_server.domain.ad.core.entity.AdPlacement;
 import org.devkor.apu.saerok_server.domain.ad.core.entity.Slot;
+import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -83,9 +85,11 @@ public class AdminAdController {
             security = @SecurityRequirement(name = "bearerAuth")
     )
     public AdminAdListResponse.Item createAd(
-            @Valid @RequestBody AdminCreateAdRequest request
+            @Valid @RequestBody AdminCreateAdRequest request,
+            @AuthenticationPrincipal UserPrincipal admin
     ) {
         Ad ad = adminAdService.createAd(
+                admin.getId(),
                 request.name(),
                 request.memo(),
                 request.objectKey(),
@@ -115,9 +119,11 @@ public class AdminAdController {
     )
     public AdminAdListResponse.Item updateAd(
             @PathVariable Long id,
-            @Valid @RequestBody AdminUpdateAdRequest request
+            @Valid @RequestBody AdminUpdateAdRequest request,
+            @AuthenticationPrincipal UserPrincipal admin
     ) {
         Ad ad = adminAdService.updateAd(
+                admin.getId(),
                 id,
                 request.name(),
                 request.memo(),
@@ -146,8 +152,9 @@ public class AdminAdController {
             summary = "광고 삭제",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    public void deleteAd(@PathVariable Long id) {
-        adminAdService.deleteAd(id);
+    public void deleteAd(@PathVariable Long id,
+                         @AuthenticationPrincipal UserPrincipal admin) {
+        adminAdService.deleteAd(admin.getId(), id);
     }
 
     /* ───────────── 광고 이미지 Presigned URL ───────────── */
@@ -204,9 +211,11 @@ public class AdminAdController {
             security = @SecurityRequirement(name = "bearerAuth")
     )
     public AdminSlotListResponse.Item createSlot(
-            @Valid @RequestBody AdminCreateSlotRequest request
+            @Valid @RequestBody AdminCreateSlotRequest request,
+            @AuthenticationPrincipal UserPrincipal admin
     ) {
         Slot slot = adminSlotService.createSlot(
+                admin.getId(),
                 request.getName(),
                 request.getMemo(),
                 request.getFallbackRatio(),
@@ -232,9 +241,11 @@ public class AdminAdController {
     )
     public AdminSlotListResponse.Item updateSlot(
             @PathVariable Long id,
-            @Valid @RequestBody AdminUpdateSlotRequest request
+            @Valid @RequestBody AdminUpdateSlotRequest request,
+            @AuthenticationPrincipal UserPrincipal admin
     ) {
         Slot slot = adminSlotService.updateSlot(
+                admin.getId(),
                 id,
                 request.getMemo(),
                 request.getFallbackRatio(),
@@ -258,8 +269,9 @@ public class AdminAdController {
             summary = "슬롯 삭제",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    public void deleteSlot(@PathVariable Long id) {
-        adminSlotService.deleteSlot(id);
+    public void deleteSlot(@PathVariable Long id,
+                           @AuthenticationPrincipal UserPrincipal admin) {
+        adminSlotService.deleteSlot(admin.getId(), id);
     }
 
     /* ───────────── 광고 배치(AdPlacement) 관리 ───────────── */
@@ -300,9 +312,11 @@ public class AdminAdController {
             security = @SecurityRequirement(name = "bearerAuth")
     )
     public AdminAdPlacementListResponse.Item createPlacement(
-            @Valid @RequestBody AdminCreateAdPlacementRequest request
+            @Valid @RequestBody AdminCreateAdPlacementRequest request,
+            @AuthenticationPrincipal UserPrincipal admin
     ) {
         AdPlacement placement = adminAdPlacementService.createPlacement(
+                admin.getId(),
                 request.adId(),
                 request.slotId(),
                 request.startDate(),
@@ -339,9 +353,11 @@ public class AdminAdController {
     )
     public AdminAdPlacementListResponse.Item updatePlacement(
             @PathVariable Long id,
-            @Valid @RequestBody AdminUpdateAdPlacementRequest request
+            @Valid @RequestBody AdminUpdateAdPlacementRequest request,
+            @AuthenticationPrincipal UserPrincipal admin
     ) {
         AdPlacement placement = adminAdPlacementService.updatePlacement(
+                admin.getId(),
                 id,
                 request.slotId(),
                 request.startDate(),
@@ -376,7 +392,8 @@ public class AdminAdController {
             summary = "광고 배치 삭제",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    public void deletePlacement(@PathVariable Long id) {
-        adminAdPlacementService.deletePlacement(id);
+    public void deletePlacement(@PathVariable Long id,
+                                @AuthenticationPrincipal UserPrincipal admin) {
+        adminAdPlacementService.deletePlacement(admin.getId(), id);
     }
 }

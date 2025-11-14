@@ -4,5 +4,8 @@ public enum AdminAuditTargetType {
     REPORT_COLLECTION,
     REPORT_COMMENT,
     COLLECTION,
-    COMMENT
+    COMMENT,
+    AD,
+    SLOT,
+    AD_PLACEMENT
 }
