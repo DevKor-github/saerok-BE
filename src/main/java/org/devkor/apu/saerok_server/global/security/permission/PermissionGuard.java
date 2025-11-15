@@ -85,9 +85,8 @@ public class PermissionGuard {
 
         boolean result = permissions.contains(permissionKey);
 
-        if (log.isDebugEnabled()) {
-            log.debug("Permission 체크 - userId={}, key={}, result={}", userId, permissionKey, result);
-        }
+
+        log.info("Permission 체크 - userId={}, key={}, result={}", userId, permissionKey, result);
 
         return result;
     }

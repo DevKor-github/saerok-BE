@@ -33,7 +33,7 @@ public class AdminReportController {
     /* ──────────────── 조회 (ADMIN_VIEWER / ADMIN_EDITOR) ──────────────── */
 
     @GetMapping("/collections")
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_REPORT_READ')")
     @Operation(
             summary = "신고된 새록 목록 조회",
             description = "관리자 권한 필요: ADMIN_VIEWER 또는 ADMIN_EDITOR",
@@ -50,7 +50,7 @@ public class AdminReportController {
     }
 
     @GetMapping("/collections/{reportId}")
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_REPORT_READ')")
     @Operation(
             summary = "신고된 새록 상세 조회(새록 + 댓글 목록)",
             description = "관리자 권한 필요: ADMIN_VIEWER 또는 ADMIN_EDITOR",
@@ -68,7 +68,7 @@ public class AdminReportController {
     }
 
     @GetMapping("/comments")
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_REPORT_READ')")
     @Operation(
             summary = "신고된 댓글 목록 조회",
             description = "관리자 권한 필요: ADMIN_VIEWER 또는 ADMIN_EDITOR",
@@ -85,7 +85,7 @@ public class AdminReportController {
     }
 
     @GetMapping("/comments/{reportId}")
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_REPORT_READ')")
     @Operation(
             summary = "신고된 댓글 상세 조회(부모 새록 + 댓글 목록)",
             description = "관리자 권한 필요: ADMIN_VIEWER 또는 ADMIN_EDITOR",
@@ -130,7 +130,7 @@ public class AdminReportController {
 
     @PostMapping("/collections/{reportId}/ignore")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_REPORT_WRITE')")
     @Operation(
             summary = "새록 신고 무시(신고 삭제)",
             description = "관리자 권한 필요: ADMIN_EDITOR",
@@ -149,7 +149,7 @@ public class AdminReportController {
 
     @PostMapping("/comments/{reportId}/ignore")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_REPORT_WRITE')")
     @Operation(
             summary = "댓글 신고 무시(신고 삭제)",
             description = "관리자 권한 필요: ADMIN_EDITOR",
@@ -168,7 +168,7 @@ public class AdminReportController {
 
     @DeleteMapping("/comments/{reportId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_REPORT_WRITE')")
     @Operation(
             summary = "신고 대상 댓글 삭제(관련 신고 정리 포함) + 사유 필수",
             description = "관리자 권한 필요: ADMIN_EDITOR. 요청 바디에 삭제 사유(reason)를 반드시 포함해야 합니다.",

@@ -47,7 +47,7 @@ public class AdminAdController {
     /* ───────────── 광고(Ad) 관리 ───────────── */
 
     @GetMapping("/list")
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_READ')")
     @Operation(
             summary = "광고 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -112,7 +112,7 @@ public class AdminAdController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "광고 수정",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -147,7 +147,7 @@ public class AdminAdController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "광고 삭제",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -160,7 +160,7 @@ public class AdminAdController {
     /* ───────────── 광고 이미지 Presigned URL ───────────── */
 
     @PostMapping("/image/presign")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "광고 이미지 Presigned URL 발급",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -181,7 +181,7 @@ public class AdminAdController {
     /* ───────────── 슬롯(Slot) 관리 ───────────── */
 
     @GetMapping("/slot")
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_READ')")
     @Operation(
             summary = "슬롯 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -205,7 +205,7 @@ public class AdminAdController {
     }
 
     @PostMapping("/slot")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "슬롯 생성",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -234,7 +234,7 @@ public class AdminAdController {
     }
 
     @PutMapping("/slot/{id}")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "슬롯 수정",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -264,7 +264,7 @@ public class AdminAdController {
     }
 
     @DeleteMapping("/slot/{id}")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_SLOT_WRITE')")
     @Operation(
             summary = "슬롯 삭제",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -277,7 +277,7 @@ public class AdminAdController {
     /* ───────────── 광고 배치(AdPlacement) 관리 ───────────── */
 
     @GetMapping("/placement")
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_READ')")
     @Operation(
             summary = "광고 배치 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -306,7 +306,7 @@ public class AdminAdController {
     }
 
     @PostMapping("/placement")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "광고 배치 생성",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -346,7 +346,7 @@ public class AdminAdController {
     }
 
     @PutMapping("/placement/{id}")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "광고 배치 수정",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -387,7 +387,7 @@ public class AdminAdController {
     }
 
     @DeleteMapping("/placement/{id}")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "광고 배치 삭제",
             security = @SecurityRequirement(name = "bearerAuth")
