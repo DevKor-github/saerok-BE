@@ -46,12 +46,14 @@ public class AdminStatController {
             }
     )
     public StatSeriesResponse getSeries(
-            @Parameter(description = "반복 지정 가능") @RequestParam List<String> metric
+            @Parameter(description = "반복 지정 가능") @RequestParam List<String> metric,
+            @Parameter(description = "조회 기간 (시작일,종료일)", example = "2024-01-01,2024-01-31")
+            @RequestParam(required = false) String period
     ) {
         List<StatMetric> metrics = metric.stream()
                 .map(s -> EnumParser.fromString(StatMetric.class, s))
                 .toList();
-        return queryService.getSeries(metrics);
+        return queryService.getSeries(metrics, period);
     }
 
     @PostMapping("/aggregate-yesterday")
