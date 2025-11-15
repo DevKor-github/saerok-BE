@@ -106,7 +106,7 @@ public class AdminReportController {
 
     @DeleteMapping("/collections/{reportId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_REPORT_WRITE')")
     @Operation(
             summary = "신고 대상 새록 삭제(관련 신고 정리 포함) + 사유 필수",
             description = "관리자 권한 필요: ADMIN_EDITOR. 요청 바디에 삭제 사유(reason)를 반드시 포함해야 합니다.",

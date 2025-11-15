@@ -79,7 +79,7 @@ public class AdminAdController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
     @Operation(
             summary = "광고 생성",
             security = @SecurityRequirement(name = "bearerAuth")
