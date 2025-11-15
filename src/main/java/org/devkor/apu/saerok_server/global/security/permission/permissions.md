@@ -54,21 +54,21 @@
 
 
 - KEY: ADMIN_AD_WRITE
-    - 설명: 광고 및 광고 스케줄 생성/수정/삭제
+    - 설명: 광고, 광고 위치, 광고 스케줄 생성/수정/삭제 (단, 광고 위치 삭제는 불가)
         - 현재 허용된 Role: ADMIN_EDITOR
         - 관련 메서드:
             - AdminAdController.createAd()
             - AdminAdController.updateAd()
             - AdminAdController.deleteAd()
             - AdminAdController.generateAdImagePresignUrl()
+            - AdminAdController.createSlot()
+            - AdminAdController.updateSlot()
             - AdminAdController.createPlacement()
             - AdminAdController.updatePlacement()
             - AdminAdController.deletePlacement()
 
 - KEY: ADMIN_SLOT_WRITE
-    - 설명: 광고 위치 생성/수정/삭제
+    - 설명: 광고 위치 삭제
         - 현재 허용된 Role: ADMIN_EDITOR
         - 관련 메서드:
-            - AdminAdController.createSlot()
-            - AdminAdController.updateSlot()
             - AdminAdController.deleteSlot()
