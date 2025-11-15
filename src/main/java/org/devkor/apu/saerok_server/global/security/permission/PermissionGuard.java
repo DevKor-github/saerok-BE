@@ -25,8 +25,7 @@ public class PermissionGuard {
     private final UserPermissionService userPermissionService;
 
     /**
-     * SpEL에서 문자열 기반으로 호출하는 엔트리 포인트.
-     *
+     * SpEL에서 문자열 기반으로 호출하는 엔트리 포인트. <br>
      * 예) @PreAuthorize("@perm.has('ADMIN_AD_WRITE')")
      */
     @Transactional(readOnly = true)
@@ -83,11 +82,6 @@ public class PermissionGuard {
             permissions = EnumSet.noneOf(PermissionKey.class);
         }
 
-        boolean result = permissions.contains(permissionKey);
-
-
-        log.info("Permission 체크 - userId={}, key={}, result={}", userId, permissionKey, result);
-
-        return result;
+        return permissions.contains(permissionKey);
     }
 }

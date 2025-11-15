@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 /**
  * 유저가 가진 Role → PermissionKey 집합으로 변환해 주는 서비스.
- *
  * Permission 기반 보안 로직은 이 서비스를 통해
  * "현재 유저가 어떤 Permission 을 갖고 있는지"를 조회하도록 일원화한다.
  */
@@ -33,6 +32,11 @@ public class UserPermissionService {
      */
     @Transactional(readOnly = true)
     public Set<PermissionKey> getPermissionsOf(User user) {
+        if (user.getIsSuperAdmin()) {
+            log.debug("SuperAdmin 권한 자동 허용: userId={}", user.getId());
+            return EnumSet.allOf(PermissionKey.class);
+        }
+
         // 1. 유저가 가진 Role 목록 조회
         List<UserRole> userRoles = userRoleRepository.findByUser(user);
         if (userRoles.isEmpty()) {
