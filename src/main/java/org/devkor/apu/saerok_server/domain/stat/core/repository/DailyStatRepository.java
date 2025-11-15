@@ -45,10 +45,28 @@ public class DailyStatRepository {
         }
     }
 
-    public List<DailyStat> findSeriesByMetric(StatMetric metric) {
-        return em.createQuery("SELECT s FROM DailyStat s WHERE s.metric = :m ORDER BY s.date", DailyStat.class)
-                .setParameter("m", metric)
-                .getResultList();
+    public List<DailyStat> findSeriesByMetric(StatMetric metric, LocalDate startDate, LocalDate endDate) {
+        StringBuilder jpql = new StringBuilder("SELECT s FROM DailyStat s WHERE s.metric = :m");
+
+        if (startDate != null) {
+            jpql.append(" AND s.date >= :start");
+        }
+        if (endDate != null) {
+            jpql.append(" AND s.date <= :end");
+        }
+        jpql.append(" ORDER BY s.date");
+
+        var query = em.createQuery(jpql.toString(), DailyStat.class)
+                .setParameter("m", metric);
+
+        if (startDate != null) {
+            query.setParameter("start", startDate);
+        }
+        if (endDate != null) {
+            query.setParameter("end", endDate);
+        }
+
+        return query.getResultList();
     }
 
     public Optional<LocalDate> findLastDateOf(StatMetric metric) {
