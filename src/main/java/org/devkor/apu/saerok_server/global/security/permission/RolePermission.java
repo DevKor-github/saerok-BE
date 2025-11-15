@@ -4,14 +4,13 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
 @Entity
 @Table(
         name = "role_permission",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"role", "permission_id"})
+                @UniqueConstraint(columnNames = {"role_id", "permission_id"})
         }
 )
 @Getter
@@ -22,20 +21,20 @@ public class RolePermission extends Auditable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 100)
-    private UserRoleType role;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "permission_id", nullable = false)
     private Permission permission;
 
-    private RolePermission(UserRoleType role, Permission permission) {
+    private RolePermission(Role role, Permission permission) {
         this.role = role;
         this.permission = permission;
     }
 
-    public static RolePermission of(UserRoleType role, Permission permission) {
+    public static RolePermission of(Role role, Permission permission) {
         return new RolePermission(role, permission);
     }
 }

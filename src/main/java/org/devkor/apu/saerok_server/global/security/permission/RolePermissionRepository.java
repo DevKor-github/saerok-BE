@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.global.security.permission;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,7 +16,7 @@ public class RolePermissionRepository {
         em.persist(rolePermission);
     }
 
-    public List<RolePermission> findByRole(UserRoleType role) {
+    public List<RolePermission> findByRole(Role role) {
         return em.createQuery(
                         "SELECT rp FROM RolePermission rp " +
                                 "JOIN FETCH rp.permission p " +
@@ -29,11 +28,25 @@ public class RolePermissionRepository {
                 .getResultList();
     }
 
+    public List<RolePermission> findByRoleCode(String roleCode) {
+        return em.createQuery(
+                        "SELECT rp FROM RolePermission rp " +
+                                "JOIN FETCH rp.permission p " +
+                                "JOIN rp.role r " +
+                                "WHERE r.code = :code " +
+                                "ORDER BY p.key",
+                        RolePermission.class
+                )
+                .setParameter("code", roleCode)
+                .getResultList();
+    }
+
     public List<RolePermission> findAll() {
         return em.createQuery(
                         "SELECT rp FROM RolePermission rp " +
                                 "JOIN FETCH rp.permission p " +
-                                "ORDER BY rp.role, p.key",
+                                "JOIN FETCH rp.role r " +
+                                "ORDER BY r.code, p.key",
                         RolePermission.class
                 )
                 .getResultList();

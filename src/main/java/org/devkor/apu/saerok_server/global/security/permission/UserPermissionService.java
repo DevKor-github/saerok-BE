@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
-import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.stereotype.Service;
@@ -18,8 +17,8 @@ import java.util.stream.Collectors;
 /**
  * 유저가 가진 Role → PermissionKey 집합으로 변환해 주는 서비스.
  *
- * 향후 Permission 기반 보안 로직은 이 서비스를 통해
- * "현재 유저가 어떤 Permission을 갖고 있는지"를 조회하도록 일원화한다.
+ * Permission 기반 보안 로직은 이 서비스를 통해
+ * "현재 유저가 어떤 Permission 을 갖고 있는지"를 조회하도록 일원화한다.
  */
 @Slf4j
 @Service
@@ -40,8 +39,8 @@ public class UserPermissionService {
             return EnumSet.noneOf(PermissionKey.class);
         }
 
-        // 2. Role 타입만 추출
-        List<UserRoleType> roleTypes = userRoles.stream()
+        // 2. Role 엔티티만 추출
+        List<Role> roles = userRoles.stream()
                 .map(UserRole::getRole)
                 .distinct()
                 .toList();
@@ -49,8 +48,8 @@ public class UserPermissionService {
         // 3. 각 Role에 매핑된 Permission들을 모아 PermissionKey 집합으로 변환
         EnumSet<PermissionKey> permissions = EnumSet.noneOf(PermissionKey.class);
 
-        for (UserRoleType roleType : roleTypes) {
-            List<RolePermission> rolePermissions = rolePermissionRepository.findByRole(roleType);
+        for (Role role : roles) {
+            List<RolePermission> rolePermissions = rolePermissionRepository.findByRole(role);
 
             Set<PermissionKey> keys = rolePermissions.stream()
                     .map(rp -> rp.getPermission().getKey())
@@ -60,8 +59,12 @@ public class UserPermissionService {
         }
 
         if (log.isDebugEnabled()) {
+            List<String> roleCodes = roles.stream()
+                    .map(Role::getCode)
+                    .toList();
+
             log.debug("Resolved permissions for user id {}: roles={}, permissions={}",
-                    user.getId(), roleTypes, permissions);
+                    user.getId(), roleCodes, permissions);
         }
 
         return permissions;
