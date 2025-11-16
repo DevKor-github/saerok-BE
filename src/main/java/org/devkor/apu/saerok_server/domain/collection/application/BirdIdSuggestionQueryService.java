@@ -9,7 +9,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdId
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
-import org.devkor.apu.saerok_server.domain.stat.core.repository.BirdIdRequestHistoryRepository; // ★ 추가
+import org.devkor.apu.saerok_server.domain.admin.stat.core.repository.BirdIdRequestHistoryRepository; // ★ 추가
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;

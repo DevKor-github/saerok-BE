@@ -1,9 +1,10 @@
 package org.devkor.apu.saerok_server.domain.admin.application;
 
-import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCollectionDetailResponse;
-import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCollectionListResponse;
-import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCommentDetailResponse;
-import org.devkor.apu.saerok_server.domain.admin.api.dto.response.ReportedCommentListResponse;
+import org.devkor.apu.saerok_server.domain.admin.report.api.dto.response.ReportedCollectionDetailResponse;
+import org.devkor.apu.saerok_server.domain.admin.report.api.dto.response.ReportedCollectionListResponse;
+import org.devkor.apu.saerok_server.domain.admin.report.api.dto.response.ReportedCommentDetailResponse;
+import org.devkor.apu.saerok_server.domain.admin.report.api.dto.response.ReportedCommentListResponse;
+import org.devkor.apu.saerok_server.domain.admin.report.application.AdminReportQueryService;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommentQueryService;
