@@ -67,7 +67,7 @@
             - AdminAdController.updatePlacement()
             - AdminAdController.deletePlacement()
 
-- KEY: ADMIN_SLOT_WRITE
+- KEY: ADMIN_SLOT_DELETE
     - 설명: 광고 위치 삭제
         - 현재 허용된 Role: ADMIN_EDITOR
         - 관련 메서드:

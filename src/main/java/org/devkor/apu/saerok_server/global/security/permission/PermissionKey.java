@@ -14,5 +14,5 @@ public enum PermissionKey {
     ADMIN_STAT_WRITE,
     ADMIN_AD_READ,
     ADMIN_AD_WRITE,
-    ADMIN_SLOT_WRITE
+    ADMIN_SLOT_DELETE
 }

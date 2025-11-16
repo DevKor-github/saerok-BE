@@ -264,7 +264,7 @@ public class AdminAdController {
     }
 
     @DeleteMapping("/slot/{id}")
-    @PreAuthorize("@perm.has('ADMIN_SLOT_WRITE')")
+    @PreAuthorize("@perm.has('ADMIN_SLOT_DELETE')")
     @Operation(
             summary = "슬롯 삭제",
             security = @SecurityRequirement(name = "bearerAuth")
