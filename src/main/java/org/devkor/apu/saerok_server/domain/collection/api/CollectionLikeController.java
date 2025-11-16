@@ -29,7 +29,7 @@ public class CollectionLikeController {
     private final CollectionLikeQueryService collectionLikeQueryService;
 
     @PostMapping("/{collectionId}/like")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 좋아요 토글",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -50,7 +50,7 @@ public class CollectionLikeController {
     }
 
     @GetMapping("/{collectionId}/like/status")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 좋아요 상태 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -71,7 +71,7 @@ public class CollectionLikeController {
     }
 
     @GetMapping("/liked")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "내가 좋아요한 컬렉션 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),

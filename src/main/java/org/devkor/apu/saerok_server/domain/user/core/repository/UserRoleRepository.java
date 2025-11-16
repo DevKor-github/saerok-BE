@@ -19,7 +19,13 @@ public class UserRoleRepository {
     }
 
     public List<UserRole> findByUser(User user) {
-        return em.createQuery("SELECT ur FROM UserRole ur WHERE ur.user = :user", UserRole.class)
+        return em.createQuery(
+                        "SELECT ur FROM UserRole ur " +
+                                "JOIN FETCH ur.role r " +
+                                "WHERE ur.user = :user " +
+                                "ORDER BY r.code",
+                        UserRole.class
+                )
                 .setParameter("user", user)
                 .getResultList();
     }

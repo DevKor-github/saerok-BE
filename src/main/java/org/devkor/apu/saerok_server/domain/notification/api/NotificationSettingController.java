@@ -31,7 +31,7 @@ public class NotificationSettingController {
     private final NotificationSettingWebMapper notificationSettingWebMapper;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "알림 설정 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -51,7 +51,7 @@ public class NotificationSettingController {
     }
 
     @PatchMapping("/toggle")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "알림 설정 토글",
             security = @SecurityRequirement(name = "bearerAuth"),

@@ -60,7 +60,7 @@ public class BirdIdSuggestionController {
     }
 
     @PostMapping("/{collectionId}/bird-id-suggestions")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
             summary  = "동정 의견 제안",
@@ -88,7 +88,7 @@ public class BirdIdSuggestionController {
     }
 
     @PostMapping("/{collectionId}/bird-id-suggestions/{birdId}/agree")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary  = "동정 의견 동의 토글",
             description = "특정 조류 동정 의견에 대한 동의를 추가하거나 제거합니다. 동의 시 기존 비동의는 자동으로 취소됩니다.",
@@ -110,7 +110,7 @@ public class BirdIdSuggestionController {
     }
 
     @PostMapping("/{collectionId}/bird-id-suggestions/{birdId}/disagree")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary  = "동정 의견 비동의 토글",
             description = "특정 조류 동정 의견에 대한 비동의를 추가하거나 제거합니다. 비동의 시 기존 동의는 자동으로 취소됩니다.",
@@ -132,7 +132,7 @@ public class BirdIdSuggestionController {
     }
 
     @PostMapping("/{collectionId}/bird-id-suggestions/{birdId}/adopt")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary  = "동정 의견 채택",
             description = "해당 컬렉션 소유자만 동정 의견 채택 가능",
@@ -155,7 +155,7 @@ public class BirdIdSuggestionController {
     }
 
     @DeleteMapping("/{collectionId}/bird-id-suggestions/all")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary  = "컬렉션의 모든 동정 의견 삭제",

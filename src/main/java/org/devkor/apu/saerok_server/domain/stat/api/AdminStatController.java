@@ -30,7 +30,7 @@ public class AdminStatController {
     private final StatAggregationService aggregationService;
 
     @GetMapping("/series")
-    @PreAuthorize("hasAnyRole('ADMIN_EDITOR', 'ADMIN_VIEWER')")
+    @PreAuthorize("@perm.has('ADMIN_STAT_READ')")
     @Operation(
             summary = "시계열 통계 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -58,7 +58,7 @@ public class AdminStatController {
 
     @PostMapping("/aggregate-yesterday")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_STAT_WRITE')")
     @Operation(
             summary = "수동 집계: 기준일의 전날(어제) 한 날짜만 집계",
             security = @SecurityRequirement(name = "bearerAuth"),

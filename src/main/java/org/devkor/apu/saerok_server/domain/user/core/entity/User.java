@@ -50,6 +50,9 @@ public class User extends SoftDeletableAuditable {
     @Column(name = "default_profile_image_variant")
     private Short defaultProfileImageVariant;
 
+    @Column(name = "is_super_admin", nullable = false)
+    private Boolean isSuperAdmin;
+
     public void anonymizeForWithdrawal() {
         this.email = null;
         this.phone = null;
@@ -70,6 +73,7 @@ public class User extends SoftDeletableAuditable {
         User user = new User();
         user.email = email;
         user.signupStatus = SignupStatusType.PROFILE_REQUIRED;
+        user.isSuperAdmin = false;
         return user;
     }
 

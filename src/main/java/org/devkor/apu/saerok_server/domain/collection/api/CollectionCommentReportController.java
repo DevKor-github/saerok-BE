@@ -24,7 +24,7 @@ public class CollectionCommentReportController {
     private final CollectionCommentReportCommandService collectionCommentReportCommandService;
 
     @PostMapping("/{collectionId}/comments/{commentId}/report")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 댓글 신고",
             security = @SecurityRequirement(name = "bearerAuth"),

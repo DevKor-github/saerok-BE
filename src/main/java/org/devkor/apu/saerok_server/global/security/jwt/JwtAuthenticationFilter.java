@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                log.info("JWT 인증 성공 - id: {}, roles: {}", userId, roles);
+//                log.info("JWT 인증 성공 - id: {}, roles: {}", userId, roles);
             } catch (Exception e) {
                 log.warn("JWT 인증 실패: {}", e.getMessage());
 

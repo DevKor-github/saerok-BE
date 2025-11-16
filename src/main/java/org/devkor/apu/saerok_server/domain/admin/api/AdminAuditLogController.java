@@ -23,7 +23,7 @@ public class AdminAuditLogController {
     private final AdminAuditQueryService queryService;
 
     @GetMapping("/logs")
-    @PreAuthorize("hasAnyRole('ADMIN_VIEWER','ADMIN_EDITOR')")
+    @PreAuthorize("@perm.has('ADMIN_AUDIT_READ')")
     @Operation(
             summary = "감사 로그 목록 조회",
             description = """

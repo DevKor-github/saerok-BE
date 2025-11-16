@@ -28,7 +28,7 @@ public class NotificationController {
     private final NotificationCommandService notificationCommandService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "알림 목록 조회",
             description = "사용자의 알림 목록을 조회합니다.",
@@ -47,7 +47,7 @@ public class NotificationController {
     }
 
     @GetMapping("/unread-count")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "읽지 않은 알림 개수 조회",
             description = "사용자의 읽지 않은 알림 개수를 조회합니다.",
@@ -66,7 +66,7 @@ public class NotificationController {
     }
 
     @PatchMapping("/{notificationId}/read")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "개별 알림 읽음 처리",
@@ -87,7 +87,7 @@ public class NotificationController {
     }
 
     @PatchMapping("/read-all")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "모든 알림 읽음 처리",
@@ -106,7 +106,7 @@ public class NotificationController {
     }
 
     @DeleteMapping("/{notificationId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "개별 알림 삭제",
@@ -127,7 +127,7 @@ public class NotificationController {
     }
 
     @DeleteMapping("/all")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "모든 알림 삭제",

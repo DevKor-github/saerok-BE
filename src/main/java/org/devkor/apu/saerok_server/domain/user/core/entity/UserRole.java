@@ -1,12 +1,17 @@
 package org.devkor.apu.saerok_server.domain.user.core.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.devkor.apu.saerok_server.global.security.permission.Role;
 
 @Entity
 @Table(
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "role"})
+        name = "user_role",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "role_id"})
 )
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class UserRole {
 
@@ -14,18 +19,20 @@ public class UserRole {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role")
-    private UserRoleType role;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
-    public static UserRole createUserRole(User user, UserRoleType role) {
-        UserRole userRole = new UserRole();
-        userRole.user = user;
-        userRole.role = role;
-        return userRole;
+    private UserRole(User user, Role role) {
+        this.user = user;
+        this.role = role;
+    }
+
+    public static UserRole createUserRole(User user, Role role) {
+        return new UserRole(user, role);
     }
 }

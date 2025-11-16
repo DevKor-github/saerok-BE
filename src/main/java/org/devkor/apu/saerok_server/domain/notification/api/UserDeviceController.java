@@ -28,7 +28,7 @@ public class UserDeviceController {
     private final UserDeviceWebMapper userDeviceWebMapper;
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "사용자 디바이스 정보 등록/갱신",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -54,7 +54,7 @@ public class UserDeviceController {
 
     @Hidden
     @DeleteMapping("/{deviceId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "특정 디바이스 토큰 삭제",
@@ -78,7 +78,7 @@ public class UserDeviceController {
 
     @Hidden
     @DeleteMapping("/all")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "사용자의 모든 디바이스 토큰 삭제",
