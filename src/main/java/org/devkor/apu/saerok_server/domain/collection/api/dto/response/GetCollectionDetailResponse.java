@@ -5,6 +5,7 @@ import lombok.Data;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "컬렉션 상세 조회 응답 DTO")
@@ -18,6 +19,9 @@ public class GetCollectionDetailResponse {
 
     @Schema(description = "관찰 날짜", example = "2024-05-21")
     private LocalDate discoveredDate;
+
+    @Schema(description = "생성 날짜", example = "2024-05-21T14:30:00")
+    private LocalDateTime createdAt;
 
     @Schema(description = "관찰 위치 위도", example = "37.987654")
     private Double latitude;
