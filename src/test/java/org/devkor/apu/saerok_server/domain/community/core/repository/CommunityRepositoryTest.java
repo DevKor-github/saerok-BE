@@ -9,7 +9,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdTaxonomy;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdDescription;
-import org.devkor.apu.saerok_server.domain.stat.core.entity.BirdIdRequestHistory;
+import org.devkor.apu.saerok_server.domain.admin.stat.core.entity.BirdIdRequestHistory;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.testsupport.AbstractPostgresContainerTest;
 import org.devkor.apu.saerok_server.testsupport.builder.CollectionBuilder;

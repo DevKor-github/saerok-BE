@@ -7,7 +7,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSuggestionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.dto.BirdIdSuggestionSummary;
-import org.devkor.apu.saerok_server.domain.stat.core.repository.BirdIdRequestHistoryRepository;
+import org.devkor.apu.saerok_server.domain.admin.stat.core.repository.BirdIdRequestHistoryRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;

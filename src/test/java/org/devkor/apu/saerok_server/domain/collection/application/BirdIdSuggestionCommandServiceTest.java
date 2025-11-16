@@ -18,7 +18,7 @@ import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.stat.application.BirdIdRequestHistoryRecorder; // ★ 추가
+import org.devkor.apu.saerok_server.domain.admin.stat.application.BirdIdRequestHistoryRecorder; // ★ 추가
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -9,7 +9,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
-import org.devkor.apu.saerok_server.domain.stat.application.BirdIdRequestHistoryRecorder; // ★ 유지
+import org.devkor.apu.saerok_server.domain.admin.stat.application.BirdIdRequestHistoryRecorder; // ★ 유지
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
