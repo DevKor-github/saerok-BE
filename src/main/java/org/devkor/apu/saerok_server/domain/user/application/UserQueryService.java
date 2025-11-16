@@ -31,7 +31,7 @@ public class UserQueryService {
                 .orElseThrow(() -> new NotFoundException("해당 id의 사용자가 존재하지 않아요"));
 
         List<String> roles = userRoleRepository.findByUser(user).stream()
-                .map(ur -> ur.getRole().name())
+                .map(ur -> ur.getRole().getCode())
                 .toList();
 
         return new GetMyUserProfileResponse(

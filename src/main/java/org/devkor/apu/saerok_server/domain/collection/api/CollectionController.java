@@ -39,7 +39,7 @@ public class CollectionController {
     private final CollectionQueryService collectionQueryService;
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 등록 (종추)",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -101,7 +101,7 @@ public class CollectionController {
     }
 
     @PostMapping("/{collectionId}/images/presign")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 이미지 Presigned URL 발급",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -163,7 +163,7 @@ public class CollectionController {
     }
 
     @PostMapping("/{collectionId}/images")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 이미지 메타데이터 등록",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -229,7 +229,7 @@ public class CollectionController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "내 컬렉션 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -263,7 +263,7 @@ public class CollectionController {
     }
 
     @GetMapping("/{collectionId}/edit")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 수정용 상세 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -286,7 +286,7 @@ public class CollectionController {
 
 
     @PatchMapping("/{collectionId}/edit")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 수정",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -316,7 +316,7 @@ public class CollectionController {
 
 
     @DeleteMapping("/{collectionId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 삭제",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -340,7 +340,7 @@ public class CollectionController {
     }
 
     @DeleteMapping("/{collectionId}/images/{imageId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 이미지 삭제",
             security = @SecurityRequirement(name = "bearerAuth"),

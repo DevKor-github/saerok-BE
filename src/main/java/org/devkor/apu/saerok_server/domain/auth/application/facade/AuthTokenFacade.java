@@ -36,7 +36,7 @@ public class AuthTokenFacade {
         // 1) roles → access token
         List<String> roles = userRoleRepository.findByUser(user)
                 .stream()
-                .map(ur -> ur.getRole().name())
+                .map(ur -> ur.getRole().getCode())
                 .toList();
         String access = accessTokenProvider.createAccessToken(user.getId(), roles);
 

@@ -10,7 +10,6 @@ import org.devkor.apu.saerok_server.domain.auth.core.service.UserProvisioningSer
 import org.devkor.apu.saerok_server.domain.auth.infra.KakaoAuthClient;
 import org.devkor.apu.saerok_server.domain.auth.infra.KakaoRedirectUriResolver;
 import org.devkor.apu.saerok_server.domain.auth.infra.SocialAuthClient;
-import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.global.security.crypto.DataCryptoService;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
@@ -83,8 +82,8 @@ public class KakaoAuthService extends AbstractSocialAuthService {
 
             boolean hasAdminRole = userRoleRepository.findByUser(link.getUser()).stream()
                     .anyMatch(ur ->
-                            ur.getRole() == UserRoleType.ADMIN_VIEWER
-                                    || ur.getRole() == UserRoleType.ADMIN_EDITOR
+                            ur.getRole().getCode().equals("ADMIN_VIEWER")
+                                    || ur.getRole().getCode().equals("ADMIN_EDITOR")
                     );
 
             if (!hasAdminRole) {

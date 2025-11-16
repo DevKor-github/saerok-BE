@@ -8,10 +8,11 @@ import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
-import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.ProfileImageDefaultService;
+import org.devkor.apu.saerok_server.global.security.permission.Role;
+import org.devkor.apu.saerok_server.global.security.permission.RoleRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.SocialAuthAlreadyExistsException;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class UserProvisioningService {
     private final UserRoleRepository userRoleRepository;
     private final SocialAuthRepository socialAuthRepository;
     private final ProfileImageDefaultService profileImageDefaultService;
+    private final RoleRepository roleRepository;
 
     /**
      * 새로운 사용자에게 필요한 자원을 할당한다.
@@ -40,7 +42,9 @@ public class UserProvisioningService {
         User user = userRepository.save(User.createUser(userInfo.email()));
         profileImageDefaultService.setRandomVariant(user);
 
-        userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
+        Role userRole = roleRepository.findByCode("USER")
+                .orElseThrow(() -> new IllegalStateException("기본 USER Role 이 존재하지 않습니다."));
+        userRoleRepository.save(UserRole.createUserRole(user, userRole));
 
         return socialAuthRepository.save(
                 SocialAuth.createSocialAuth(user, provider, userInfo.sub())
@@ -66,7 +70,9 @@ public class UserProvisioningService {
         }
 
         if (userRoleRepository.findByUser(user).isEmpty()) {
-            userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
+            Role userRole = roleRepository.findByCode("USER")
+                    .orElseThrow(() -> new IllegalStateException("기본 USER Role 이 존재하지 않습니다."));
+            userRoleRepository.save(UserRole.createUserRole(user, userRole));
         }
 
         if (user.getDefaultProfileImageVariant() == null) {

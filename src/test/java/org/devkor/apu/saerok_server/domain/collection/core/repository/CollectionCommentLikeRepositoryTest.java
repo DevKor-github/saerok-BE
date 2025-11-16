@@ -40,9 +40,10 @@ class CollectionCommentLikeRepositoryTest extends AbstractPostgresContainerTest 
     }
 
     private User newUser() {
-        User u = new User();
-        em.persist(u);
-        return u;
+        User user = User.createUser("test+" + System.nanoTime() + "@example.com");
+        em.persist(user);
+        em.flush();
+        return user;
     }
 
     private UserBirdCollection newCollection(User owner) {
