@@ -13,7 +13,7 @@ import org.devkor.apu.saerok_server.domain.user.api.dto.request.UpdateUserProfil
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.api.response.CheckNicknameResponse;
-import org.devkor.apu.saerok_server.domain.user.api.response.GetMyUserProfileResponse;
+import org.devkor.apu.saerok_server.domain.user.api.response.UserInfoResponse;
 import org.devkor.apu.saerok_server.domain.user.application.UserCommandService;
 import org.devkor.apu.saerok_server.domain.user.application.UserQueryService;
 import org.devkor.apu.saerok_server.domain.user.mapper.UserWebMapper;
@@ -45,7 +45,7 @@ public class UserController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "성공",
-                            content = @Content(schema = @Schema(implementation = GetMyUserProfileResponse.class))
+                            content = @Content(schema = @Schema(implementation = UserInfoResponse.class))
                     ),
                     @ApiResponse(
                             responseCode = "401",
@@ -54,10 +54,10 @@ public class UserController {
                     ),
             }
     )
-    public GetMyUserProfileResponse getMyUserProfile(
+    public UserInfoResponse getMyUserInfo(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        return userQueryService.getMyUserProfile(userPrincipal.getId());
+        return userQueryService.getMyUserInfo(userPrincipal.getId());
     }
 
     @PatchMapping("/me")
