@@ -1,5 +1,13 @@
 # Admin Permissions 명세
 
+## 어드민 로그인 (Admin Login)
+
+- KEY: ADMIN_LOGIN
+  - 설명: 어드민에 로그인
+    - 현재 허용된 Role: ADMIN_VIEWER
+    - 관련 메서드:
+      - 카카오 로그인에서 admin 로그인 처리하는 부분
+
 ## 신고 (Report)
 
 - KEY: ADMIN_REPORT_READ
