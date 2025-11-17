@@ -3,15 +3,12 @@ package org.devkor.apu.saerok_server.domain.auth.application;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenService;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
-import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.auth.core.service.UserProvisioningService;
 import org.devkor.apu.saerok_server.domain.auth.infra.KakaoAuthClient;
 import org.devkor.apu.saerok_server.domain.auth.infra.KakaoRedirectUriResolver;
 import org.devkor.apu.saerok_server.domain.auth.infra.SocialAuthClient;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.global.security.crypto.DataCryptoService;
-import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.stereotype.Service;
 
@@ -22,24 +19,17 @@ public class KakaoLoginService extends AbstractSocialLoginService {
     private final KakaoAuthClient kakaoAuthClient;
     private final KakaoRedirectUriResolver redirectUriResolver;
 
-    // admin 채널 권한 확인을 위해 필요
-    private final SocialAuthRepository socialAuthRepository;
-    private final UserRoleRepository userRoleRepository;
-
     public KakaoLoginService(
             SocialAuthRepository socialAuthRepository,
             AuthTokenService authTokenService,
             UserProvisioningService userProvisioningService,
             DataCryptoService dataCryptoService,
             KakaoAuthClient kakaoAuthClient,
-            KakaoRedirectUriResolver redirectUriResolver,
-            UserRoleRepository userRoleRepository
+            KakaoRedirectUriResolver redirectUriResolver
     ) {
         super(socialAuthRepository, authTokenService, userProvisioningService, dataCryptoService);
         this.kakaoAuthClient = kakaoAuthClient;
         this.redirectUriResolver = redirectUriResolver;
-        this.socialAuthRepository = socialAuthRepository;
-        this.userRoleRepository = userRoleRepository;
     }
 
     @Override
@@ -70,27 +60,6 @@ public class KakaoLoginService extends AbstractSocialLoginService {
 
         log.info("[fixlog] sub: {}, email: {}, channel: {}", userInfo.sub(), userInfo.email(), channel);
 
-        // admin 채널 선권한 검증 (미보유시 관리자 시스템 로그인 불가)
-        if ("admin".equalsIgnoreCase(channel)) {
-            SocialProviderType provider = kakaoAuthClient.provider();
-
-            var link = socialAuthRepository
-                    .findByProviderAndProviderUserId(provider, userInfo.sub())
-                    .orElseThrow(() -> new ForbiddenException("관리자 권한이 없는 계정입니다."));
-
-            boolean hasAdminRole = userRoleRepository.findByUser(link.getUser()).stream()
-                    .anyMatch(ur ->
-                            ur.getRole().getCode().equals("ADMIN_VIEWER")
-                                    || ur.getRole().getCode().equals("ADMIN_EDITOR")
-                    );
-
-            if (!hasAdminRole) {
-                throw new ForbiddenException("관리자 권한이 없는 계정입니다.");
-            }
-        }
-
-        // 이후 공통 후처리(토큰 발급, 쿠키 설정 등)는 상위 클래스에서 처리
-        // (현재는 상위 클래스에서 AuthResult까지만 만들고, 쿠키 설정은 컨트롤러에서 수행)
         return authenticateWithUserInfo(userInfo, ci);
     }
 }
