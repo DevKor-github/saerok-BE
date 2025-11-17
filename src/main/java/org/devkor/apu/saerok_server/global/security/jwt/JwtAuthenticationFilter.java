@@ -11,13 +11,12 @@ import org.devkor.apu.saerok_server.global.security.token.AccessTokenProvider;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collections;
 
 @Slf4j
 @Component
@@ -37,19 +36,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = bearerToken.substring(7);
             try {
                 Long userId = accessTokenProvider.getUserId(token);
-                List<String> roles = accessTokenProvider.getUserRoles(token);
-
-                List<SimpleGrantedAuthority> authorities = roles.stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                        .toList();
-
                 UserPrincipal userPrincipal = new UserPrincipal(userId);
                 Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        userPrincipal, null, authorities
+                        userPrincipal, null, Collections.emptyList()
                 );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-//                log.info("JWT 인증 성공 - id: {}, roles: {}", userId, roles);
+//                log.info("JWT 인증 성공 - id: {}", userId);
             } catch (Exception e) {
                 log.warn("JWT 인증 실패: {}", e.getMessage());
 
