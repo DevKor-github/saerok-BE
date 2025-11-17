@@ -13,12 +13,17 @@ import org.devkor.apu.saerok_server.domain.auth.api.dto.request.AppleLoginReques
 import org.devkor.apu.saerok_server.domain.auth.api.dto.request.KakaoLoginRequest;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.request.RefreshRequest;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResponse;
-import org.devkor.apu.saerok_server.domain.auth.application.AppleAuthService;
-import org.devkor.apu.saerok_server.domain.auth.application.KakaoAuthService;
+import org.devkor.apu.saerok_server.domain.auth.application.AppleLoginService;
+import org.devkor.apu.saerok_server.domain.auth.application.LoginResult;
+import org.devkor.apu.saerok_server.domain.auth.application.KakaoLoginService;
 import org.devkor.apu.saerok_server.domain.auth.application.TokenRefreshService;
+import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
 import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
 import org.devkor.apu.saerok_server.global.shared.util.ClientInfoExtractor;
 import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,10 +33,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${api_prefix}/auth/")
 public class AuthController {
 
-    private final AppleAuthService appleAuthService;
-    private final KakaoAuthService kakaoAuthService;
+    private final AppleLoginService appleAuthService;
+    private final KakaoLoginService kakaoAuthService;
     private final TokenRefreshService tokenRefreshService;
     private final ClientInfoExtractor clientInfoExtractor;
+
+    @Value("${app.cookie.secure}")
+    private boolean isCookieSecure;
 
     @PostMapping("/apple/login")
     @PermitAll
@@ -66,7 +74,8 @@ public class AuthController {
             HttpServletRequest httpServletRequest
     ) {
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        return appleAuthService.authenticate(request.authorizationCode(), null, clientInfo);
+        LoginResult loginResult = appleAuthService.authenticate(request.authorizationCode(), null, clientInfo);
+        return toAuthResponse(loginResult);
     }
 
     @PostMapping("/kakao/login")
@@ -102,38 +111,47 @@ public class AuthController {
             HttpServletRequest httpServletRequest
     ) {
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        // channel(요청 주체)에 따라 redirect_uri를 선택적으로 매핑
-        return kakaoAuthService.authenticate(
+        LoginResult loginResult = kakaoAuthService.authenticate(
                 request.getAuthorizationCode(),
                 request.getAccessToken(),
                 request.getChannel(),
                 clientInfo
         );
+        return toAuthResponse(loginResult);
     }
 
     @PostMapping("/refresh")
     @PermitAll
     @Operation(
-            summary = "로그인 상태 유지/자동 로그인 (토큰 재발급)",
+            summary = "Access Token & Refresh Token 갱신",
             description = """
-    클라이언트(웹/앱)의 리프레시 토큰을 사용해 새로운 액세스 토큰을 발급받는 엔드포인트입니다.
-    
-    • **웹 브라우저:** HttpOnly 쿠키에 저장된 리프레시 토큰이 브라우저에 의해 자동으로 전송되므로, 별도 헤더나 바디 없이 POST 요청만 보내면 됩니다.<br>
-    • **iOS/모바일 앱:** 쿠키 사용이 어렵다면, 리프레시 토큰 값을 JSON 바디(`refreshTokenJson`)로 직접 전달할 수 있습니다.
-    
-    • **응답(200):** JSON 형식으로 새 액세스 토큰(`accessToken`)과 회원가입 상태(`signupStatus`)가 반환됩니다.
-      예시:
-      {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…",
-        "signupStatus": "COMPLETED"
-      }
-    
-    • **오류(401):** 리프레시 토큰이 없거나 유효하지 않을 경우 401 응답이 반환되며, 이 경우 FE/앱에서는 로그인 화면으로 이동해야 합니다.
-    
-    ※ 리프레시 토큰은 30일간 유효하며, 이 API를 호출할 때마다 서버가 새 리프레시 토큰으로 쿠키를 갱신해 유효 기간을 연장합니다.
-    즉, 30일 동안 한 번도 호출하지 않으면 만료되어 재로그인이 필요합니다.
-    
-    """,
+                    클라이언트가 가지고 있는 Refresh Token을 사용하여 새 Access Token과 Refresh Token을 발급받는 API입니다.
+                    
+                    - 클라이언트는 HttpOnly 쿠키 또는 JSON Body 중 하나에 Refresh Token을 담아 요청할 수 있습니다.
+                    - 서버는 새 Refresh Token을 HttpOnly 쿠키로 내려주며, Access Token은 JSON Body로 반환합니다.
+                    
+                    요청 예시:
+                    
+                    1) 쿠키로 전달 (추천)
+                    Cookie: refreshToken=xxx.yyy.zzz
+                    
+                    2) JSON 바디로 전달 (iOS 앱 등에서 사용)
+                    {
+                      "refreshTokenJson": "xxx.yyy.zzz"
+                    }
+                    
+                    응답 예시:
+                      {
+                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…",
+                        "signupStatus": "COMPLETED"
+                      }
+                    
+                    • **오류(401):** 리프레시 토큰이 없거나 유효하지 않을 경우 401 응답이 반환되며, 이 경우 FE/앱에서는 로그인 화면으로 이동해야 합니다.
+                    
+                    ※ 리프레시 토큰은 30일간 유효하며, 이 API를 호출할 때마다 서버가 새 리프레시 토큰으로 쿠키를 갱신해 유효 기간을 연장합니다.
+                    즉, 30일 동안 한 번도 호출하지 않으면 만료되어 재로그인이 필요합니다.
+                    
+                    """,
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -154,8 +172,7 @@ public class AuthController {
             @CookieValue(name = "refreshToken", required = false) String refreshTokenCookie,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "쿠키에 리프레시 토큰이 없을 때, JSON 바디로 전달된 리프레시 토큰 " +
-                            "(iOS App에서 요청할 때 쓰면 편리. 웹 브라우저는 알아서 쿠키를 서버와 주고받으므로 이것을 사용할 필요 없음)",
-                    required = false
+                            "(iOS App에서 요청할 때 쓰면 편리. 웹 브라우저는 알아서 쿠키를 서버와 주고받으므로 이것을 사용할 필요 없음)"
             )
             @RequestBody(required = false) RefreshRequest request,
             HttpServletRequest httpServletRequest
@@ -166,6 +183,33 @@ public class AuthController {
         String refreshToken = refreshTokenCookie != null ? refreshTokenCookie : request.refreshTokenJson();
 
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        return tokenRefreshService.refresh(refreshToken, clientInfo);
+        LoginResult loginResult = tokenRefreshService.refresh(refreshToken, clientInfo);
+        return toAuthResponse(loginResult);
+    }
+
+    /**
+     * AuthResult(비즈니스 결과)를 HTTP 응답(ResponseEntity + 쿠키)로 매핑.
+     */
+    private ResponseEntity<AccessTokenResponse> toAuthResponse(LoginResult loginResult) {
+        ResponseCookie cookie = createRefreshTokenCookie(loginResult.refreshToken());
+        AccessTokenResponse body = new AccessTokenResponse(
+                loginResult.accessToken(),
+                loginResult.signupStatus()
+        );
+
+        return ResponseEntity
+                .ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(body);
+    }
+
+    private ResponseCookie createRefreshTokenCookie(String refreshToken) {
+        return ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(isCookieSecure)
+                .sameSite("Lax")
+                .path("/api/v1/auth/refresh")
+                .maxAge(RefreshTokenProvider.validDuration)
+                .build();
     }
 }

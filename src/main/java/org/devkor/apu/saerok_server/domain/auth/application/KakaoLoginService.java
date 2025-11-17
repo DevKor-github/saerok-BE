@@ -1,8 +1,7 @@
 package org.devkor.apu.saerok_server.domain.auth.application;
 
 import lombok.extern.slf4j.Slf4j;
-import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResponse;
-import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade;
+import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenService;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
@@ -14,12 +13,11 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleReposito
 import org.devkor.apu.saerok_server.global.security.crypto.DataCryptoService;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class KakaoAuthService extends AbstractSocialAuthService {
+public class KakaoLoginService extends AbstractSocialLoginService {
 
     private final KakaoAuthClient kakaoAuthClient;
     private final KakaoRedirectUriResolver redirectUriResolver;
@@ -28,16 +26,16 @@ public class KakaoAuthService extends AbstractSocialAuthService {
     private final SocialAuthRepository socialAuthRepository;
     private final UserRoleRepository userRoleRepository;
 
-    public KakaoAuthService(
+    public KakaoLoginService(
             SocialAuthRepository socialAuthRepository,
-            AuthTokenFacade authTokenFacade,
+            AuthTokenService authTokenService,
             UserProvisioningService userProvisioningService,
             DataCryptoService dataCryptoService,
             KakaoAuthClient kakaoAuthClient,
             KakaoRedirectUriResolver redirectUriResolver,
             UserRoleRepository userRoleRepository
     ) {
-        super(socialAuthRepository, authTokenFacade, userProvisioningService, dataCryptoService);
+        super(socialAuthRepository, authTokenService, userProvisioningService, dataCryptoService);
         this.kakaoAuthClient = kakaoAuthClient;
         this.redirectUriResolver = redirectUriResolver;
         this.socialAuthRepository = socialAuthRepository;
@@ -56,7 +54,7 @@ public class KakaoAuthService extends AbstractSocialAuthService {
      * channel == "admin" 인 경우, 해당 카카오 계정이 ADMIN_VIEWER 또는 ADMIN_EDITOR 권한을
      * 이미 보유하고 있는지 선확인하고, 없으면 403으로 거부한다.
      */
-    public ResponseEntity<AccessTokenResponse> authenticate(
+    public LoginResult authenticate(
             String authorizationCode,
             String accessToken,
             String channel,
@@ -87,11 +85,12 @@ public class KakaoAuthService extends AbstractSocialAuthService {
                     );
 
             if (!hasAdminRole) {
-                throw new ForbiddenException("관리자 권한이 없는 계정입니다. (ADMIN_VIEWER/ADMIN_EDITOR 필요)");
+                throw new ForbiddenException("관리자 권한이 없는 계정입니다.");
             }
         }
 
         // 이후 공통 후처리(토큰 발급, 쿠키 설정 등)는 상위 클래스에서 처리
+        // (현재는 상위 클래스에서 AuthResult까지만 만들고, 쿠키 설정은 컨트롤러에서 수행)
         return authenticateWithUserInfo(userInfo, ci);
     }
 }
