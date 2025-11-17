@@ -23,7 +23,7 @@ public class Role extends Auditable {
     private Long id;
 
     /**
-     * 시스템 식별자 (예: USER, ADMIN_VIEWER, ADMIN_EDITOR, MODERATOR 등)
+     * 시스템 식별자 (예: USER, TEAM_MEMBER, ADMIN_EDITOR, MODERATOR 등)
      */
     @Column(name = "code", nullable = false, length = 100)
     private String code;

@@ -41,8 +41,6 @@ public class KakaoLoginService extends AbstractSocialLoginService {
      * channel(요청 주체)에 따라 허용된 redirect_uri를 선택해 Kakao 토큰 교환을 수행.
      * - authorizationCode 경로에서만 redirect_uri가 사용됨
      * - accessToken 경로는 기존 처리와 동일
-     * channel == "admin" 인 경우, 해당 카카오 계정이 ADMIN_VIEWER 또는 ADMIN_EDITOR 권한을
-     * 이미 보유하고 있는지 선확인하고, 없으면 403으로 거부한다.
      */
     public LoginResult authenticate(
             String authorizationCode,

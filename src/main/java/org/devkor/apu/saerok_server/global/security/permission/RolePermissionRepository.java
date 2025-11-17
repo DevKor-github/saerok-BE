@@ -51,4 +51,10 @@ public class RolePermissionRepository {
                 )
                 .getResultList();
     }
+
+    public void deleteByRole(Role role) {
+        em.createQuery("DELETE FROM RolePermission rp WHERE rp.role = :role")
+                .setParameter("role", role)
+                .executeUpdate();
+    }
 }

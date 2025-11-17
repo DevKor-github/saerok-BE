@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +33,18 @@ public class PermissionRepository {
                         "SELECT p FROM Permission p ORDER BY p.key",
                         Permission.class
                 )
+                .getResultList();
+    }
+
+    public List<Permission> findByKeys(Collection<PermissionKey> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return List.of();
+        }
+        return em.createQuery(
+                        "SELECT p FROM Permission p WHERE p.key IN :keys ORDER BY p.key",
+                        Permission.class
+                )
+                .setParameter("keys", keys)
                 .getResultList();
     }
 }

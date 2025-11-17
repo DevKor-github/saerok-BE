@@ -34,4 +34,8 @@ public class RoleRepository {
                 )
                 .getResultList();
     }
+
+    public void delete(Role role) {
+        em.remove(role);
+    }
 }
