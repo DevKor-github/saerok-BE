@@ -3,7 +3,7 @@ package org.devkor.apu.saerok_server.domain.auth.application;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade;
+import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenService;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.UserRefreshToken;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
@@ -19,7 +19,7 @@ public class TokenRefreshService {
 
     private final RefreshTokenProvider refreshTokenProvider;
     private final UserRefreshTokenRepository userRefreshTokenRepository;
-    private final AuthTokenFacade authTokenFacade;
+    private final AuthTokenService authTokenService;
 
     /**
      * 액세스 토큰과 리프레시 토큰을 갱신하여 돌려줍니다.
@@ -28,7 +28,7 @@ public class TokenRefreshService {
      *
      * @param refreshTokenCookie 클라이언트가 보낸 리프레시 토큰
      */
-    public AuthResult refresh(String refreshTokenCookie, ClientInfo clientInfo) {
+    public LoginResult refresh(String refreshTokenCookie, ClientInfo clientInfo) {
 
         log.info("refreshTokenCookie: {}", refreshTokenCookie);
 
@@ -40,6 +40,6 @@ public class TokenRefreshService {
             throw new UnauthorizedException("리프레시 토큰이 유효하지 않아요 (not usable)");
         }
 
-        return authTokenFacade.rotateTokens(userRefreshToken, clientInfo);
+        return authTokenService.rotateTokens(userRefreshToken, clientInfo);
     }
 }

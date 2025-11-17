@@ -1,7 +1,7 @@
 package org.devkor.apu.saerok_server.domain.auth.application;
 
 import lombok.extern.slf4j.Slf4j;
-import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenFacade;
+import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenService;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class KakaoAuthService extends AbstractSocialAuthService {
+public class KakaoLoginService extends AbstractSocialLoginService {
 
     private final KakaoAuthClient kakaoAuthClient;
     private final KakaoRedirectUriResolver redirectUriResolver;
@@ -26,16 +26,16 @@ public class KakaoAuthService extends AbstractSocialAuthService {
     private final SocialAuthRepository socialAuthRepository;
     private final UserRoleRepository userRoleRepository;
 
-    public KakaoAuthService(
+    public KakaoLoginService(
             SocialAuthRepository socialAuthRepository,
-            AuthTokenFacade authTokenFacade,
+            AuthTokenService authTokenService,
             UserProvisioningService userProvisioningService,
             DataCryptoService dataCryptoService,
             KakaoAuthClient kakaoAuthClient,
             KakaoRedirectUriResolver redirectUriResolver,
             UserRoleRepository userRoleRepository
     ) {
-        super(socialAuthRepository, authTokenFacade, userProvisioningService, dataCryptoService);
+        super(socialAuthRepository, authTokenService, userProvisioningService, dataCryptoService);
         this.kakaoAuthClient = kakaoAuthClient;
         this.redirectUriResolver = redirectUriResolver;
         this.socialAuthRepository = socialAuthRepository;
@@ -54,7 +54,7 @@ public class KakaoAuthService extends AbstractSocialAuthService {
      * channel == "admin" 인 경우, 해당 카카오 계정이 ADMIN_VIEWER 또는 ADMIN_EDITOR 권한을
      * 이미 보유하고 있는지 선확인하고, 없으면 403으로 거부한다.
      */
-    public AuthResult authenticate(
+    public LoginResult authenticate(
             String authorizationCode,
             String accessToken,
             String channel,

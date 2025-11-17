@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class LocalAuthService {
+public class LocalLoginService {
 
     private final AccessTokenProvider accessTokenProvider;
     private final UserRepository userRepository;

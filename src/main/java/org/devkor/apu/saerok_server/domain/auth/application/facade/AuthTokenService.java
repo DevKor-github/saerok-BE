@@ -2,7 +2,7 @@ package org.devkor.apu.saerok_server.domain.auth.application.facade;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.auth.application.AuthResult;
+import org.devkor.apu.saerok_server.domain.auth.application.LoginResult;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.UserRefreshToken;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -17,7 +17,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class AuthTokenFacade {
+public class AuthTokenService {
 
     private final AccessTokenProvider accessTokenProvider;
     private final RefreshTokenProvider refreshTokenProvider;
@@ -29,7 +29,7 @@ public class AuthTokenFacade {
      * 비즈니스 결과(AuthResult)로 반환함.
      */
     @Transactional
-    public AuthResult issueTokens(User user, ClientInfo ci) {
+    public LoginResult issueTokens(User user, ClientInfo ci) {
 
         // 1) roles → access token
         List<String> roles = userRoleRepository.findByUser(user)
@@ -51,7 +51,7 @@ public class AuthTokenFacade {
         );
 
         // 3) 비즈니스 결과 레코드로 반환 (표현 계층은 별도)
-        return new AuthResult(
+        return new LoginResult(
                 access,
                 pair.raw(),
                 user.getSignupStatus().name(),
@@ -63,7 +63,7 @@ public class AuthTokenFacade {
      * refresh 토큰을 한 번 쓰고 → 새로 교체하는 시나리오
      */
     @Transactional
-    public AuthResult rotateTokens(UserRefreshToken oldToken, ClientInfo ci) {
+    public LoginResult rotateTokens(UserRefreshToken oldToken, ClientInfo ci) {
         oldToken.revoke();
         return issueTokens(oldToken.getUser(), ci);
     }

@@ -13,9 +13,9 @@ import org.devkor.apu.saerok_server.domain.auth.api.dto.request.AppleLoginReques
 import org.devkor.apu.saerok_server.domain.auth.api.dto.request.KakaoLoginRequest;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.request.RefreshRequest;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResponse;
-import org.devkor.apu.saerok_server.domain.auth.application.AppleAuthService;
-import org.devkor.apu.saerok_server.domain.auth.application.AuthResult;
-import org.devkor.apu.saerok_server.domain.auth.application.KakaoAuthService;
+import org.devkor.apu.saerok_server.domain.auth.application.AppleLoginService;
+import org.devkor.apu.saerok_server.domain.auth.application.LoginResult;
+import org.devkor.apu.saerok_server.domain.auth.application.KakaoLoginService;
 import org.devkor.apu.saerok_server.domain.auth.application.TokenRefreshService;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
 import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
@@ -33,8 +33,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${api_prefix}/auth/")
 public class AuthController {
 
-    private final AppleAuthService appleAuthService;
-    private final KakaoAuthService kakaoAuthService;
+    private final AppleLoginService appleAuthService;
+    private final KakaoLoginService kakaoAuthService;
     private final TokenRefreshService tokenRefreshService;
     private final ClientInfoExtractor clientInfoExtractor;
 
@@ -74,8 +74,8 @@ public class AuthController {
             HttpServletRequest httpServletRequest
     ) {
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        AuthResult authResult = appleAuthService.authenticate(request.authorizationCode(), null, clientInfo);
-        return toAuthResponse(authResult);
+        LoginResult loginResult = appleAuthService.authenticate(request.authorizationCode(), null, clientInfo);
+        return toAuthResponse(loginResult);
     }
 
     @PostMapping("/kakao/login")
@@ -111,13 +111,13 @@ public class AuthController {
             HttpServletRequest httpServletRequest
     ) {
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        AuthResult authResult = kakaoAuthService.authenticate(
+        LoginResult loginResult = kakaoAuthService.authenticate(
                 request.getAuthorizationCode(),
                 request.getAccessToken(),
                 request.getChannel(),
                 clientInfo
         );
-        return toAuthResponse(authResult);
+        return toAuthResponse(loginResult);
     }
 
     @PostMapping("/refresh")
@@ -184,18 +184,18 @@ public class AuthController {
         String refreshToken = refreshTokenCookie != null ? refreshTokenCookie : request.refreshTokenJson();
 
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
-        AuthResult authResult = tokenRefreshService.refresh(refreshToken, clientInfo);
-        return toAuthResponse(authResult);
+        LoginResult loginResult = tokenRefreshService.refresh(refreshToken, clientInfo);
+        return toAuthResponse(loginResult);
     }
 
     /**
      * AuthResult(비즈니스 결과)를 HTTP 응답(ResponseEntity + 쿠키)로 매핑.
      */
-    private ResponseEntity<AccessTokenResponse> toAuthResponse(AuthResult authResult) {
-        ResponseCookie cookie = createRefreshTokenCookie(authResult.refreshToken());
+    private ResponseEntity<AccessTokenResponse> toAuthResponse(LoginResult loginResult) {
+        ResponseCookie cookie = createRefreshTokenCookie(loginResult.refreshToken());
         AccessTokenResponse body = new AccessTokenResponse(
-                authResult.accessToken(),
-                authResult.signupStatus()
+                loginResult.accessToken(),
+                loginResult.signupStatus()
         );
 
         return ResponseEntity
