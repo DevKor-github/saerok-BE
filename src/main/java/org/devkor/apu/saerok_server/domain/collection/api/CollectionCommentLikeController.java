@@ -26,7 +26,7 @@ public class CollectionCommentLikeController {
     private final CollectionCommentLikeQueryService collectionCommentLikeQueryService;
 
     @PostMapping("/{commentId}/like")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "댓글 좋아요 토글",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -47,7 +47,7 @@ public class CollectionCommentLikeController {
     }
 
     @GetMapping("/{commentId}/like/status")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "댓글 좋아요 상태 조회",
             security = @SecurityRequirement(name = "bearerAuth"),

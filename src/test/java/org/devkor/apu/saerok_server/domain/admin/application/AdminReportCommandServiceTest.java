@@ -1,8 +1,9 @@
 package org.devkor.apu.saerok_server.domain.admin.application;
 
-import org.devkor.apu.saerok_server.domain.admin.core.entity.AdminAuditAction;
-import org.devkor.apu.saerok_server.domain.admin.core.entity.AdminAuditLog;
-import org.devkor.apu.saerok_server.domain.admin.core.repository.AdminAuditLogRepository;
+import org.devkor.apu.saerok_server.domain.admin.audit.core.entity.AdminAuditAction;
+import org.devkor.apu.saerok_server.domain.admin.audit.core.entity.AdminAuditLog;
+import org.devkor.apu.saerok_server.domain.admin.audit.core.repository.AdminAuditLogRepository;
+import org.devkor.apu.saerok_server.domain.admin.report.application.AdminReportCommandService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionCommentReport;

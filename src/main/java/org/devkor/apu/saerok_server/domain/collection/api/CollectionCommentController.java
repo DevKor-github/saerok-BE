@@ -30,7 +30,7 @@ public class CollectionCommentController {
 
     /* 댓글 작성 */
     @PostMapping("/{collectionId}/comments")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 댓글 작성",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -53,7 +53,7 @@ public class CollectionCommentController {
 
     /* 댓글 수정 */
     @PatchMapping("/{collectionId}/comments/{commentId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 댓글 수정",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -77,7 +77,7 @@ public class CollectionCommentController {
 
     /* 댓글 삭제 */
     @DeleteMapping("/{collectionId}/comments/{commentId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "컬렉션 댓글 삭제",
             security = @SecurityRequirement(name = "bearerAuth"),

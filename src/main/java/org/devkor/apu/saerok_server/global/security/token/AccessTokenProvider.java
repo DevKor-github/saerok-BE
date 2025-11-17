@@ -11,15 +11,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-import java.util.List;
-
 @Component
 public class AccessTokenProvider {
 
     @Value("${jwt.secret}")
     private String secret;
 
-    public String createAccessToken(Long userId, List<String> roles) {
+    public String createAccessToken(Long userId) {
 
         long expirationMillisecond = 1000L * 60 * 60; // 1시간
         Date now = new Date();
@@ -27,7 +25,6 @@ public class AccessTokenProvider {
 
         return JWT.create()
                 .withSubject(userId.toString())
-                .withClaim("roles", roles)
                 .withIssuedAt(now)
                 .withExpiresAt(expiry)
                 .sign(Algorithm.HMAC256(secret));
@@ -51,10 +48,5 @@ public class AccessTokenProvider {
     public Long getUserId(String token) {
         DecodedJWT jwt = verifyAndDecode(token);
         return Long.parseLong(jwt.getSubject());
-    }
-
-    public List<String> getUserRoles(String token) {
-        DecodedJWT jwt = verifyAndDecode(token);
-        return jwt.getClaim("roles").asList(String.class);
     }
 }

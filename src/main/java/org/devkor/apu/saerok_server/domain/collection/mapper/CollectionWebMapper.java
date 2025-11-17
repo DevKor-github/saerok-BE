@@ -49,6 +49,7 @@ public interface CollectionWebMapper {
     @Mapping(target = "bird.koreanName", source = "collection", qualifiedByName = "getBirdKoreanName")
     @Mapping(target = "bird.scientificName", source = "collection", qualifiedByName = "getBirdScientificName")
     @Mapping(target = "collectionId", source = "collection.id")
+    @Mapping(target = "createdAt", expression = "java(org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer.toSeoulLocalDateTime(collection.getCreatedAt()))")
     @Mapping(target = "user.userId", source = "collection.user.id")
     @Mapping(target = "user.nickname", source = "collection.user.nickname")
     @Mapping(target = "user.profileImageUrl", source = "userProfileImageUrl")

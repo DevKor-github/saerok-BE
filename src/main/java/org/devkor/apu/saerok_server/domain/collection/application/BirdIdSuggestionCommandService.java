@@ -11,7 +11,7 @@ import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Ac
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
-import org.devkor.apu.saerok_server.domain.stat.application.BirdIdRequestHistoryRecorder;
+import org.devkor.apu.saerok_server.domain.admin.stat.application.BirdIdRequestHistoryRecorder;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;

@@ -47,6 +47,7 @@ public class FcmMessageClient {
         if (cmd.notificationType() != null) data.put("type", cmd.notificationType());
         if (cmd.relatedId() != null)       data.put("relatedId", cmd.relatedId().toString());
         if (cmd.notificationId() != null)  data.put("notificationId", cmd.notificationId().toString());
+        data.put("unreadCount", String.valueOf(cmd.unreadCount()));
 
         int badge = Math.max(0, Math.min(cmd.unreadCount(), 999));
         ApnsConfig apns = ApnsConfig.builder()
@@ -81,6 +82,7 @@ public class FcmMessageClient {
         Map<String, String> data = new HashMap<>();
         data.put("type", "UPDATE_BADGE");
         data.put("silent", "true");
+        data.put("unreadCount", String.valueOf(unreadCount));
 
         int badge = Math.max(0, Math.min(unreadCount, 999));
         ApnsConfig apns = ApnsConfig.builder()

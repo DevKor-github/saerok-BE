@@ -13,7 +13,7 @@ import org.devkor.apu.saerok_server.domain.user.api.dto.request.UpdateUserProfil
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.api.response.CheckNicknameResponse;
-import org.devkor.apu.saerok_server.domain.user.api.response.GetMyUserProfileResponse;
+import org.devkor.apu.saerok_server.domain.user.api.response.UserInfoResponse;
 import org.devkor.apu.saerok_server.domain.user.application.UserCommandService;
 import org.devkor.apu.saerok_server.domain.user.application.UserQueryService;
 import org.devkor.apu.saerok_server.domain.user.mapper.UserWebMapper;
@@ -34,7 +34,7 @@ public class UserController {
     private final UserWebMapper userWebMapper;
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "나의 회원 정보 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -45,7 +45,7 @@ public class UserController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "성공",
-                            content = @Content(schema = @Schema(implementation = GetMyUserProfileResponse.class))
+                            content = @Content(schema = @Schema(implementation = UserInfoResponse.class))
                     ),
                     @ApiResponse(
                             responseCode = "401",
@@ -54,14 +54,14 @@ public class UserController {
                     ),
             }
     )
-    public GetMyUserProfileResponse getMyUserProfile(
+    public UserInfoResponse getMyUserInfo(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        return userQueryService.getMyUserProfile(userPrincipal.getId());
+        return userQueryService.getMyUserInfo(userPrincipal.getId());
     }
 
     @PatchMapping("/me")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "나의 회원 정보 수정",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -110,7 +110,7 @@ public class UserController {
     }
 
     @PostMapping("/me/profile-image/presign")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "프로필 사진 Presigned URL 발급",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -146,7 +146,7 @@ public class UserController {
     }
 
     @DeleteMapping("/me/profile-image")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "프로필 사진 삭제",
@@ -196,7 +196,7 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "회원 탈퇴",

@@ -7,10 +7,7 @@ import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialAuth;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
-import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
-import org.devkor.apu.saerok_server.domain.user.core.entity.UserRoleType;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.ProfileImageDefaultService;
 import org.devkor.apu.saerok_server.global.shared.exception.SocialAuthAlreadyExistsException;
 import org.springframework.stereotype.Service;
@@ -21,7 +18,6 @@ import org.springframework.stereotype.Service;
 public class UserProvisioningService {
 
     private final UserRepository userRepository;
-    private final UserRoleRepository userRoleRepository;
     private final SocialAuthRepository socialAuthRepository;
     private final ProfileImageDefaultService profileImageDefaultService;
 
@@ -40,8 +36,6 @@ public class UserProvisioningService {
         User user = userRepository.save(User.createUser(userInfo.email()));
         profileImageDefaultService.setRandomVariant(user);
 
-        userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
-
         return socialAuthRepository.save(
                 SocialAuth.createSocialAuth(user, provider, userInfo.sub())
         );
@@ -54,7 +48,6 @@ public class UserProvisioningService {
      *  - deleted_at → null
      *  - joined_at → 현재 시각
      *  - 이메일이 비어 있으면 소셜에서 받은 이메일로 복구
-     *  - USER 롤이 없으면 다시 부여
      *  - 기본 프로필 이미지가 비어 있으면 랜덤 배정
      */
     public void provisionRejoinedUser(User user, String email) {
@@ -63,10 +56,6 @@ public class UserProvisioningService {
 
         if (user.getEmail() == null && email != null) {
             user.setEmail(email);
-        }
-
-        if (userRoleRepository.findByUser(user).isEmpty()) {
-            userRoleRepository.save(UserRole.createUserRole(user, UserRoleType.USER));
         }
 
         if (user.getDefaultProfileImageVariant() == null) {
