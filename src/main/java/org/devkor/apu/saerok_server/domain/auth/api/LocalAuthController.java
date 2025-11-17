@@ -21,7 +21,7 @@ public class LocalAuthController {
 
     @Operation(
             summary = "더미 유저 JWT 발급",
-            description = "로컬 환경에서 USER 권한을 가진 더미 유저의 JWT 토큰을 발급합니다."
+            description = "로컬 환경에서 더미 유저의 JWT 토큰을 발급합니다."
     )
     @GetMapping("/dummy-user-token")
     @PermitAll

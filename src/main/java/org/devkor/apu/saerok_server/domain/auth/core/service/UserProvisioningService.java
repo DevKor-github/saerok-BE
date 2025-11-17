@@ -7,12 +7,8 @@ import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialAuth;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
-import org.devkor.apu.saerok_server.domain.user.core.entity.UserRole;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.ProfileImageDefaultService;
-import org.devkor.apu.saerok_server.global.security.permission.Role;
-import org.devkor.apu.saerok_server.global.security.permission.RoleRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.SocialAuthAlreadyExistsException;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +18,8 @@ import org.springframework.stereotype.Service;
 public class UserProvisioningService {
 
     private final UserRepository userRepository;
-    private final UserRoleRepository userRoleRepository;
     private final SocialAuthRepository socialAuthRepository;
     private final ProfileImageDefaultService profileImageDefaultService;
-    private final RoleRepository roleRepository;
 
     /**
      * 새로운 사용자에게 필요한 자원을 할당한다.
@@ -42,10 +36,6 @@ public class UserProvisioningService {
         User user = userRepository.save(User.createUser(userInfo.email()));
         profileImageDefaultService.setRandomVariant(user);
 
-        Role userRole = roleRepository.findByCode("USER")
-                .orElseThrow(() -> new IllegalStateException("기본 USER Role 이 존재하지 않습니다."));
-        userRoleRepository.save(UserRole.createUserRole(user, userRole));
-
         return socialAuthRepository.save(
                 SocialAuth.createSocialAuth(user, provider, userInfo.sub())
         );
@@ -58,7 +48,6 @@ public class UserProvisioningService {
      *  - deleted_at → null
      *  - joined_at → 현재 시각
      *  - 이메일이 비어 있으면 소셜에서 받은 이메일로 복구
-     *  - USER 롤이 없으면 다시 부여
      *  - 기본 프로필 이미지가 비어 있으면 랜덤 배정
      */
     public void provisionRejoinedUser(User user, String email) {
@@ -67,12 +56,6 @@ public class UserProvisioningService {
 
         if (user.getEmail() == null && email != null) {
             user.setEmail(email);
-        }
-
-        if (userRoleRepository.findByUser(user).isEmpty()) {
-            Role userRole = roleRepository.findByCode("USER")
-                    .orElseThrow(() -> new IllegalStateException("기본 USER Role 이 존재하지 않습니다."));
-            userRoleRepository.save(UserRole.createUserRole(user, userRole));
         }
 
         if (user.getDefaultProfileImageVariant() == null) {

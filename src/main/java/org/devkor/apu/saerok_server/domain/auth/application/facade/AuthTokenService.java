@@ -6,14 +6,11 @@ import org.devkor.apu.saerok_server.domain.auth.application.LoginResult;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.UserRefreshToken;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
-import org.devkor.apu.saerok_server.domain.user.core.repository.UserRoleRepository;
 import org.devkor.apu.saerok_server.global.security.token.AccessTokenProvider;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenPair;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
 import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -21,7 +18,6 @@ public class AuthTokenService {
 
     private final AccessTokenProvider accessTokenProvider;
     private final RefreshTokenProvider refreshTokenProvider;
-    private final UserRoleRepository userRoleRepository;
     private final UserRefreshTokenRepository refreshTokenRepo;
 
     /**
@@ -31,12 +27,8 @@ public class AuthTokenService {
     @Transactional
     public LoginResult issueTokens(User user, ClientInfo ci) {
 
-        // 1) roles → access token
-        List<String> roles = userRoleRepository.findByUser(user)
-                .stream()
-                .map(ur -> ur.getRole().getCode())
-                .toList();
-        String access = accessTokenProvider.createAccessToken(user.getId(), roles);
+        // 1) access token
+        String access = accessTokenProvider.createAccessToken(user.getId());
 
         // 2) refresh token pair
         RefreshTokenPair pair = refreshTokenProvider.generateRefreshTokenPair();
