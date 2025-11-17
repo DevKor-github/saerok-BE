@@ -172,8 +172,7 @@ public class AuthController {
             @CookieValue(name = "refreshToken", required = false) String refreshTokenCookie,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "쿠키에 리프레시 토큰이 없을 때, JSON 바디로 전달된 리프레시 토큰 " +
-                            "(iOS App에서 요청할 때 쓰면 편리. 웹 브라우저는 알아서 쿠키를 서버와 주고받으므로 이것을 사용할 필요 없음)",
-                    required = false
+                            "(iOS App에서 요청할 때 쓰면 편리. 웹 브라우저는 알아서 쿠키를 서버와 주고받으므로 이것을 사용할 필요 없음)"
             )
             @RequestBody(required = false) RefreshRequest request,
             HttpServletRequest httpServletRequest
