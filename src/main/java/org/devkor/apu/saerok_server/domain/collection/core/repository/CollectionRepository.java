@@ -51,7 +51,7 @@ public class CollectionRepository {
     }
 
     @SuppressWarnings("unchecked")
-    public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId, boolean isMineOnly) {
+    public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId, boolean isMineOnly, Integer limit) {
 
         if (isMineOnly && userId != null) {
             String sqlMineOnly = """
@@ -68,11 +68,14 @@ public class CollectionRepository {
                      CAST(:refPoint AS geography)
             )
             """;
-            return em.createNativeQuery(sqlMineOnly, UserBirdCollection.class)
+            var query = em.createNativeQuery(sqlMineOnly, UserBirdCollection.class)
                     .setParameter("refPoint", ref)
                     .setParameter("radius",  radiusMeters)
-                    .setParameter("userId",  userId)
-                    .getResultList();
+                    .setParameter("userId",  userId);
+            if (limit != null) {
+                query.setMaxResults(limit);
+            }
+            return query.getResultList();
         }
 
         String sqlAll = """
@@ -92,10 +95,142 @@ public class CollectionRepository {
                      CAST(:refPoint AS geography)
             )
             """;
-        return em.createNativeQuery(sqlAll, UserBirdCollection.class)
+        var query = em.createNativeQuery(sqlAll, UserBirdCollection.class)
+                .setParameter("refPoint", ref)
+                .setParameter("radius", radiusMeters)
+                .setParameter("userId", userId);
+        if (limit != null) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    public long countNearbyCandidates(Point ref, double radiusMeters, Long userId, boolean isMineOnly) {
+
+        if (isMineOnly && userId != null) {
+            String sql = """
+            SELECT COUNT(*)
+            FROM user_bird_collection c
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND c.user_id = :userId
+            """;
+
+            var query = em.createNativeQuery(sql)
+                    .setParameter("refPoint", ref)
+                    .setParameter("radius", radiusMeters)
+                    .setParameter("userId", userId);
+            Number result = (Number) query.getSingleResult();
+            return result.longValue();
+        }
+
+        String sql = """
+            SELECT COUNT(*)
+            FROM user_bird_collection c
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND (
+                   c.access_level = 'PUBLIC'
+                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
+              )
+            """;
+
+        var query = em.createNativeQuery(sql)
+                .setParameter("refPoint", ref)
+                .setParameter("radius", radiusMeters)
+                .setParameter("userId", userId);
+        Number result = (Number) query.getSingleResult();
+        return result.longValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<UserBirdCollection> findNearbyEven(
+            Point ref,
+            double radiusMeters,
+            Long userId,
+            boolean isMineOnly,
+            int limit,
+            double gridSizeMeters
+    ) {
+        if (limit <= 0) {
+            return List.of();
+        }
+
+        if (isMineOnly && userId != null) {
+            String sql = """
+            WITH candidates AS (
+                SELECT c.id,
+                       ST_Distance(c.location::geography, CAST(:refPoint AS geography)) AS dist,
+                       ST_SnapToGrid(ST_Transform(c.location, 3857), :gridSize, :gridSize) AS cell_id
+                FROM user_bird_collection c
+                WHERE ST_DWithin(
+                      c.location::geography,
+                      CAST(:refPoint AS geography),
+                      :radius
+                    )
+                  AND c.user_id = :userId
+            ), ranked AS (
+                SELECT id,
+                       dist,
+                       ROW_NUMBER() OVER (PARTITION BY cell_id ORDER BY dist) AS rn
+                FROM candidates
+            )
+            SELECT c.*
+            FROM ranked r
+            JOIN user_bird_collection c ON c.id = r.id
+            ORDER BY r.rn, r.dist
+            LIMIT :limit
+            """;
+
+            return em.createNativeQuery(sql, UserBirdCollection.class)
+                    .setParameter("refPoint", ref)
+                    .setParameter("radius", radiusMeters)
+                    .setParameter("userId", userId)
+                    .setParameter("gridSize", gridSizeMeters)
+                    .setParameter("limit", limit)
+                    .getResultList();
+        }
+
+        String sql = """
+        WITH candidates AS (
+            SELECT c.id,
+                   ST_Distance(c.location::geography, CAST(:refPoint AS geography)) AS dist,
+                   ST_SnapToGrid(ST_Transform(c.location, 3857), :gridSize, :gridSize) AS cell_id
+            FROM user_bird_collection c
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND (
+                   c.access_level = 'PUBLIC'
+                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
+              )
+        ), ranked AS (
+            SELECT id,
+                   dist,
+                   ROW_NUMBER() OVER (PARTITION BY cell_id ORDER BY dist) AS rn
+            FROM candidates
+        )
+        SELECT c.*
+        FROM ranked r
+        JOIN user_bird_collection c ON c.id = r.id
+        ORDER BY r.rn, r.dist
+        LIMIT :limit
+        """;
+
+        return em.createNativeQuery(sql, UserBirdCollection.class)
                 .setParameter("refPoint", ref)
                 .setParameter("radius", radiusMeters)
                 .setParameter("userId", userId)
+                .setParameter("gridSize", gridSizeMeters)
+                .setParameter("limit", limit)
                 .getResultList();
     }
 

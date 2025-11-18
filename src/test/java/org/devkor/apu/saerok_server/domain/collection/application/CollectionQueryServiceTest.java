@@ -59,7 +59,8 @@ class CollectionQueryServiceTest {
                 collectionWebMapper,
                 userRepository,
                 userProfileImageUrlService,
-                collectionImageUrlService
+                collectionImageUrlService,
+                List.of()
         );
 
         userIdField       = User.class.getDeclaredField("id");
