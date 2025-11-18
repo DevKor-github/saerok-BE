@@ -13,13 +13,16 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.request.*;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetNearbyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.NearbyCollectionsMode;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.http.HttpStatus;
@@ -398,11 +401,13 @@ public class CollectionController {
             @Parameter(description = "주위의 내 컬렉션만 조회 여부. 비회원은 false만 허용", example = "false")
             @RequestParam(required = false, defaultValue = "false") Boolean isMineOnly,
             @Parameter(description = "조회할 최대 개수 (미지정 시 전체)", example = "50")
-            @RequestParam(required = false) Integer limit
+            @RequestParam(required = false) Integer limit,
+            @Parameter(description = "조회 모드 (DIST: 거리순, EVEN: 균등 분포)", example = "DIST")
+            @RequestParam(required = false, defaultValue = "DIST") NearbyCollectionsMode mode
     ) {
         Long userId = userPrincipal == null ? null : userPrincipal.getId();
         return collectionQueryService.getNearbyCollections(
-                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters, isMineOnly, limit)
+                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters, isMineOnly, limit, mode)
         );
     }
 }

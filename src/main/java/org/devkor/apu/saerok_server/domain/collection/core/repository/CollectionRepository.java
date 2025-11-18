@@ -105,6 +105,135 @@ public class CollectionRepository {
         return query.getResultList();
     }
 
+    public long countNearbyCandidates(Point ref, double radiusMeters, Long userId, boolean isMineOnly) {
+
+        if (isMineOnly && userId != null) {
+            String sql = """
+            SELECT COUNT(*)
+            FROM user_bird_collection c
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND c.user_id = :userId
+            """;
+
+            var query = em.createNativeQuery(sql)
+                    .setParameter("refPoint", ref)
+                    .setParameter("radius", radiusMeters)
+                    .setParameter("userId", userId);
+            Number result = (Number) query.getSingleResult();
+            return result.longValue();
+        }
+
+        String sql = """
+            SELECT COUNT(*)
+            FROM user_bird_collection c
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND (
+                   c.access_level = 'PUBLIC'
+                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
+              )
+            """;
+
+        var query = em.createNativeQuery(sql)
+                .setParameter("refPoint", ref)
+                .setParameter("radius", radiusMeters)
+                .setParameter("userId", userId);
+        Number result = (Number) query.getSingleResult();
+        return result.longValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<UserBirdCollection> findNearbyEven(
+            Point ref,
+            double radiusMeters,
+            Long userId,
+            boolean isMineOnly,
+            int limit,
+            double gridSizeMeters
+    ) {
+        if (limit <= 0) {
+            return List.of();
+        }
+
+        if (isMineOnly && userId != null) {
+            String sql = """
+            WITH candidates AS (
+                SELECT c.id,
+                       ST_Distance(c.location::geography, CAST(:refPoint AS geography)) AS dist,
+                       ST_SnapToGrid(ST_Transform(c.location, 3857), :gridSize, :gridSize) AS cell_id
+                FROM user_bird_collection c
+                WHERE ST_DWithin(
+                      c.location::geography,
+                      CAST(:refPoint AS geography),
+                      :radius
+                    )
+                  AND c.user_id = :userId
+            ), ranked AS (
+                SELECT id,
+                       dist,
+                       ROW_NUMBER() OVER (PARTITION BY cell_id ORDER BY dist) AS rn
+                FROM candidates
+            )
+            SELECT c.*
+            FROM ranked r
+            JOIN user_bird_collection c ON c.id = r.id
+            ORDER BY r.rn, r.dist
+            LIMIT :limit
+            """;
+
+            return em.createNativeQuery(sql, UserBirdCollection.class)
+                    .setParameter("refPoint", ref)
+                    .setParameter("radius", radiusMeters)
+                    .setParameter("userId", userId)
+                    .setParameter("gridSize", gridSizeMeters)
+                    .setParameter("limit", limit)
+                    .getResultList();
+        }
+
+        String sql = """
+        WITH candidates AS (
+            SELECT c.id,
+                   ST_Distance(c.location::geography, CAST(:refPoint AS geography)) AS dist,
+                   ST_SnapToGrid(ST_Transform(c.location, 3857), :gridSize, :gridSize) AS cell_id
+            FROM user_bird_collection c
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND (
+                   c.access_level = 'PUBLIC'
+                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
+              )
+        ), ranked AS (
+            SELECT id,
+                   dist,
+                   ROW_NUMBER() OVER (PARTITION BY cell_id ORDER BY dist) AS rn
+            FROM candidates
+        )
+        SELECT c.*
+        FROM ranked r
+        JOIN user_bird_collection c ON c.id = r.id
+        ORDER BY r.rn, r.dist
+        LIMIT :limit
+        """;
+
+        return em.createNativeQuery(sql, UserBirdCollection.class)
+                .setParameter("refPoint", ref)
+                .setParameter("radius", radiusMeters)
+                .setParameter("userId", userId)
+                .setParameter("gridSize", gridSizeMeters)
+                .setParameter("limit", limit)
+                .getResultList();
+    }
+
     /**
      * 매핑 시 필요한 연관(User, Bird)을 ID 리스트 기준으로 한 번에 초기화 (LAZY N+1 방지)
      * - 반환값은 사용하지 않아도, 동일 영속성 컨텍스트에서 연관이 프록시가 아닌 초기화된 상태가 된다.
