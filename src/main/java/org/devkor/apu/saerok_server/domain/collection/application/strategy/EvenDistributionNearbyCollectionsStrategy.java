@@ -14,11 +14,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EvenDistributionNearbyCollectionsStrategy implements NearbyCollectionsStrategy {
 
-    private static final double R_REF = 800.0;
-    private static final double D_MAX = 40.0;
-    private static final double D_MIN = 3.0;
-    private static final int N_MIN = 15;
-    private static final int N_MAX = 100;
     private static final double CELL_STABILITY_COEFFICIENT = 1.5;
     private static final double CELL_SIZE_MIN = 80.0;
 
@@ -42,7 +37,8 @@ public class EvenDistributionNearbyCollectionsStrategy implements NearbyCollecti
             return List.of();
         }
 
-        int finalCount = determineFinalCount(command, candidateCount);
+
+        long finalCount = command.limit() != null ? Math.min(command.limit(), candidateCount) : candidateCount;
         if (finalCount <= 0) {
             return List.of();
         }
@@ -58,22 +54,7 @@ public class EvenDistributionNearbyCollectionsStrategy implements NearbyCollecti
         );
     }
 
-    private int determineFinalCount(GetNearbyCollectionsCommand command, long candidateCount) {
-        double radius = command.radiusMeters();
-        double baseDensity = clamp(D_MAX * (R_REF / radius), D_MIN, D_MAX);
-        double areaKm2 = Math.PI * Math.pow(radius / 1000.0, 2);
-        long target = Math.round(areaKm2 * baseDensity);
-        long clampedTarget = clamp(target, N_MIN, N_MAX);
-        long finalCount = Math.min(clampedTarget, candidateCount);
-
-        if (command.limit() != null) {
-            finalCount = Math.min(finalCount, command.limit());
-        }
-
-        return (int) finalCount;
-    }
-
-    private double calculateCellSize(double radiusMeters, int count) {
+    private double calculateCellSize(double radiusMeters, long count) {
         double cellCount = Math.max(count * CELL_STABILITY_COEFFICIENT, 1.0);
         double cellArea = (Math.PI * Math.pow(radiusMeters, 2)) / cellCount;
         double rawCellSize = Math.sqrt(cellArea);
@@ -85,7 +66,4 @@ public class EvenDistributionNearbyCollectionsStrategy implements NearbyCollecti
         return Math.min(Math.max(value, min), max);
     }
 
-    private long clamp(long value, long min, long max) {
-        return Math.min(Math.max(value, min), max);
-    }
 }
