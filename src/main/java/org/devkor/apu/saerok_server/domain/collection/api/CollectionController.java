@@ -381,9 +381,8 @@ public class CollectionController {
                     - DIST : 기존의 방식으로서, 중심점에서 가까운 순으로 limit 개수만큼 가져옵니다.
                              limit를 지정하지 않으면 무제한으로 설정됩니다.
                     
-                    - EVEN : 새로 도입된 방식으로서, 요청한 영역 안에서 지리적으로 고르게 결과를 가져옵니다.
-                             limit를 지정하지 않아도, 화면에 보여주기에 적절한 개수 = finalCount를 자동으로 계산합니다.
-                             limit를 지정할 경우, min(finalCount, limit) 개수만큼 가져옵니다.
+                    - EVEN : 새로 도입된 방식으로서, 요청한 영역 안에서 지리적으로 고르게 limit 개수만큼 가져옵니다.
+                             limit를 지정하지 않으면 무제한으로 설정됩니다.
                     """,
             responses = {
                     @ApiResponse(

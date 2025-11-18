@@ -155,7 +155,7 @@ public class CollectionRepository {
             double radiusMeters,
             Long userId,
             boolean isMineOnly,
-            int limit,
+            long limit,
             double gridSizeMeters
     ) {
         if (limit <= 0) {
