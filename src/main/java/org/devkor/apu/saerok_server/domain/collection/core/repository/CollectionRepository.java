@@ -51,7 +51,7 @@ public class CollectionRepository {
     }
 
     @SuppressWarnings("unchecked")
-    public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId, boolean isMineOnly) {
+    public List<UserBirdCollection> findNearby(Point ref, double radiusMeters, Long userId, boolean isMineOnly, Integer limit) {
 
         if (isMineOnly && userId != null) {
             String sqlMineOnly = """
@@ -68,11 +68,14 @@ public class CollectionRepository {
                      CAST(:refPoint AS geography)
             )
             """;
-            return em.createNativeQuery(sqlMineOnly, UserBirdCollection.class)
+            var query = em.createNativeQuery(sqlMineOnly, UserBirdCollection.class)
                     .setParameter("refPoint", ref)
                     .setParameter("radius",  radiusMeters)
-                    .setParameter("userId",  userId)
-                    .getResultList();
+                    .setParameter("userId",  userId);
+            if (limit != null) {
+                query.setMaxResults(limit);
+            }
+            return query.getResultList();
         }
 
         String sqlAll = """
@@ -92,11 +95,14 @@ public class CollectionRepository {
                      CAST(:refPoint AS geography)
             )
             """;
-        return em.createNativeQuery(sqlAll, UserBirdCollection.class)
+        var query = em.createNativeQuery(sqlAll, UserBirdCollection.class)
                 .setParameter("refPoint", ref)
                 .setParameter("radius", radiusMeters)
-                .setParameter("userId", userId)
-                .getResultList();
+                .setParameter("userId", userId);
+        if (limit != null) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
     }
 
     /**

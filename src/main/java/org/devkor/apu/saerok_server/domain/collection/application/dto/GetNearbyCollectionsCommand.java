@@ -5,6 +5,7 @@ public record GetNearbyCollectionsCommand(
         Double latitude,
         Double longitude,
         Double radiusMeters,
-        boolean isMineOnly
+        boolean isMineOnly,
+        Integer limit
 ) {
 }

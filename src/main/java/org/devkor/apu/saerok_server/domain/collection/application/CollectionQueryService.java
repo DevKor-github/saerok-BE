@@ -139,9 +139,19 @@ public class CollectionQueryService {
             throw new BadRequestException("비회원 사용자는 isMineOnly = false만 사용 가능해요.");
         }
 
+        if (command.limit() != null && command.limit() < 1) {
+            throw new BadRequestException("limit은 1 이상의 양수여야 해요.");
+        }
+
         // 1) 근거리 컬렉션 조회 (PostGIS native)
         Point refPoint = PointFactory.create(command.latitude(), command.longitude());
-        List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId(), command.isMineOnly());
+        List<UserBirdCollection> collections = collectionRepository.findNearby(
+                refPoint,
+                command.radiusMeters(),
+                command.userId(),
+                command.isMineOnly(),
+                command.limit()
+        );
 
         GetNearbyCollectionsResponse response = new GetNearbyCollectionsResponse();
         if (collections.isEmpty()) {

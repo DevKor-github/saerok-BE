@@ -93,7 +93,7 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
 
         // when
         List<UserBirdCollection> result =
-                collectionRepository.findNearby(ref, 1_000, me.getId(), true);
+                collectionRepository.findNearby(ref, 1_000, me.getId(), true, null);
 
         // then
         assertEquals(1, result.size(), "mineOnly=true 이므로 한 개만 반환");
@@ -121,7 +121,7 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
 
         // when
         List<UserBirdCollection> result =
-                collectionRepository.findNearby(ref, 1_000, me.getId(), false);
+                collectionRepository.findNearby(ref, 1_000, me.getId(), false, null);
 
         // then
         assertEquals(2, result.size(), "PUBLIC + 내 컬렉션 두 개 조회");
@@ -146,10 +146,36 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
 
         // when
         List<UserBirdCollection> result =
-                collectionRepository.findNearby(ref, 1_000, null, false);
+                collectionRepository.findNearby(ref, 1_000, null, false, null);
 
         // then
         assertEquals(1, result.size(), "PUBLIC 하나만 조회");
         assertEquals(publicColl.getId(), result.getFirst().getId());
+    }
+
+    @Test
+    @DisplayName("limit 파라미터만큼만 컬렉션을 반환")
+    void findNearby_withLimit_appliesMaxResults() throws Exception {
+        // given
+        User owner = newUser();
+
+        Point ref = gf.createPoint(new Coordinate(126.9780, 37.5665));
+        Point near1 = gf.createPoint(new Coordinate(126.9781, 37.5665));
+        Point near2 = gf.createPoint(new Coordinate(126.9782, 37.5665));
+        Point near3 = gf.createPoint(new Coordinate(126.9783, 37.5665));
+
+        newCollection(owner, near1, AccessLevelType.PUBLIC);
+        newCollection(owner, near2, AccessLevelType.PUBLIC);
+        newCollection(owner, near3, AccessLevelType.PUBLIC);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<UserBirdCollection> result =
+                collectionRepository.findNearby(ref, 1_000, owner.getId(), false, 2);
+
+        // then
+        assertEquals(2, result.size());
     }
 }

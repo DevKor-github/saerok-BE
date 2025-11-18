@@ -396,11 +396,13 @@ public class CollectionController {
             @Parameter(description = "검색 반경 (m)", example = "500", required = true)
             @RequestParam Double radiusMeters,
             @Parameter(description = "주위의 내 컬렉션만 조회 여부. 비회원은 false만 허용", example = "false")
-            @RequestParam(required = false, defaultValue = "false") Boolean isMineOnly
+            @RequestParam(required = false, defaultValue = "false") Boolean isMineOnly,
+            @Parameter(description = "조회할 최대 개수 (미지정 시 전체)", example = "50")
+            @RequestParam(required = false) Integer limit
     ) {
         Long userId = userPrincipal == null ? null : userPrincipal.getId();
         return collectionQueryService.getNearbyCollections(
-                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters, isMineOnly)
+                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters, isMineOnly, limit)
         );
     }
 }
