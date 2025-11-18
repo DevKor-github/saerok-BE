@@ -375,10 +375,15 @@ public class CollectionController {
             summary = "주위의 컬렉션 조회 (인증: optional)",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-                    주위의 컬렉션을 조회합니다.
+                    중심점 주위의 컬렉션을 조회합니다.
                     
-                    내 지도 기능은 isMineOnly = true, 우리 지도 기능은 false를 사용하면 됩니다.
-                     - 비회원인데 isMineOnly = true이면 400 Bad Request
+                    2가지 조회 모드 중 상황에 알맞은 것을 선택하세요.
+                    - DIST : 기존의 방식으로서, 중심점에서 가까운 순으로 limit 개수만큼 가져옵니다.
+                             limit를 지정하지 않으면 무제한으로 설정됩니다.
+                    
+                    - EVEN : 새로 도입된 방식으로서, 요청한 영역 안에서 지리적으로 고르게 결과를 가져옵니다.
+                             limit를 지정하지 않아도, 화면에 보여주기에 적절한 개수 = finalCount를 자동으로 계산합니다.
+                             limit를 지정할 경우, min(finalCount, limit) 개수만큼 가져옵니다.
                     """,
             responses = {
                     @ApiResponse(
