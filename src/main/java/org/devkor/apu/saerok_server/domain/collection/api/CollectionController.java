@@ -13,13 +13,16 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.request.*;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetNearbyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.NearbyCollectionsMode;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.http.HttpStatus;
@@ -372,10 +375,14 @@ public class CollectionController {
             summary = "주위의 컬렉션 조회 (인증: optional)",
             security = @SecurityRequirement(name = "bearerAuth"),
             description = """
-                    주위의 컬렉션을 조회합니다.
+                    중심점 주위의 컬렉션을 조회합니다.
                     
-                    내 지도 기능은 isMineOnly = true, 우리 지도 기능은 false를 사용하면 됩니다.
-                     - 비회원인데 isMineOnly = true이면 400 Bad Request
+                    2가지 조회 모드 중 상황에 알맞은 것을 선택하세요.
+                    - DIST : 기존의 방식으로서, 중심점에서 가까운 순으로 limit 개수만큼 가져옵니다.
+                             limit를 지정하지 않으면 무제한으로 설정됩니다.
+                    
+                    - EVEN : 새로 도입된 방식으로서, 요청한 영역 안에서 지리적으로 고르게 limit 개수만큼 가져옵니다.
+                             limit를 지정하지 않으면 무제한으로 설정됩니다.
                     """,
             responses = {
                     @ApiResponse(
@@ -396,11 +403,15 @@ public class CollectionController {
             @Parameter(description = "검색 반경 (m)", example = "500", required = true)
             @RequestParam Double radiusMeters,
             @Parameter(description = "주위의 내 컬렉션만 조회 여부. 비회원은 false만 허용", example = "false")
-            @RequestParam(required = false, defaultValue = "false") Boolean isMineOnly
+            @RequestParam(required = false, defaultValue = "false") Boolean isMineOnly,
+            @Parameter(description = "조회할 최대 개수 (미지정 시 전체)", example = "50")
+            @RequestParam(required = false) Integer limit,
+            @Parameter(description = "조회 모드 (DIST: 거리순, EVEN: 균등 분포)", example = "DIST")
+            @RequestParam(required = false, defaultValue = "DIST") NearbyCollectionsMode mode
     ) {
         Long userId = userPrincipal == null ? null : userPrincipal.getId();
         return collectionQueryService.getNearbyCollections(
-                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters, isMineOnly)
+                new GetNearbyCollectionsCommand(userId, latitude, longitude, radiusMeters, isMineOnly, limit, mode)
         );
     }
 }

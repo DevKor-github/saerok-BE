@@ -1,6 +1,5 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
-import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetNearbyCollectionsResponse;
@@ -8,6 +7,7 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollect
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollectionEditDataCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
+import org.devkor.apu.saerok_server.domain.collection.application.strategy.NearbyCollectionsStrategy;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionImage;
@@ -32,10 +32,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 public class CollectionQueryService {
 
     private final CollectionRepository collectionRepository;
@@ -46,6 +47,30 @@ public class CollectionQueryService {
     private final UserRepository userRepository;
     private final UserProfileImageUrlService userProfileImageUrlService;
     private final CollectionImageUrlService collectionImageUrlService;
+    private final Map<NearbyCollectionsMode, NearbyCollectionsStrategy> nearbyCollectionsStrategyMap;
+
+    public CollectionQueryService(
+            CollectionRepository collectionRepository,
+            CollectionImageRepository collectionImageRepository,
+            CollectionLikeRepository collectionLikeRepository,
+            CollectionCommentRepository collectionCommentRepository,
+            CollectionWebMapper collectionWebMapper,
+            UserRepository userRepository,
+            UserProfileImageUrlService userProfileImageUrlService,
+            CollectionImageUrlService collectionImageUrlService,
+            List<NearbyCollectionsStrategy> nearbyCollectionsStrategies
+    ) {
+        this.collectionRepository = collectionRepository;
+        this.collectionImageRepository = collectionImageRepository;
+        this.collectionLikeRepository = collectionLikeRepository;
+        this.collectionCommentRepository = collectionCommentRepository;
+        this.collectionWebMapper = collectionWebMapper;
+        this.userRepository = userRepository;
+        this.userProfileImageUrlService = userProfileImageUrlService;
+        this.collectionImageUrlService = collectionImageUrlService;
+        this.nearbyCollectionsStrategyMap = nearbyCollectionsStrategies.stream()
+                .collect(Collectors.toUnmodifiableMap(NearbyCollectionsStrategy::getMode, Function.identity()));
+    }
 
     public GetCollectionEditDataResponse getCollectionEditDataResponse(GetCollectionEditDataCommand command) {
         userRepository.findById(command.userId()).orElseThrow(() -> new BadRequestException("유효하지 않은 사용자 id예요"));
@@ -139,9 +164,19 @@ public class CollectionQueryService {
             throw new BadRequestException("비회원 사용자는 isMineOnly = false만 사용 가능해요.");
         }
 
-        // 1) 근거리 컬렉션 조회 (PostGIS native)
+        if (command.limit() != null && command.limit() < 1) {
+            throw new BadRequestException("limit은 1 이상의 양수여야 해요.");
+        }
+
+        if (command.radiusMeters() == null || command.radiusMeters() <= 0) {
+            throw new BadRequestException("radiusMeters는 0보다 커야 해요.");
+        }
+
+        // 1) 근거리 컬렉션 조회 (전략 기반)
         Point refPoint = PointFactory.create(command.latitude(), command.longitude());
-        List<UserBirdCollection> collections = collectionRepository.findNearby(refPoint, command.radiusMeters(), command.userId(), command.isMineOnly());
+        NearbyCollectionsStrategy strategy = Optional.ofNullable(nearbyCollectionsStrategyMap.get(command.mode()))
+                .orElseThrow(() -> new BadRequestException("지원하지 않는 조회 모드예요."));
+        List<UserBirdCollection> collections = strategy.findCollections(command, refPoint);
 
         GetNearbyCollectionsResponse response = new GetNearbyCollectionsResponse();
         if (collections.isEmpty()) {

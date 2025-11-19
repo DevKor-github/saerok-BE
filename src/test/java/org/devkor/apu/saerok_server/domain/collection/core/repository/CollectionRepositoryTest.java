@@ -93,7 +93,7 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
 
         // when
         List<UserBirdCollection> result =
-                collectionRepository.findNearby(ref, 1_000, me.getId(), true);
+                collectionRepository.findNearby(ref, 1_000, me.getId(), true, null);
 
         // then
         assertEquals(1, result.size(), "mineOnly=true 이므로 한 개만 반환");
@@ -121,7 +121,7 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
 
         // when
         List<UserBirdCollection> result =
-                collectionRepository.findNearby(ref, 1_000, me.getId(), false);
+                collectionRepository.findNearby(ref, 1_000, me.getId(), false, null);
 
         // then
         assertEquals(2, result.size(), "PUBLIC + 내 컬렉션 두 개 조회");
@@ -146,10 +146,74 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
 
         // when
         List<UserBirdCollection> result =
-                collectionRepository.findNearby(ref, 1_000, null, false);
+                collectionRepository.findNearby(ref, 1_000, null, false, null);
 
         // then
         assertEquals(1, result.size(), "PUBLIC 하나만 조회");
         assertEquals(publicColl.getId(), result.getFirst().getId());
+    }
+
+    @Test
+    @DisplayName("limit 파라미터만큼만 컬렉션을 반환")
+    void findNearby_withLimit_appliesMaxResults() throws Exception {
+        // given
+        User owner = newUser();
+
+        Point ref = gf.createPoint(new Coordinate(126.9780, 37.5665));
+        Point near1 = gf.createPoint(new Coordinate(126.9781, 37.5665));
+        Point near2 = gf.createPoint(new Coordinate(126.9782, 37.5665));
+        Point near3 = gf.createPoint(new Coordinate(126.9783, 37.5665));
+
+        newCollection(owner, near1, AccessLevelType.PUBLIC);
+        newCollection(owner, near2, AccessLevelType.PUBLIC);
+        newCollection(owner, near3, AccessLevelType.PUBLIC);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<UserBirdCollection> result =
+                collectionRepository.findNearby(ref, 1_000, owner.getId(), false, 2);
+
+        // then
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    @DisplayName("findNearbyEven은 셀 단위 라운드로빈으로 균등 샘플링한다")
+    void findNearbyEven_returnsBalancedSamplesAcrossCells() throws Exception {
+        // given
+        User owner = newUser();
+
+        Point ref = gf.createPoint(new Coordinate(126.9780, 37.5665));
+
+        // cell A (two candidates inside 동일 셀)
+        UserBirdCollection cellAFirst  = newCollection(owner, gf.createPoint(new Coordinate(126.97805, 37.5665)), AccessLevelType.PUBLIC);
+        UserBirdCollection cellASecond = newCollection(owner, gf.createPoint(new Coordinate(126.97806, 37.5665)), AccessLevelType.PUBLIC);
+
+        // cell B / C 는 ref 와 100m 이상 떨어진 지점으로 분리
+        UserBirdCollection cellB = newCollection(owner, gf.createPoint(new Coordinate(126.9800, 37.5665)), AccessLevelType.PUBLIC);
+        UserBirdCollection cellC = newCollection(owner, gf.createPoint(new Coordinate(126.9780, 37.5685)), AccessLevelType.PUBLIC);
+
+        em.flush();
+        em.clear();
+
+        // when : limit=3 이므로 각 셀의 1순위 후보가 먼저 선택되고, cellASecond 는 제외된다
+        List<UserBirdCollection> result = collectionRepository.findNearbyEven(
+                ref,
+                1_500,
+                owner.getId(),
+                false,
+                3,
+                80
+        );
+
+        // then
+        assertEquals(3, result.size());
+        assertTrue(result.stream().anyMatch(c -> c.getId().equals(cellAFirst.getId())));
+        assertTrue(result.stream().anyMatch(c -> c.getId().equals(cellB.getId())));
+        assertTrue(result.stream().anyMatch(c -> c.getId().equals(cellC.getId())));
+        assertFalse(result.stream().anyMatch(c -> c.getId().equals(cellASecond.getId())),
+                "같은 셀의 두 번째 후보는 limit보다 뒤 순위로 밀려야 한다");
     }
 }

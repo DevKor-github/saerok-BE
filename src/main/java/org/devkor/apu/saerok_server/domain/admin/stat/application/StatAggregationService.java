@@ -137,10 +137,11 @@ public class StatAggregationService {
         var end = endExclusive(date);
         long total = em.createQuery("""
                 SELECT COUNT(u) FROM User u
-                WHERE u.signupStatus = :completed
-                  AND (u.deletedAt IS NULL OR u.deletedAt >= :end)
+                WHERE (u.signupStatus = :completed AND u.deletedAt IS NULL)
+                  OR (u.signupStatus = :withdrawn AND u.deletedAt IS NOT NULL AND u.deletedAt >= :end)
                 """, Long.class)
                 .setParameter("completed", SignupStatusType.COMPLETED)
+                .setParameter("withdrawn", SignupStatusType.WITHDRAWN)
                 .setParameter("end", end)
                 .getSingleResult();
 
