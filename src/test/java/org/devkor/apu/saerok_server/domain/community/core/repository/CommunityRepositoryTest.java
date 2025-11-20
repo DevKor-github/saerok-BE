@@ -168,8 +168,8 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
-    @DisplayName("PopularCollection 테이블에 등록된 PUBLIC 컬렉션만 조회")
-    void findPopular_returnsRegisteredPopular() {
+    @DisplayName("PopularCollection 스냅샷에 등록된 PUBLIC 컬렉션만 조회하고 좋아요 수와 무관")
+    void findPopular_returnsOnlySnapshotEntries() {
         // given
         User user = newUser("user");
         Bird bird = newBird("참새");
@@ -178,18 +178,20 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
         UserBirdCollection popularOld = newCollection(user, bird, AccessLevelType.PUBLIC, null);
         UserBirdCollection popularNew = newCollection(user, bird, AccessLevelType.PUBLIC, null);
         UserBirdCollection privatePopular = newCollection(user, bird, AccessLevelType.PRIVATE, null);
+        UserBirdCollection notRankedButLiked = newCollection(user, bird, AccessLevelType.PUBLIC, null);
+
+        // 좋아요가 많아도 배치에 의해 선택되지 않은 컬렉션은 인기 목록에 없어야 한다
+        addLikes(notRankedButLiked, 5);
 
         em.flush();
 
-        PopularCollection pc1 = new PopularCollection(popularOld);
-        ReflectionTestUtils.setField(pc1, "createdAt", now.minusDays(1));
+        PopularCollection pc1 = new PopularCollection(popularOld, 1.0, 1.0, 0.5, now.minusDays(1), 1);
         em.persist(pc1);
 
-        PopularCollection pc2 = new PopularCollection(popularNew);
-        ReflectionTestUtils.setField(pc2, "createdAt", now);
+        PopularCollection pc2 = new PopularCollection(popularNew, 1.0, 1.0, 1.2, now, 0);
         em.persist(pc2);
 
-        PopularCollection pc3 = new PopularCollection(privatePopular);
+        PopularCollection pc3 = new PopularCollection(privatePopular, 1.0, 1.0, 2.0, now, 2);
         em.persist(pc3);
 
         CommunityQueryCommand command = new CommunityQueryCommand(1, 10, null);
@@ -202,8 +204,9 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
 
         // then
         assertEquals(2, result.size(), "PopularCollection에 등록된 PUBLIC 컬렉션만");
-        assertEquals(popularNew.getId(), result.get(0).getId(), "최근에 등록된 컬렉션이 먼저");
-        assertEquals(popularOld.getId(), result.get(1).getId(), "이전에 등록된 컬렉션이 다음");
+        assertEquals(popularNew.getId(), result.get(0).getId(), "displayOrder가 낮은 순으로 반환");
+        assertEquals(popularOld.getId(), result.get(1).getId(), "displayOrder가 낮은 순으로 반환");
+        assertTrue(result.stream().noneMatch(c -> c.getId().equals(notRankedButLiked.getId())), "스냅샷에 없는 컬렉션 제외");
     }
 
     @Test

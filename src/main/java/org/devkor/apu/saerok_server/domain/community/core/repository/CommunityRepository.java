@@ -40,7 +40,7 @@ public class CommunityRepository {
             LEFT JOIN FETCH c.bird b
             JOIN PopularCollection pc ON pc.collection.id = c.id
             WHERE c.accessLevel = :public
-            ORDER BY pc.createdAt DESC
+            ORDER BY pc.displayOrder ASC
             """, UserBirdCollection.class)
                 .setParameter("public", AccessLevelType.PUBLIC);
 
