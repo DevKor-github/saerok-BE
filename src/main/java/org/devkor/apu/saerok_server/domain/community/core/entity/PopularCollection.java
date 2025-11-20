@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.global.shared.entity.CreatedAtOnly;
 
+import java.time.OffsetDateTime;
+
 @Entity
 @Table(
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_bird_collection_id"})
@@ -23,7 +25,15 @@ public class PopularCollection extends CreatedAtOnly {
     @JoinColumn(name = "user_bird_collection_id", nullable = false)
     private UserBirdCollection collection;
 
-    public PopularCollection(UserBirdCollection collection) {
+    @Column(name = "trending_score", nullable = false)
+    private double trendingScore;
+
+    @Column(name = "calculated_at", nullable = false)
+    private OffsetDateTime calculatedAt;
+
+    public PopularCollection(UserBirdCollection collection, double trendingScore, OffsetDateTime calculatedAt) {
         this.collection = collection;
+        this.trendingScore = trendingScore;
+        this.calculatedAt = calculatedAt;
     }
 }

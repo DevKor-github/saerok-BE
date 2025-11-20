@@ -181,15 +181,13 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
 
         em.flush();
 
-        PopularCollection pc1 = new PopularCollection(popularOld);
-        ReflectionTestUtils.setField(pc1, "createdAt", now.minusDays(1));
+        PopularCollection pc1 = new PopularCollection(popularOld, 0.5, now.minusDays(1));
         em.persist(pc1);
 
-        PopularCollection pc2 = new PopularCollection(popularNew);
-        ReflectionTestUtils.setField(pc2, "createdAt", now);
+        PopularCollection pc2 = new PopularCollection(popularNew, 1.2, now);
         em.persist(pc2);
 
-        PopularCollection pc3 = new PopularCollection(privatePopular);
+        PopularCollection pc3 = new PopularCollection(privatePopular, 2.0, now);
         em.persist(pc3);
 
         CommunityQueryCommand command = new CommunityQueryCommand(1, 10, null);
