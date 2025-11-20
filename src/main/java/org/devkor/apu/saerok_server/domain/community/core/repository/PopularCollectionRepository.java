@@ -19,6 +19,14 @@ public class PopularCollectionRepository {
         em.persist(popularCollection);
     }
 
+    public void saveAll(Iterable<PopularCollection> popularCollections) {
+        popularCollections.forEach(em::persist);
+    }
+
+    public void deleteAll() {
+        em.createQuery("DELETE FROM PopularCollection").executeUpdate();
+    }
+
     public boolean existsByCollectionId(Long collectionId) {
         return !em.createQuery(
                 "SELECT 1 FROM PopularCollection pc " +
