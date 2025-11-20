@@ -31,7 +31,7 @@ public class PopularCollectionBatchService {
     private static final double LAST_ACTIVITY_WINDOW_DAYS = 7.0;
     private static final double HALF_LIFE_DAYS = 3.0;
     private static final int CANDIDATE_DAYS = 120;
-    private static final int POPULAR_LIMIT = 20;
+    private static final int POPULAR_LIMIT = 5;
 
     private final PopularCollectionRepository popularCollectionRepository;
     private final TrendingCollectionRepository trendingCollectionRepository;
