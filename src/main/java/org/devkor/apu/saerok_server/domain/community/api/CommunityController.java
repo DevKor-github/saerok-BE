@@ -1,5 +1,6 @@
 package org.devkor.apu.saerok_server.domain.community.api;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +14,7 @@ import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommuni
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchUsersResponse;
 import org.devkor.apu.saerok_server.domain.community.application.CommunityQueryService;
+import org.devkor.apu.saerok_server.domain.community.application.PopularCollectionBatchService;
 import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class CommunityController {
 
     private final CommunityQueryService communityQueryService;
+    private final PopularCollectionBatchService popularCollectionBatchService;
 
     // 1) 메인 화면
     @GetMapping("/main")
@@ -119,6 +122,15 @@ public class CommunityController {
         
         Long userId = userPrincipal != null ? userPrincipal.getId() : null;
         return communityQueryService.getPopularCollections(userId, command);
+    }
+
+    // TODO: 인기글 업데이트 임시 테스트용. 추후 삭제 예정
+    @PostMapping("/popular")
+    @PermitAll
+    @Hidden
+    public void refreshPopularCollections(
+    ) {
+        popularCollectionBatchService.refreshPopularCollections();
     }
 
     // 4) 이 새 이름이 뭔가요?
