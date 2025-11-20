@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -57,21 +58,28 @@ public class PopularCollectionBatchService {
         Map<Long, Map<Long, OffsetDateTime>> lastCommentAtByUser = trendingCollectionRepository
                 .findLastCommentAtByCollectionIds(candidateIds);
 
-        List<PopularCollection> ranked = candidates.stream()
-                .map(candidate -> buildPopularCollection(candidate, now, likeCreatedAts, lastCommentAtByUser))
+        List<PopularCandidateSnapshot> ranked = candidates.stream()
+                .map(candidate -> buildSnapshot(candidate, now, likeCreatedAts, lastCommentAtByUser))
                 .filter(Objects::nonNull)
-                .sorted(Comparator.comparingDouble(PopularCollection::getTrendingScore).reversed()
-                        .thenComparing(pc -> pc.getCollection().getId()))
+                .sorted(Comparator.comparingDouble(PopularCandidateSnapshot::trendingScore).reversed()
+                        .thenComparing(snapshot -> snapshot.collection().getId()))
                 .limit(POPULAR_LIMIT)
                 .toList();
 
-        popularCollectionRepository.deleteAll();
-        popularCollectionRepository.saveAll(ranked);
+        List<PopularCandidateSnapshot> shuffled = new ArrayList<>(ranked);
+        Collections.shuffle(shuffled);
 
-        log.info("[popular] refreshed {} rows", ranked.size());
+        List<PopularCollection> rankedAndShuffled = IntStream.range(0, shuffled.size())
+                .mapToObj(idx -> toPopularCollection(shuffled.get(idx), now, idx))
+                .toList();
+
+        popularCollectionRepository.deleteAll();
+        popularCollectionRepository.saveAll(rankedAndShuffled);
+
+        log.info("[popular] refreshed {} rows", rankedAndShuffled.size());
     }
 
-    private PopularCollection buildPopularCollection(
+    private PopularCandidateSnapshot buildSnapshot(
             TrendingCollectionCandidate candidate,
             OffsetDateTime now,
             Map<Long, List<OffsetDateTime>> likeCreatedAts,
@@ -115,7 +123,7 @@ public class PopularCollectionBatchService {
         }
 
         UserBirdCollection ref = em.getReference(UserBirdCollection.class, candidate.collectionId());
-        return new PopularCollection(ref, trendingScore, now);
+        return new PopularCandidateSnapshot(ref, popularityScore, freshnessScore, trendingScore);
     }
 
     private double decay(OffsetDateTime eventTime, OffsetDateTime now) {
@@ -127,5 +135,24 @@ public class PopularCollectionBatchService {
         double seconds = Duration.between(earlier, later).getSeconds();
         double days = seconds / 86_400d;
         return Math.max(0d, days);
+    }
+
+    private PopularCollection toPopularCollection(PopularCandidateSnapshot snapshot, OffsetDateTime calculatedAt, int displayOrder) {
+        return new PopularCollection(
+                snapshot.collection(),
+                snapshot.popularityScore(),
+                snapshot.freshnessScore(),
+                snapshot.trendingScore(),
+                calculatedAt,
+                displayOrder
+        );
+    }
+
+    private record PopularCandidateSnapshot(
+            UserBirdCollection collection,
+            double popularityScore,
+            double freshnessScore,
+            double trendingScore
+    ) {
     }
 }

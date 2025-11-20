@@ -1,5 +1,3 @@
-DELETE FROM popular_collection;
-
 ALTER TABLE popular_collection
     ADD COLUMN trending_score double precision,
     ADD COLUMN calculated_at timestamp with time zone;

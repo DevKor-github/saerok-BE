@@ -25,15 +25,34 @@ public class PopularCollection extends CreatedAtOnly {
     @JoinColumn(name = "user_bird_collection_id", nullable = false)
     private UserBirdCollection collection;
 
+    @Column(name = "popularity_score", nullable = false)
+    private double popularityScore;
+
+    @Column(name = "freshness_score", nullable = false)
+    private double freshnessScore;
+
     @Column(name = "trending_score", nullable = false)
     private double trendingScore;
 
     @Column(name = "calculated_at", nullable = false)
     private OffsetDateTime calculatedAt;
 
-    public PopularCollection(UserBirdCollection collection, double trendingScore, OffsetDateTime calculatedAt) {
+    @Column(name = "display_order", nullable = false)
+    private int displayOrder;
+
+    public PopularCollection(
+            UserBirdCollection collection,
+            double popularityScore,
+            double freshnessScore,
+            double trendingScore,
+            OffsetDateTime calculatedAt,
+            int displayOrder
+    ) {
         this.collection = collection;
+        this.popularityScore = popularityScore;
+        this.freshnessScore = freshnessScore;
         this.trendingScore = trendingScore;
         this.calculatedAt = calculatedAt;
+        this.displayOrder = displayOrder;
     }
 }
