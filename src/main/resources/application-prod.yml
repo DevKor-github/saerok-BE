@@ -85,3 +85,4 @@ cors:
   allowed-origins:
     - https://saerok.app
     - https://www.saerok.app
+    - http://localhost:5173
