@@ -4,12 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
 import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
-import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationTypeResolver;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -26,8 +23,7 @@ public class FcmPushGateway implements PushGateway {
     private final FcmMessageClient fcmMessageClient;
 
     @Override
-    public void sendToUser(Long userId, NotificationSubject subject, NotificationAction action, PushMessageCommand cmd) {
-        NotificationType type = NotificationTypeResolver.from(subject, action);
+    public void sendToUser(Long userId, NotificationType type, PushMessageCommand cmd) {
 
         List<Long> deviceIds = settingRepository.findEnabledDeviceIdsByUserAndType(userId, type);
         if (deviceIds.isEmpty()) {
@@ -37,6 +33,7 @@ public class FcmPushGateway implements PushGateway {
 
         List<String> tokens = userDeviceRepository.findTokensByUserDeviceIds(deviceIds);
         if (tokens.isEmpty()) return;
+
         fcmMessageClient.sendToDevices(tokens, cmd);
     }
 
