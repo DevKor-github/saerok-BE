@@ -116,9 +116,9 @@ public class NotifyActionDsl {
                             actor.name(),
                             notificationSubject,
                             notificationAction,
+                            target.id(),
                             extras
-                    ),
-                    target
+                    )
             );
         }
     }

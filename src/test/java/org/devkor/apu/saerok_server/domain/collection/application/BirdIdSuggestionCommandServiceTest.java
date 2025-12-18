@@ -10,7 +10,6 @@ import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
@@ -57,7 +56,7 @@ class BirdIdSuggestionCommandServiceTest {
                     Map<String,Object> extras = base == null ? new HashMap<>() : new HashMap<>(base);
                     if (target.type() == TargetType.COLLECTION) {
                         extras.put("collectionId", target.id());
-                        extras.put("collectionImageUrl", null);
+                        extras.put("collectionImageUrl", "dummy");
                     }
                     return extras;
                 }
@@ -129,8 +128,7 @@ class BirdIdSuggestionCommandServiceTest {
             verify(suggestionRepo, times(2)).save(any(BirdIdSuggestion.class));
 
             ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
-            ArgumentCaptor<Target> targetCap = ArgumentCaptor.forClass(Target.class);
-            verify(publisher).push(payloadCap.capture(), targetCap.capture());
+            verify(publisher).push(payloadCap.capture());
 
             ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
             assertThat(p.subject()).isEqualTo(NotificationSubject.COLLECTION);
@@ -140,7 +138,6 @@ class BirdIdSuggestionCommandServiceTest {
             Map<String, Object> extras = p.extras();
             assertThat(extras.get("collectionId")).isEqualTo(100L);
             assertThat(extras).containsKey("collectionImageUrl");
-            assertThat(targetCap.getValue()).isEqualTo(Target.collection(100L));
         }
 
         // 이하 기존 테스트 동일 …
@@ -158,7 +155,7 @@ class BirdIdSuggestionCommandServiceTest {
             when(suggestionRepo.existsByCollectionIdAndBirdIdAndType(100L, 5L, SuggestionType.SUGGEST)).thenReturn(true);
 
             sut.suggest(1L, 100L, 5L);
-            verify(publisher, never()).push(any(), any());
+            verify(publisher, never()).push(any());
         }
 
         // 나머지 예외 케이스 테스트들 그대로…

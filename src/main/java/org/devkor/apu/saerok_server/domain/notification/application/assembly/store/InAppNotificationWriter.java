@@ -6,7 +6,6 @@ import org.devkor.apu.saerok_server.domain.notification.application.model.payloa
 import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
-import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationTypeResolver;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.springframework.stereotype.Component;
@@ -22,20 +21,19 @@ public class InAppNotificationWriter {
     private final UserRepository userRepository;
 
     public Long save(NotificationPayload payload) {
-        if (!(payload instanceof ActionNotificationPayload a)) {
-            throw new IllegalArgumentException("Unsupported payload: " + payload.getClass());
+        User recipient = userRepository.findById(payload.recipientId())
+                .orElseThrow(() -> new IllegalArgumentException("Recipient not found: " + payload.recipientId()));
+
+        NotificationType type = payload.type();
+
+        User actor = null;
+        if (payload instanceof ActionNotificationPayload a) {
+            actor = userRepository.findById(a.actorId())
+                    .orElseThrow(() -> new IllegalArgumentException("Actor not found: " + a.actorId()));
         }
 
-        User recipient = userRepository.findById(a.recipientId())
-                .orElseThrow(() -> new IllegalArgumentException("Recipient not found: " + a.recipientId()));
-
-        User actor = userRepository.findById(a.actorId())
-                .orElseThrow(() -> new IllegalArgumentException("Actor not found: " + a.actorId()));
-
-        NotificationType type = NotificationTypeResolver.from(a.subject(), a.action());
-
         Map<String, Object> payloadMap = new HashMap<>();
-        if (a.extras() != null) payloadMap.putAll(a.extras());
+        if (payload.extras() != null) payloadMap.putAll(payload.extras());
 
         Notification entity = Notification.builder()
                 .user(recipient)
