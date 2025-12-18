@@ -13,20 +13,14 @@ public class SystemNotificationRenderer implements NotificationRenderer {
             throw new IllegalArgumentException("Unsupported payload: " + p.getClass());
         }
 
-        String title = firstNonBlank(s.title(), asString(s.extras().get("title")));
-        String body  = firstNonBlank(s.body(), asString(s.extras().get("body")));
+        String title = asString(s.extras().get("pushTitle"));
+        String body  = asString(s.extras().get("pushBody"));
 
         return new RenderedMessage(nullToEmpty(title), nullToEmpty(body));
     }
 
     private static String asString(Object v) {
         return v == null ? null : String.valueOf(v);
-    }
-
-    private static String firstNonBlank(String a, String b) {
-        if (a != null && !a.isBlank()) return a;
-        if (b != null && !b.isBlank()) return b;
-        return null;
     }
 
     private static String nullToEmpty(String s) {

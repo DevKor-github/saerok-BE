@@ -36,12 +36,6 @@ public class InAppNotificationWriter {
         Map<String, Object> payloadMap = new HashMap<>();
         if (payload.extras() != null) payloadMap.putAll(payload.extras());
 
-        // SystemNotification은 기본적으로 title/body를 payload에 포함시키는 편이 FE/로그 용으로 유용
-        if (payload instanceof SystemNotificationPayload s) {
-            if (s.title() != null && !payloadMap.containsKey("title")) payloadMap.put("title", s.title());
-            if (s.body() != null && !payloadMap.containsKey("body")) payloadMap.put("body", s.body());
-        }
-
         Notification entity = Notification.builder()
                 .user(recipient)
                 .type(type)

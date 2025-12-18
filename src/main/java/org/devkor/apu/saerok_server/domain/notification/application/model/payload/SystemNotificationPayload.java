@@ -17,8 +17,6 @@ public record SystemNotificationPayload(
         Long recipientId,
         NotificationType type,
         Long relatedId,
-        String title,
-        String body,
         Map<String, Object> extras
 ) implements NotificationPayload {
 
