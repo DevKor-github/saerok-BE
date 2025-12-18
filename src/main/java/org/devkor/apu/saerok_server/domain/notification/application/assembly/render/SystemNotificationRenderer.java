@@ -1,11 +1,16 @@
 package org.devkor.apu.saerok_server.domain.notification.application.assembly.render;
 
+import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.SystemNotificationPayload;
+import org.devkor.apu.saerok_server.global.core.config.feature.NotificationMessagesConfig;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class SystemNotificationRenderer implements NotificationRenderer {
+
+    private final NotificationMessagesConfig messages;
 
     @Override
     public RenderedMessage render(NotificationPayload p) {
@@ -13,17 +18,10 @@ public class SystemNotificationRenderer implements NotificationRenderer {
             throw new IllegalArgumentException("Unsupported payload: " + p.getClass());
         }
 
-        String title = asString(s.extras().get("pushTitle"));
-        String body  = asString(s.extras().get("pushBody"));
+        NotificationMessagesConfig.Template t = messages.forType(s.type());
 
-        return new RenderedMessage(nullToEmpty(title), nullToEmpty(body));
-    }
+        var vars = NotificationTemplateRenderer.toVars(s.extras());
 
-    private static String asString(Object v) {
-        return v == null ? null : String.valueOf(v);
-    }
-
-    private static String nullToEmpty(String s) {
-        return s == null ? "" : s;
+        return NotificationTemplateRenderer.render(t, vars);
     }
 }
