@@ -3,7 +3,6 @@ package org.devkor.apu.saerok_server.domain.notification.application.assembly.re
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.global.core.config.feature.NotificationMessagesConfig;
 import org.springframework.stereotype.Component;
 
