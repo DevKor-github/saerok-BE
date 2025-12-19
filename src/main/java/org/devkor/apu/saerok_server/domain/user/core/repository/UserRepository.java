@@ -2,9 +2,11 @@ package org.devkor.apu.saerok_server.domain.user.core.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.user.core.entity.SignupStatusType;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -37,5 +39,14 @@ public class UserRepository {
                 .setParameter("nickname", nickname)
                 .getResultStream()
                 .findFirst();
+    }
+
+    public List<Long> findActiveUserIds() {
+        return em.createQuery(
+                        "SELECT u.id FROM User u " +
+                        "WHERE u.deletedAt IS NULL AND u.signupStatus <> :withdrawn",
+                        Long.class)
+                .setParameter("withdrawn", SignupStatusType.WITHDRAWN)
+                .getResultList();
     }
 }

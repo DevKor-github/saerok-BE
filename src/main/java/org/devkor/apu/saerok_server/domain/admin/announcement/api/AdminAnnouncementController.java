@@ -57,6 +57,10 @@ public class AdminAnnouncementController {
                 request.content(),
                 request.scheduledAt(),
                 request.publishNow(),
+                request.sendNotification(),
+                request.pushTitle(),
+                request.pushBody(),
+                request.inAppBody(),
                 request.images()
         );
 
@@ -84,6 +88,10 @@ public class AdminAnnouncementController {
                 request.content(),
                 request.scheduledAt(),
                 request.publishNow(),
+                request.sendNotification(),
+                request.pushTitle(),
+                request.pushBody(),
+                request.inAppBody(),
                 request.images()
         );
 
@@ -154,6 +162,10 @@ public class AdminAnnouncementController {
                 announcement.getStatus(),
                 announcement.getScheduledAt(),
                 announcement.getPublishedAt(),
+                announcement.getSendNotification(),
+                announcement.getPushTitle(),
+                announcement.getPushBody(),
+                announcement.getInAppBody(),
                 announcement.getAdmin().getNickname(),
                 images
         );

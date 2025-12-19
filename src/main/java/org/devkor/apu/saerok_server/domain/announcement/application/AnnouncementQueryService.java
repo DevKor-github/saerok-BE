@@ -18,11 +18,8 @@ import java.util.List;
 public class AnnouncementQueryService {
 
     private final AnnouncementRepository announcementRepository;
-    private final AnnouncementPublicationService publicationService;
 
     public AnnouncementListResponse listPublished() {
-        publicationService.publishDueAnnouncements();
-
         List<Announcement> published = announcementRepository.findPublishedOrderByPublishedAtDesc();
         List<AnnouncementListResponse.Item> items = published.stream()
                 .map(a -> new AnnouncementListResponse.Item(
@@ -36,8 +33,6 @@ public class AnnouncementQueryService {
     }
 
     public AnnouncementDetailResponse getPublishedAnnouncement(Long id) {
-        publicationService.publishDueAnnouncements();
-
         Announcement announcement = announcementRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 공지사항이에요."));
 

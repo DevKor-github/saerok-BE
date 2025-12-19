@@ -41,6 +41,18 @@ public class Announcement extends Auditable {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
+    @Column(name = "send_notification", nullable = false)
+    private Boolean sendNotification;
+
+    @Column(name = "push_title", length = 255)
+    private String pushTitle;
+
+    @Column(name = "push_body", columnDefinition = "TEXT")
+    private String pushBody;
+
+    @Column(name = "in_app_body", columnDefinition = "TEXT")
+    private String inAppBody;
+
     @OneToMany(mappedBy = "announcement", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AnnouncementImage> images = new ArrayList<>();
 
@@ -49,27 +61,45 @@ public class Announcement extends Auditable {
                          String content,
                          AnnouncementStatus status,
                          OffsetDateTime scheduledAt,
-                         OffsetDateTime publishedAt) {
+                         OffsetDateTime publishedAt,
+                         boolean sendNotification,
+                         String pushTitle,
+                         String pushBody,
+                         String inAppBody) {
         this.admin = admin;
         this.title = title;
         this.content = content;
         this.status = status;
         this.scheduledAt = scheduledAt;
         this.publishedAt = publishedAt;
+        this.sendNotification = sendNotification;
+        this.pushTitle = pushTitle;
+        this.pushBody = pushBody;
+        this.inAppBody = inAppBody;
     }
 
     public static Announcement createScheduled(User admin,
                                                String title,
                                                String content,
-                                               OffsetDateTime scheduledAt) {
-        return new Announcement(admin, title, content, AnnouncementStatus.SCHEDULED, scheduledAt, null);
+                                               OffsetDateTime scheduledAt,
+                                               boolean sendNotification,
+                                               String pushTitle,
+                                               String pushBody,
+                                               String inAppBody) {
+        return new Announcement(admin, title, content, AnnouncementStatus.SCHEDULED, scheduledAt, null,
+                sendNotification, pushTitle, pushBody, inAppBody);
     }
 
     public static Announcement createPublished(User admin,
                                                String title,
                                                String content,
-                                               OffsetDateTime publishedAt) {
-        return new Announcement(admin, title, content, AnnouncementStatus.PUBLISHED, null, publishedAt);
+                                               OffsetDateTime publishedAt,
+                                               boolean sendNotification,
+                                               String pushTitle,
+                                               String pushBody,
+                                               String inAppBody) {
+        return new Announcement(admin, title, content, AnnouncementStatus.PUBLISHED, null, publishedAt,
+                sendNotification, pushTitle, pushBody, inAppBody);
     }
 
     public void publish(OffsetDateTime publishedAt) {
@@ -94,6 +124,22 @@ public class Announcement extends Auditable {
         }
         if (content != null) {
             this.content = content;
+        }
+    }
+
+    public void updateNotificationOptions(boolean sendNotification,
+                                          String pushTitle,
+                                          String pushBody,
+                                          String inAppBody) {
+        this.sendNotification = sendNotification;
+        if (sendNotification) {
+            this.pushTitle = pushTitle;
+            this.pushBody = pushBody;
+            this.inAppBody = inAppBody;
+        } else {
+            this.pushTitle = null;
+            this.pushBody = null;
+            this.inAppBody = null;
         }
     }
 

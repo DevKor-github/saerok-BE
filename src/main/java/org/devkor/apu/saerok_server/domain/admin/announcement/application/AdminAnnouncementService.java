@@ -51,25 +51,42 @@ public class AdminAnnouncementService {
                                            String content,
                                            LocalDateTime scheduledAt,
                                            Boolean publishNow,
+                                           Boolean sendNotification,
+                                           String pushTitle,
+                                           String pushBody,
+                                           String inAppBody,
                                            List<AdminAnnouncementImageRequest> images) {
         validateScheduleRequest(scheduledAt, publishNow);
+        validateNotificationOptions(sendNotification, pushTitle, pushBody, inAppBody);
 
         User admin = loadAdmin(adminUserId);
         OffsetDateTime now = publicationService.nowKst();
         OffsetDateTime scheduled = publicationService.toKstOffset(scheduledAt);
 
+        boolean shouldSendNotification = sendNotification;
+        if (!shouldSendNotification) {
+            pushTitle = null;
+            pushBody = null;
+            inAppBody = null;
+        }
+
         Announcement announcement;
         if (Boolean.TRUE.equals(publishNow)) {
-            announcement = Announcement.createPublished(admin, title, content, now);
+            announcement = Announcement.createPublished(admin, title, content, now,
+                    shouldSendNotification, pushTitle, pushBody, inAppBody);
         } else {
-            announcement = Announcement.createScheduled(admin, title, content, scheduled);
-            if (scheduled != null && !scheduled.isAfter(now)) {
-                announcement.publish(scheduled);
-            }
+            announcement = Announcement.createScheduled(admin, title, content, scheduled,
+                    shouldSendNotification, pushTitle, pushBody, inAppBody);
         }
 
         announcement.replaceImages(toImages(images));
         Announcement saved = announcementRepository.save(announcement);
+
+        if (Boolean.TRUE.equals(publishNow)) {
+            publicationService.notifyPublishedAnnouncement(saved);
+        } else if (scheduled != null && !scheduled.isAfter(now)) {
+            publicationService.publishAnnouncement(saved, scheduled);
+        }
 
         recordAudit(admin, AdminAuditAction.ANNOUNCEMENT_CREATED, saved);
 
@@ -82,6 +99,10 @@ public class AdminAnnouncementService {
                                                      String content,
                                                      LocalDateTime scheduledAt,
                                                      Boolean publishNow,
+                                                     Boolean sendNotification,
+                                                     String pushTitle,
+                                                     String pushBody,
+                                                     String inAppBody,
                                                      List<AdminAnnouncementImageRequest> images) {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new NotFoundException("해당 ID의 공지사항이 존재하지 않아요."));
@@ -93,6 +114,7 @@ public class AdminAnnouncementService {
         if (!Boolean.TRUE.equals(publishNow) && scheduledAt == null && announcement.getScheduledAt() == null) {
             throw new BadRequestException("게시 예정 시각을 입력하거나 즉시 게시 옵션을 선택해 주세요.");
         }
+        validateNotificationOptions(sendNotification, pushTitle, pushBody, inAppBody);
 
         OffsetDateTime now = publicationService.nowKst();
         OffsetDateTime newSchedule = publicationService.toKstOffset(scheduledAt);
@@ -102,13 +124,14 @@ public class AdminAnnouncementService {
                 .toList();
 
         announcement.updateContent(title, content);
+        announcement.updateNotificationOptions(sendNotification, pushTitle, pushBody, inAppBody);
 
         if (Boolean.TRUE.equals(publishNow)) {
-            announcement.publish(now);
+            publicationService.publishAnnouncement(announcement, now);
         } else if (newSchedule != null) {
             announcement.reschedule(newSchedule);
             if (!newSchedule.isAfter(now)) {
-                announcement.publish(newSchedule);
+                publicationService.publishAnnouncement(announcement, newSchedule);
             }
         }
 
@@ -141,7 +164,6 @@ public class AdminAnnouncementService {
     }
 
     public List<Announcement> listAnnouncements() {
-        publicationService.publishDueAnnouncements();
         return announcementRepository.findAllOrderByLatest();
     }
 
@@ -160,6 +182,26 @@ public class AdminAnnouncementService {
     private void validateScheduleRequest(LocalDateTime scheduledAt, Boolean publishNow) {
         if (!Boolean.TRUE.equals(publishNow) && scheduledAt == null) {
             throw new BadRequestException("게시 예정 시각을 입력하거나 즉시 게시 옵션을 선택해 주세요.");
+        }
+    }
+
+    private void validateNotificationOptions(Boolean sendNotification,
+                                             String pushTitle,
+                                             String pushBody,
+                                             String inAppBody) {
+        if (sendNotification == null) {
+            throw new BadRequestException("알림 발송 여부를 입력해 주세요.");
+        }
+        if (sendNotification) {
+            if (pushTitle == null || pushTitle.isBlank()) {
+                throw new BadRequestException("푸시 알림 제목을 입력해 주세요.");
+            }
+            if (pushBody == null || pushBody.isBlank()) {
+                throw new BadRequestException("푸시 알림 본문을 입력해 주세요.");
+            }
+            if (inAppBody == null || inAppBody.isBlank()) {
+                throw new BadRequestException("인앱 알림 본문을 입력해 주세요.");
+            }
         }
     }
 

@@ -7,6 +7,7 @@ import org.devkor.apu.saerok_server.domain.notification.application.gateway.Push
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
+import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationSettingBackfillService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +22,13 @@ public class FcmPushGateway implements PushGateway {
     private final NotificationSettingRepository settingRepository;
     private final UserDeviceRepository userDeviceRepository;
     private final FcmMessageClient fcmMessageClient;
+    private final NotificationSettingBackfillService backfillService;
 
     @Override
     public void sendToUser(Long userId, NotificationType type, PushMessageCommand cmd) {
+
+        userDeviceRepository.findAllByUserId(userId)
+                .forEach(backfillService::ensureDefaults);
 
         List<Long> deviceIds = settingRepository.findEnabledDeviceIdsByUserAndType(userId, type);
         if (deviceIds.isEmpty()) {
