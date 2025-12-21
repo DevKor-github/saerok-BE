@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.notification.application.assembly.ren
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.render.NotificationRenderer.RenderedMessage;
 import org.devkor.apu.saerok_server.domain.notification.application.assembly.store.InAppNotificationWriter;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.PushTarget;
 import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationRepository;
@@ -55,5 +56,48 @@ public class NotificationPublisher {
         );
 
         pushGateway.sendToUser(payload.recipientId(), payload.type(), cmd);
+    }
+
+    /**
+     * 여러 사용자에게 알림을 발송하되, 푸시는 디바이스 기준으로 중복 제거합니다.
+     */
+    @Transactional
+    public void pushDeduplicatedByDevice(Iterable<? extends NotificationPayload> payloads) {
+        if (payloads == null) {
+            return;
+        }
+
+        java.util.List<PushTarget> targets = new java.util.ArrayList<>();
+
+        for (NotificationPayload payload : payloads) {
+            if (payload == null) {
+                continue;
+            }
+
+            if (userRepository.findById(payload.recipientId()).isEmpty()) {
+                continue;
+            }
+
+            RenderedMessage renderedMessage = renderer.render(payload);
+            Long notificationId = inAppWriter.save(payload);
+            int unread = notificationRepository.countUnreadByUserId(payload.recipientId()).intValue();
+
+            PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
+                    renderedMessage.pushTitle(),
+                    renderedMessage.pushBody(),
+                    payload.type().name(),
+                    payload.relatedId(),
+                    unread,
+                    notificationId
+            );
+
+            targets.add(new PushTarget(payload.recipientId(), payload.type(), cmd));
+        }
+
+        if (targets.isEmpty()) {
+            return;
+        }
+
+        pushGateway.sendToUsersDeduplicated(targets);
     }
 }

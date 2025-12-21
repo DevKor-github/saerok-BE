@@ -6,6 +6,7 @@ import org.devkor.apu.saerok_server.domain.notification.core.entity.Notification
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,5 +46,33 @@ public class NotifySystemService {
                 relatedId,
                 merged
         ));
+    }
+
+    /**
+     * 여러 사용자에게 시스템 알림을 전송하되, 푸시는 디바이스 기준으로 중복 제거합니다.
+     */
+    public void notifyUsersDeduplicatedPush(
+            List<Long> recipientIds,
+            NotificationType type,
+            Long relatedId,
+            Map<String, Object> extras
+    ) {
+        if (recipientIds == null || recipientIds.isEmpty()) {
+            return;
+        }
+
+        Map<String, Object> merged = new HashMap<>();
+        if (extras != null) merged.putAll(extras);
+
+        List<SystemNotificationPayload> payloads = recipientIds.stream()
+                .map(recipientId -> new SystemNotificationPayload(
+                        recipientId,
+                        type,
+                        relatedId,
+                        merged
+                ))
+                .toList();
+
+        publisher.pushDeduplicatedByDevice(payloads);
     }
 }
