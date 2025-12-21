@@ -43,5 +43,9 @@ public class NotificationMessagesConfig {
         private String pushTitle;
         private String pushBody;
         private String inAppBody;
+
+        // 배치 알림용 템플릿
+        private String batchPushTitle;
+        private String batchPushBody;
     }
 }
