@@ -9,6 +9,8 @@ import java.util.List;
 public record AnnouncementListResponse(
         List<Item> announcements
 ) {
+
+    @Schema(name = "AnnouncementListResponse.Item")
     public record Item(
             @Schema(description = "공지사항 ID", example = "1")
             Long id,
