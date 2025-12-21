@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.notification.infra.local;
 
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.PushTarget;
 import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.springframework.context.annotation.Profile;
@@ -35,6 +36,20 @@ public class LocalPushGateway implements PushGateway {
                 cmd.notificationId(),
                 cmd.unreadCount()
         );
+    }
+
+    @Override
+    public void sendToUsersDeduplicated(java.util.List<PushTarget> targets) {
+        if (targets == null || targets.isEmpty()) {
+            return;
+        }
+
+        for (PushTarget target : targets) {
+            if (target == null) {
+                continue;
+            }
+            sendToUser(target.userId(), target.type(), target.command());
+        }
     }
 
     @Override

@@ -71,15 +71,11 @@ public class AnnouncementPublicationService {
                 "inAppBody", announcement.getInAppBody()
         );
 
-        runAfterCommitOrNow(() -> {
-            for (Long userId : userIds) {
-                notifySystemService.notifyUser(
-                        userId,
-                        NotificationType.SYSTEM_PUBLISHED_ANNOUNCEMENT,
-                        announcement.getId(),
-                        extras
-                );
-            }
-        });
+        runAfterCommitOrNow(() -> notifySystemService.notifyUsersDeduplicatedPush(
+                userIds,
+                NotificationType.SYSTEM_PUBLISHED_ANNOUNCEMENT,
+                announcement.getId(),
+                extras
+        ));
     }
 }

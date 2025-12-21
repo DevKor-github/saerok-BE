@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.notification.infra.fcm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
+import org.devkor.apu.saerok_server.domain.notification.application.dto.PushTarget;
 import org.devkor.apu.saerok_server.domain.notification.application.gateway.PushGateway;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
@@ -11,7 +12,9 @@ import org.devkor.apu.saerok_server.domain.notification.core.service.Notificatio
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -40,6 +43,53 @@ public class FcmPushGateway implements PushGateway {
         if (tokens.isEmpty()) return;
 
         fcmMessageClient.sendToDevices(tokens, cmd);
+    }
+
+    @Override
+    public void sendToUsersDeduplicated(List<PushTarget> targets) {
+        if (targets == null || targets.isEmpty()) {
+            return;
+        }
+
+        Set<String> sentTokens = new HashSet<>();
+
+        for (PushTarget target : targets) {
+            if (target == null) {
+                continue;
+            }
+
+            Long userId = target.userId();
+            NotificationType type = target.type();
+            PushMessageCommand cmd = target.command();
+
+            if (userId == null || type == null || cmd == null) {
+                continue;
+            }
+
+            userDeviceRepository.findAllByUserId(userId)
+                    .forEach(backfillService::ensureDefaults);
+
+            List<Long> deviceIds = settingRepository.findEnabledDeviceIdsByUserAndType(userId, type);
+            if (deviceIds.isEmpty()) {
+                log.debug("No enabled devices for user={}, type={}", userId, type);
+                continue;
+            }
+
+            List<String> tokens = userDeviceRepository.findTokensByUserDeviceIds(deviceIds);
+            if (tokens.isEmpty()) {
+                continue;
+            }
+
+            List<String> deduped = tokens.stream()
+                    .filter(sentTokens::add)
+                    .toList();
+
+            if (deduped.isEmpty()) {
+                continue;
+            }
+
+            fcmMessageClient.sendToDevices(deduped, cmd);
+        }
     }
 
     @Override
