@@ -42,9 +42,6 @@ app:
 
 notification-batch:
   enabled: true
-  # 첫 알림 발생 시 대기 시간 (초)
   initial-window-seconds: 30
-  # 추가 알림 발생 시 최대 대기 시간 (초)
   max-window-seconds: 60
-  # Redis TTL (최대 대기 시간 + 여유)
-  ttl-seconds: 61
+  ttl-seconds: 90

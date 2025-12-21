@@ -18,7 +18,7 @@ public class NotificationBatchConfig {
     private boolean enabled = true; // 배치 처리 활성화 여부.
     private int initialWindowSeconds = 30;
     private int maxWindowSeconds = 60;
-    private int ttlSeconds = 61;
+    private int ttlSeconds = 90;
 
     @PostConstruct
     void validateConfig() {
