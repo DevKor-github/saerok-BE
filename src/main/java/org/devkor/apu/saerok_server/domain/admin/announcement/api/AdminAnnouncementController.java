@@ -17,6 +17,7 @@ import org.devkor.apu.saerok_server.domain.admin.announcement.api.dto.response.A
 import org.devkor.apu.saerok_server.domain.admin.announcement.application.AdminAnnouncementService;
 import org.devkor.apu.saerok_server.domain.admin.announcement.core.entity.Announcement;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,6 +38,7 @@ import java.util.List;
 public class AdminAnnouncementController {
 
     private final AdminAnnouncementService adminAnnouncementService;
+    private final ImageDomainService imageDomainService;
 
     @PostMapping
     @PreAuthorize("@perm.has('ADMIN_ANNOUNCEMENT_WRITE')")
@@ -44,7 +46,11 @@ public class AdminAnnouncementController {
             summary = "공지사항 생성",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "생성 성공", content = @Content(schema = @Schema(implementation = AdminAnnouncementDetailResponse.class)))
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "생성 성공",
+                            content = @Content(schema = @Schema(implementation = AdminAnnouncementDetailResponse.class))
+                    )
             }
     )
     public AdminAnnouncementDetailResponse createAnnouncement(
@@ -73,7 +79,11 @@ public class AdminAnnouncementController {
             summary = "공지사항 수정",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(schema = @Schema(implementation = AdminAnnouncementDetailResponse.class)))
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "수정 성공",
+                            content = @Content(schema = @Schema(implementation = AdminAnnouncementDetailResponse.class))
+                    )
             }
     )
     public AdminAnnouncementDetailResponse updateAnnouncement(
@@ -111,13 +121,35 @@ public class AdminAnnouncementController {
         adminAnnouncementService.deleteAnnouncement(admin.getId(), id);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("@perm.has('ADMIN_ANNOUNCEMENT_READ')")
+    @Operation(
+            summary = "공지사항 단건 조회",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공",
+                            content = @Content(schema = @Schema(implementation = AdminAnnouncementDetailResponse.class))
+                    )
+            }
+    )
+    public AdminAnnouncementDetailResponse getAnnouncement(@PathVariable Long id) {
+        Announcement announcement = adminAnnouncementService.getAnnouncement(id);
+        return toDetailResponse(announcement);
+    }
+
     @GetMapping
     @PreAuthorize("@perm.has('ADMIN_ANNOUNCEMENT_READ')")
     @Operation(
             summary = "공지사항 목록 조회",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = AdminAnnouncementListResponse.class)))
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "목록 조회 성공",
+                            content = @Content(schema = @Schema(implementation = AdminAnnouncementListResponse.class))
+                    )
             }
     )
     public AdminAnnouncementListResponse listAnnouncements() {
@@ -152,7 +184,11 @@ public class AdminAnnouncementController {
 
     private AdminAnnouncementDetailResponse toDetailResponse(Announcement announcement) {
         List<AdminAnnouncementDetailResponse.Image> images = announcement.getImages().stream()
-                .map(img -> new AdminAnnouncementDetailResponse.Image(img.getObjectKey(), img.getContentType()))
+                .map(img -> new AdminAnnouncementDetailResponse.Image(
+                        img.getObjectKey(),
+                        img.getContentType(),
+                        img.getObjectKey() != null ? imageDomainService.toUploadImageUrl(img.getObjectKey()) : null
+                ))
                 .toList();
 
         return new AdminAnnouncementDetailResponse(

@@ -23,8 +23,9 @@ public class AnnouncementRepository {
 
     public Optional<Announcement> findById(Long id) {
         List<Announcement> results = em.createQuery(
-                        "SELECT a FROM Announcement a " +
+                        "SELECT DISTINCT a FROM Announcement a " +
                                 "JOIN FETCH a.admin " +
+                                "LEFT JOIN FETCH a.images " +
                                 "WHERE a.id = :id",
                         Announcement.class)
                 .setParameter("id", id)

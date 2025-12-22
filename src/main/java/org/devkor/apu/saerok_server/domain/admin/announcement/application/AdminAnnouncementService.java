@@ -14,6 +14,7 @@ import org.devkor.apu.saerok_server.domain.admin.audit.core.repository.AdminAudi
 import org.devkor.apu.saerok_server.domain.announcement.application.AnnouncementPublicationService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
+import org.devkor.apu.saerok_server.global.shared.infra.ImageDomainService;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.image.ImageKind;
@@ -43,6 +44,7 @@ public class AdminAnnouncementService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final ImageVariantService imageVariantService;
+    private final ImageDomainService imageDomainService;
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final AnnouncementPublicationService publicationService;
 
@@ -94,16 +96,16 @@ public class AdminAnnouncementService {
     }
 
     public Announcement updateScheduledAnnouncement(Long adminUserId,
-                                                     Long announcementId,
-                                                     String title,
-                                                     String content,
-                                                     LocalDateTime scheduledAt,
-                                                     Boolean publishNow,
-                                                     Boolean sendNotification,
-                                                     String pushTitle,
-                                                     String pushBody,
-                                                     String inAppBody,
-                                                     List<AdminAnnouncementImageRequest> images) {
+                                                    Long announcementId,
+                                                    String title,
+                                                    String content,
+                                                    LocalDateTime scheduledAt,
+                                                    Boolean publishNow,
+                                                    Boolean sendNotification,
+                                                    String pushTitle,
+                                                    String pushBody,
+                                                    String inAppBody,
+                                                    List<AdminAnnouncementImageRequest> images) {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new NotFoundException("해당 ID의 공지사항이 존재하지 않아요."));
 
@@ -151,12 +153,13 @@ public class AdminAnnouncementService {
 
         List<String> imageKeys = announcement.getImages().stream()
                 .map(AnnouncementImage::getObjectKey)
+                .filter(Objects::nonNull)
                 .toList();
-
-        announcementRepository.delete(announcement);
 
         User admin = loadAdmin(adminUserId);
         recordAudit(admin, AdminAuditAction.ANNOUNCEMENT_DELETED, announcement);
+
+        announcementRepository.delete(announcement);
 
         if (!imageKeys.isEmpty()) {
             runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantService.associatedKeys(ImageKind.ANNOUNCEMENT_IMAGE, imageKeys)));
@@ -165,6 +168,11 @@ public class AdminAnnouncementService {
 
     public List<Announcement> listAnnouncements() {
         return announcementRepository.findAllOrderByLatest();
+    }
+
+    public Announcement getAnnouncement(Long announcementId) {
+        return announcementRepository.findById(announcementId)
+                .orElseThrow(() -> new NotFoundException("해당 ID의 공지사항이 존재하지 않아요."));
     }
 
     public AnnouncementImagePresignResponse generateImagePresignUrl(String contentType) {
@@ -176,7 +184,9 @@ public class AdminAnnouncementService {
         String objectKey = "announcements/" + fileName;
         String uploadUrl = imageService.generateUploadUrl(objectKey, contentType, 10);
 
-        return new AnnouncementImagePresignResponse(uploadUrl, objectKey);
+        String imageUrl = imageDomainService.toUploadImageUrl(objectKey);
+
+        return new AnnouncementImagePresignResponse(uploadUrl, objectKey, imageUrl);
     }
 
     private void validateScheduleRequest(LocalDateTime scheduledAt, Boolean publishNow) {
@@ -189,47 +199,53 @@ public class AdminAnnouncementService {
                                              String pushTitle,
                                              String pushBody,
                                              String inAppBody) {
-        if (sendNotification == null) {
-            throw new BadRequestException("알림 발송 여부를 입력해 주세요.");
+        if (!Boolean.TRUE.equals(sendNotification)) {
+            return;
         }
-        if (sendNotification) {
-            if (pushTitle == null || pushTitle.isBlank()) {
-                throw new BadRequestException("푸시 알림 제목을 입력해 주세요.");
-            }
-            if (pushBody == null || pushBody.isBlank()) {
-                throw new BadRequestException("푸시 알림 본문을 입력해 주세요.");
-            }
-            if (inAppBody == null || inAppBody.isBlank()) {
-                throw new BadRequestException("인앱 알림 본문을 입력해 주세요.");
-            }
-        }
-    }
-
-    private List<AnnouncementImage> toImages(List<AdminAnnouncementImageRequest> images) {
-        if (images == null || images.isEmpty()) return List.of();
-        return images.stream()
-                .filter(Objects::nonNull)
-                .map(image -> AnnouncementImage.of(image.objectKey(), image.contentType()))
-                .toList();
-    }
-
-    private void cleanupRemovedImages(List<String> previousKeys, List<AnnouncementImage> currentImages) {
-        Set<String> currentKeys = currentImages.stream()
-                .map(AnnouncementImage::getObjectKey)
-                .collect(Collectors.toSet());
-
-        List<String> removedKeys = previousKeys.stream()
-                .filter(key -> !currentKeys.contains(key))
-                .toList();
-
-        if (!removedKeys.isEmpty()) {
-            runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantService.associatedKeys(ImageKind.ANNOUNCEMENT_IMAGE, removedKeys)));
+        if (pushTitle == null || pushTitle.isBlank()
+                || pushBody == null || pushBody.isBlank()
+                || inAppBody == null || inAppBody.isBlank()) {
+            throw new BadRequestException("알림을 보낼 경우 푸시 제목/본문과 인앱 알림 본문을 모두 입력해 주세요.");
         }
     }
 
     private User loadAdmin(Long adminUserId) {
         return userRepository.findById(adminUserId)
-                .orElseThrow(() -> new NotFoundException("관리자 계정이 존재하지 않아요"));
+                .orElseThrow(() -> new NotFoundException("관리자 정보를 찾을 수 없어요."));
+    }
+
+    private List<AnnouncementImage> toImages(List<AdminAnnouncementImageRequest> images) {
+        if (images == null || images.isEmpty()) {
+            return List.of();
+        }
+
+        return images.stream()
+                .filter(Objects::nonNull)
+                .filter(i -> i.objectKey() != null && !i.objectKey().isBlank())
+                .map(i -> AnnouncementImage.of(i.objectKey(), i.contentType()))
+                .toList();
+    }
+
+    private void cleanupRemovedImages(List<String> previousKeys, List<AnnouncementImage> newImages) {
+        if (previousKeys == null || previousKeys.isEmpty()) {
+            return;
+        }
+
+        Set<String> currentKeys = newImages == null ? Set.of() : newImages.stream()
+                .map(AnnouncementImage::getObjectKey)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        List<String> removed = previousKeys.stream()
+                .filter(Objects::nonNull)
+                .filter(k -> !currentKeys.contains(k))
+                .toList();
+
+        if (removed.isEmpty()) {
+            return;
+        }
+
+        runAfterCommitOrNow(() -> imageService.deleteAll(imageVariantService.associatedKeys(ImageKind.ANNOUNCEMENT_IMAGE, removed)));
     }
 
     private void recordAudit(User admin, AdminAuditAction action, Announcement announcement) {
