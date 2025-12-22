@@ -15,8 +15,6 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
-import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.runAfterCommitOrNow;
-
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -71,11 +69,11 @@ public class AnnouncementPublicationService {
                 "inAppBody", announcement.getInAppBody()
         );
 
-        runAfterCommitOrNow(() -> notifySystemService.notifyUsersDeduplicatedPush(
+        notifySystemService.notifyUsersDeduplicatedPush(
                 userIds,
                 NotificationType.SYSTEM_PUBLISHED_ANNOUNCEMENT,
                 announcement.getId(),
                 extras
-        ));
+        );
     }
 }
