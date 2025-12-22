@@ -8,6 +8,9 @@ public record AnnouncementImagePresignResponse(
         String presignedUrl,
 
         @Schema(description = "업로드할 object key", example = "announcements/uuid.png")
-        String objectKey
+        String objectKey,
+
+        @Schema(description = "업로드된 이미지의 최종 접근 URL (CDN 도메인 기반)", example = "https://cdn.../announcements/uuid.png")
+        String imageUrl
 ) {
 }
