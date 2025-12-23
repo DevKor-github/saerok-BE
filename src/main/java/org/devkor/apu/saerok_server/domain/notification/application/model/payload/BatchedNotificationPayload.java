@@ -1,5 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.application.model.payload;
 
+import org.devkor.apu.saerok_server.domain.notification.application.model.batch.NotificationBatch;
 import org.devkor.apu.saerok_server.domain.notification.application.model.batch.BatchActor;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
@@ -25,6 +26,18 @@ public record BatchedNotificationPayload(
 
     public BatchedNotificationPayload {
         extras = (extras == null) ? Map.of() : Map.copyOf(extras);
+    }
+
+    public static BatchedNotificationPayload fromBatch(NotificationBatch batch) {
+        return new BatchedNotificationPayload(
+                batch.getRecipientId(),
+                batch.getSubject(),
+                batch.getAction(),
+                batch.getRelatedId(),
+                batch.getActors(),
+                batch.getActorCount(),
+                batch.getExtras()
+        );
     }
 
     @Override
