@@ -46,7 +46,9 @@ public class NotificationPublisher {
     public void push(NotificationPayload payload) {
         // 시스템 알림은 즉시 전송
         if (payload instanceof SystemNotificationPayload) {
-            sendNotification(payload);
+            prepareNotificationTarget(payload).ifPresent(target ->
+                pushGateway.sendToUser(target.userId(), target.type(), target.command())
+            );
             return;
         }
 
@@ -54,7 +56,9 @@ public class NotificationPublisher {
             BatchResult result = batchService.addToBatch(actionPayload);
 
             if (result.shouldSendImmediately()) {
-                sendNotification(payload);
+                prepareNotificationTarget(payload).ifPresent(target ->
+                    pushGateway.sendToUser(target.userId(), target.type(), target.command())
+                );
             }
             // 배치에 추가되었으면 스케줄러가 나중에 전송
         }
@@ -67,7 +71,9 @@ public class NotificationPublisher {
     public void pushBatch(NotificationBatch batch) {
         try {
             BatchedNotificationPayload payload = BatchedNotificationPayload.fromBatch(batch);
-            sendNotification(payload);
+            prepareNotificationTarget(payload).ifPresent(target ->
+                pushGateway.sendToUser(target.userId(), target.type(), target.command())
+            );
 
         } catch (Exception e) {
             log.error("Failed to send batch notification: key={}", batch.getKey(), e);
@@ -77,15 +83,14 @@ public class NotificationPublisher {
         }
     }
 
-    private void sendNotification(NotificationPayload payload) {
+    private java.util.Optional<PushTarget> prepareNotificationTarget(NotificationPayload payload) {
         // recipient가 삭제/미존재면 조용히 무시
         if (userRepository.findById(payload.recipientId()).isEmpty()) {
-            return;
+            return java.util.Optional.empty();
         }
 
         RenderedMessage renderedMessage = renderer.render(payload);
         Long notificationId = inAppWriter.save(payload);
-
         int unread = notificationRepository.countUnreadByUserId(payload.recipientId()).intValue();
 
         PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
@@ -97,7 +102,7 @@ public class NotificationPublisher {
                 notificationId
         );
 
-        pushGateway.sendToUser(payload.recipientId(), payload.type(), cmd);
+        return java.util.Optional.of(new PushTarget(payload.recipientId(), payload.type(), cmd));
     }
 
     /**
@@ -116,24 +121,7 @@ public class NotificationPublisher {
                 continue;
             }
 
-            if (userRepository.findById(payload.recipientId()).isEmpty()) {
-                continue;
-            }
-
-            RenderedMessage renderedMessage = renderer.render(payload);
-            Long notificationId = inAppWriter.save(payload);
-            int unread = notificationRepository.countUnreadByUserId(payload.recipientId()).intValue();
-
-            PushMessageCommand cmd = PushMessageCommand.createPushMessageCommand(
-                    renderedMessage.pushTitle(),
-                    renderedMessage.pushBody(),
-                    payload.type().name(),
-                    payload.relatedId(),
-                    unread,
-                    notificationId
-            );
-
-            targets.add(new PushTarget(payload.recipientId(), payload.type(), cmd));
+            prepareNotificationTarget(payload).ifPresent(targets::add);
         }
 
         if (targets.isEmpty()) {
