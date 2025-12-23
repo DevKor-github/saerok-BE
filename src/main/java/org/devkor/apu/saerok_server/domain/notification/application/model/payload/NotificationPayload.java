@@ -10,6 +10,7 @@ import java.util.Map;
  * <ul>
  *   <li><b>ActionNotificationPayload</b>: 다른 사용자(actor)의 행동에 의해 발생하는 알림</li>
  *   <li><b>SystemNotificationPayload</b>: 공지/점검 등 시스템 차원에서 발생하는 알림</li>
+ *   <li><b>BatchedNotificationPayload</b>: 여러 사용자의 행동을 모은 배치 알림</li>
  * </ul>
  *
  * <p>
@@ -18,7 +19,7 @@ import java.util.Map;
  * </p>
  */
 public sealed interface NotificationPayload
-        permits ActionNotificationPayload, SystemNotificationPayload {
+        permits ActionNotificationPayload, SystemNotificationPayload, BatchedNotificationPayload {
 
     /**
      * 클라이언트에서 식별 가능한 최종 알림 타입.

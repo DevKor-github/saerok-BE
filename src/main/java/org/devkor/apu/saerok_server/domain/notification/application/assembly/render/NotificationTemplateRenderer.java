@@ -17,6 +17,12 @@ final class NotificationTemplateRenderer {
         return new RenderedMessage(title, body);
     }
 
+    static RenderedMessage renderBatch(NotificationMessagesConfig.Template template, Map<String, String> vars) {
+        String title = renderTemplate(template.getBatchPushTitle(), vars);
+        String body = renderTemplate(template.getBatchPushBody(), vars);
+        return new RenderedMessage(title, body);
+    }
+
     static Map<String, String> toVars(Map<String, Object> extras) {
         Map<String, String> vars = new HashMap<>();
         extras.forEach((k, v) -> vars.put(k, v == null ? "" : String.valueOf(v)));
