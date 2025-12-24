@@ -1,5 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.application;
 
+import com.google.common.util.concurrent.Striped;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.application.model.batch.*;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.locks.Lock;
 
 /**
  * 알림 배치 관리 서비스.
@@ -20,6 +22,7 @@ public class NotificationBatchService {
 
     private final NotificationBatchStore batchStore;
     private final NotificationBatchConfig batchConfig;
+    private final Striped<Lock> stripedLocks = Striped.lock(256);
 
     /**
      * 배치에 알림 추가.
@@ -40,7 +43,9 @@ public class NotificationBatchService {
 
         BatchActor actor = BatchActor.of(payload.actorId(), payload.actorName());
 
-        synchronized (this.getLockKey(key)) {
+        Lock lock = stripedLocks.get(key.toRedisKey());
+        lock.lock();
+        try {
             Optional<NotificationBatch> existingBatch = batchStore.findBatch(key);
 
             if (existingBatch.isPresent()) {
@@ -65,6 +70,8 @@ public class NotificationBatchService {
 
                 return BatchResult.created(newBatch);
             }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -74,13 +81,5 @@ public class NotificationBatchService {
 
     public void deleteBatch(BatchKey key) {
         batchStore.deleteBatch(key);
-    }
-
-    /**
-     * 동시성 제어를 위한 락 키 생성.
-     * 같은 배치 키에 대한 동시 접근을 막기 위해 String 인터닝 활용.
-     */
-    private String getLockKey(BatchKey key) {
-        return key.toRedisKey().intern();
     }
 }
