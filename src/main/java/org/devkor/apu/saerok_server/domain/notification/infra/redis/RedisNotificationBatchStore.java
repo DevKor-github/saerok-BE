@@ -32,6 +32,7 @@ public class RedisNotificationBatchStore implements NotificationBatchStore {
      * member: 배치 데이터 Redis 키
      */
     private static final String EXPIRY_INDEX = "notification:batch:expiry_index";
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
@@ -67,7 +68,7 @@ public class RedisNotificationBatchStore implements NotificationBatchStore {
             redisTemplate.opsForValue().set(redisKey, json, Duration.ofSeconds(batchConfig.getTtlSeconds()));
 
             long expiryTimestamp = batch.getExpiresAt()
-                    .atZone(ZoneId.systemDefault())
+                    .atZone(KST)
                     .toInstant()
                     .toEpochMilli();
 
@@ -86,6 +87,9 @@ public class RedisNotificationBatchStore implements NotificationBatchStore {
         redisTemplate.opsForZSet().remove(EXPIRY_INDEX, redisKey);
     }
 
+    /**
+     * Sorted Set을 사용한 만료 배치 조회.
+     */
     @Override
     public List<NotificationBatch> findExpiredBatches() {
         List<NotificationBatch> expiredBatches = new ArrayList<>();
@@ -95,7 +99,7 @@ public class RedisNotificationBatchStore implements NotificationBatchStore {
 
             // Sorted Set에서 score가 현재 시간 이하인 키들만 조회
             Set<String> expiredKeys = redisTemplate.opsForZSet()
-                    .rangeByScore(EXPIRY_INDEX, 0, now);
+                    .rangeByScore(EXPIRY_INDEX, 0, now, 0, batchConfig.getMaxBatchesPerTick());
 
             if (expiredKeys == null || expiredKeys.isEmpty()) {
                 return expiredBatches;
