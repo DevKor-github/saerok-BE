@@ -88,6 +88,10 @@ public class AdminRoleQueryService {
                 .toList();
     }
 
+    public List<Permission> listPermissions() {
+        return permissionRepository.findAll();
+    }
+
     public record MyRoleInfo(List<Role> roles, List<Permission> permissions) {
     }
 
