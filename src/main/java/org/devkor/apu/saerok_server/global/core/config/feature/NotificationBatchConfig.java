@@ -19,6 +19,7 @@ public class NotificationBatchConfig {
     private int initialWindowSeconds = 30;
     private int maxWindowSeconds = 60;
     private int ttlSeconds = 90;
+    private int maxBatchesPerTick = 300; // 한 번의 스케줄러 틱에서 처리할 최대 배치 수
 
     @PostConstruct
     void validateConfig() {
@@ -39,6 +40,9 @@ public class NotificationBatchConfig {
                     String.format("notification-batch.ttl-seconds (%d) > max-window-seconds (%d) 이어야 합니다",
                             ttlSeconds, maxWindowSeconds)
             );
+        }
+        if (maxBatchesPerTick <= 0) {
+            throw new IllegalStateException("notification-batch.max-batches-per-tick은 양수여야합니다");
         }
     }
 }

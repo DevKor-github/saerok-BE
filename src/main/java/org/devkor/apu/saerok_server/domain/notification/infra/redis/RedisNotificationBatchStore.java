@@ -8,15 +8,15 @@ import org.devkor.apu.saerok_server.domain.notification.application.model.batch.
 import org.devkor.apu.saerok_server.domain.notification.application.model.batch.NotificationBatch;
 import org.devkor.apu.saerok_server.domain.notification.application.store.NotificationBatchStore;
 import org.devkor.apu.saerok_server.global.core.config.feature.NotificationBatchConfig;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Redis 기반 알림 배치 저장소 구현체.
@@ -26,8 +26,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RedisNotificationBatchStore implements NotificationBatchStore {
 
-    private static final String KEY_PREFIX = "notification:batch:";
-    private static final String KEY_PATTERN = KEY_PREFIX + "*";
+    /**
+     * 만료 시간 인덱스용 Sorted Set.
+     * score: 만료 시간 타임스탬프 (밀리초)
+     * member: 배치 데이터 Redis 키
+     */
+    private static final String EXPIRY_INDEX = "notification:batch:expiry_index";
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
@@ -62,6 +67,13 @@ public class RedisNotificationBatchStore implements NotificationBatchStore {
 
             redisTemplate.opsForValue().set(redisKey, json, Duration.ofSeconds(batchConfig.getTtlSeconds()));
 
+            long expiryTimestamp = batch.getExpiresAt()
+                    .atZone(KST)
+                    .toInstant()
+                    .toEpochMilli();
+
+            redisTemplate.opsForZSet().add(EXPIRY_INDEX, redisKey, expiryTimestamp);
+
         } catch (JsonProcessingException e) {
             log.error("Redis에서 배치 데이터 직렬화에 실패했습니다: {}", batch.getKey(), e);
             throw new IllegalStateException("Redis에 배치 저장하는 것에 실패했습니다", e);
@@ -72,24 +84,33 @@ public class RedisNotificationBatchStore implements NotificationBatchStore {
     public void deleteBatch(BatchKey key) {
         String redisKey = key.toRedisKey();
         redisTemplate.delete(redisKey);
+        redisTemplate.opsForZSet().remove(EXPIRY_INDEX, redisKey);
     }
 
+    /**
+     * Sorted Set을 사용한 만료 배치 조회.
+     */
     @Override
     public List<NotificationBatch> findExpiredBatches() {
         List<NotificationBatch> expiredBatches = new ArrayList<>();
 
-        ScanOptions scanOptions = ScanOptions.scanOptions()
-                .match(KEY_PATTERN)
-                .count(100)
-                .build();
+        try {
+            long now = System.currentTimeMillis();
 
-        try (Cursor<String> cursor = redisTemplate.scan(scanOptions)) {
-            while (cursor.hasNext()) {
-                String redisKey = cursor.next();
+            // Sorted Set에서 score가 현재 시간 이하인 키들만 조회
+            Set<String> expiredKeys = redisTemplate.opsForZSet()
+                    .rangeByScore(EXPIRY_INDEX, 0, now, 0, batchConfig.getMaxBatchesPerTick());
+
+            if (expiredKeys == null || expiredKeys.isEmpty()) {
+                return expiredBatches;
+            }
+
+            // 만료된 키들의 데이터 조회
+            for (String redisKey : expiredKeys) {
                 String json = redisTemplate.opsForValue().get(redisKey);
 
                 if (json == null) {
-                    // 키가 스캔 후 만료되었을 수 있음
+                    redisTemplate.opsForZSet().remove(EXPIRY_INDEX, redisKey);
                     continue;
                 }
 
@@ -99,14 +120,16 @@ public class RedisNotificationBatchStore implements NotificationBatchStore {
 
                     if (batch.isExpired()) {
                         expiredBatches.add(batch);
+                        redisTemplate.opsForZSet().remove(EXPIRY_INDEX, redisKey);
                     }
 
                 } catch (JsonProcessingException e) {
                     log.error("Redis 키 역직렬화에 실패했습니다: {}", redisKey, e);
+                    redisTemplate.opsForZSet().remove(EXPIRY_INDEX, redisKey);
                 }
             }
         } catch (Exception e) {
-            log.error("만료된 배치 스캔에 실패했습니다.", e);
+            log.error("만료된 배치 조회에 실패했습니다.", e);
         }
 
         return expiredBatches;
