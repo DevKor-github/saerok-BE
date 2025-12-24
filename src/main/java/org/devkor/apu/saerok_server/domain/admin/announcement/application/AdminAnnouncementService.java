@@ -181,7 +181,7 @@ public class AdminAnnouncementService {
         }
 
         String fileName = UUID.randomUUID().toString();
-        String objectKey = "announcements/" + fileName;
+        String objectKey = "announcement-images/" + fileName;
         String uploadUrl = imageService.generateUploadUrl(objectKey, contentType, 10);
 
         String imageUrl = imageDomainService.toUploadImageUrl(objectKey);
