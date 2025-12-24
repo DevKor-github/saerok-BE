@@ -81,6 +81,9 @@ dependencies {
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// Guava (동시성 제어용)
+	implementation 'com.google.guava:guava:33.4.0-jre'
 }
 
 tasks.named('test') {

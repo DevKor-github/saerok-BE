@@ -7,5 +7,6 @@ public enum AdminAuditTargetType {
     COMMENT,
     AD,
     SLOT,
-    AD_PLACEMENT
+    AD_PLACEMENT,
+    ANNOUNCEMENT
 }

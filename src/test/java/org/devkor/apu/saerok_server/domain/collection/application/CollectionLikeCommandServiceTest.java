@@ -7,7 +7,6 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
@@ -49,7 +48,7 @@ class CollectionLikeCommandServiceTest {
                     Map<String,Object> extras = base == null ? new HashMap<>() : new HashMap<>(base);
                     if (target.type() == TargetType.COLLECTION) {
                         extras.put("collectionId", target.id());
-                        extras.put("collectionImageUrl", null);
+                        extras.put("collectionImageUrl", "dummy");
                     }
                     return extras;
                 }
@@ -83,8 +82,7 @@ class CollectionLikeCommandServiceTest {
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
 
         ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
-        ArgumentCaptor<Target> targetCap = ArgumentCaptor.forClass(Target.class);
-        verify(publisher).push(payloadCap.capture(), targetCap.capture());
+        verify(publisher).push(payloadCap.capture());
 
         ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
         assertEquals(NotificationSubject.COLLECTION, p.subject());
@@ -94,7 +92,6 @@ class CollectionLikeCommandServiceTest {
         Map<String, Object> extras = p.extras();
         assertEquals(collectionId, extras.get("collectionId"));
         assertTrue(extras.containsKey("collectionImageUrl"));
-        assertEquals(Target.collection(collectionId), targetCap.getValue());
     }
 
     @Test

@@ -81,6 +81,23 @@
         - 관련 메서드:
             - AdminAdController.deleteSlot()
 
+## 공지사항 (Announcement)
+
+- KEY: ADMIN_ANNOUNCEMENT_READ
+    - 설명: 관리자 공지사항 조회
+        - 현재 허용된 Role: TEAM_MEMBER, ADMIN_EDITOR
+        - 관련 메서드:
+            - AdminAnnouncementController.listAnnouncements()
+
+- KEY: ADMIN_ANNOUNCEMENT_WRITE
+    - 설명: 관리자 공지사항 생성/수정/삭제
+        - 현재 허용된 Role: ADMIN_EDITOR
+        - 관련 메서드:
+            - AdminAnnouncementController.createAnnouncement()
+            - AdminAnnouncementController.updateAnnouncement()
+            - AdminAnnouncementController.deleteAnnouncement()
+            - AdminAnnouncementController.generateImagePresignUrl()
+
 ## 관리자 역할 관리 (Role Management)
 
 - KEY: ADMIN_ROLE_MY_READ

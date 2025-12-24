@@ -62,6 +62,14 @@ public class UserDeviceRepository {
         
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
     }
+
+    public List<UserDevice> findAllByUserId(Long userId) {
+        return em.createQuery(
+                        "SELECT ud FROM UserDevice ud WHERE ud.user.id = :userId",
+                        UserDevice.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
     
     // UserDevice ID 목록으로 FCM 토큰 목록 조회
     public List<String> findTokensByUserDeviceIds(List<Long> userDeviceIds) {

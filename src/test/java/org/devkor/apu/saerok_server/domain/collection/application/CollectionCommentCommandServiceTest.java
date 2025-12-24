@@ -11,7 +11,6 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
@@ -84,7 +83,7 @@ class CollectionCommentCommandServiceTest {
                     Map<String,Object> extras = base == null ? new HashMap<>() : new HashMap<>(base);
                     if (target.type() == TargetType.COLLECTION) {
                         extras.put("collectionId", target.id());
-                        extras.put("collectionImageUrl", null);
+                        extras.put("collectionImageUrl", "dummy");
                     }
                     return extras;
                 }
@@ -119,8 +118,7 @@ class CollectionCommentCommandServiceTest {
             verify(commentRepo).save(any());
 
             ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
-            ArgumentCaptor<Target> targetCap = ArgumentCaptor.forClass(Target.class);
-            verify(publisher).push(payloadCap.capture(), targetCap.capture());
+            verify(publisher).push(payloadCap.capture());
 
             ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
             assertThat(p.subject()).isEqualTo(NotificationSubject.COLLECTION);
@@ -131,7 +129,6 @@ class CollectionCommentCommandServiceTest {
             assertThat(extras.get("collectionId")).isEqualTo(COLL_ID);
             assertThat(extras.get("comment")).isEqualTo("Nice");
             assertThat(extras).containsKey("collectionImageUrl");
-            assertThat(targetCap.getValue()).isEqualTo(Target.collection(COLL_ID));
         }
 
         @Test @DisplayName("사용자 없음 → NotFoundException")

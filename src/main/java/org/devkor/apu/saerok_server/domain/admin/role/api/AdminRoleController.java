@@ -14,6 +14,7 @@ import org.devkor.apu.saerok_server.domain.admin.role.api.dto.request.AssignRole
 import org.devkor.apu.saerok_server.domain.admin.role.api.dto.request.CreateRoleRequest;
 import org.devkor.apu.saerok_server.domain.admin.role.api.dto.request.UpdateRolePermissionsRequest;
 import org.devkor.apu.saerok_server.domain.admin.role.api.dto.response.AdminMyRoleResponse;
+import org.devkor.apu.saerok_server.domain.admin.role.api.dto.response.AdminPermissionListResponse;
 import org.devkor.apu.saerok_server.domain.admin.role.api.dto.response.AdminRoleListResponse;
 import org.devkor.apu.saerok_server.domain.admin.role.api.dto.response.AdminRoleUserListResponse;
 import org.devkor.apu.saerok_server.domain.admin.role.api.dto.response.AdminUserRoleResponse;
@@ -84,6 +85,18 @@ public class AdminRoleController {
                 .map(result -> toRoleDetail(result.role(), result.permissions()))
                 .toList();
         return new AdminRoleListResponse(roles);
+    }
+
+    @GetMapping("/permissions")
+    @PreAuthorize("@perm.has('ADMIN_ROLE_WRITE')")
+    @Operation(
+            summary = "권한 목록 조회",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = AdminPermissionListResponse.class)))
+    )
+    public AdminPermissionListResponse listPermissions() {
+        List<PermissionSummaryResponse> permissions = mapPermissions(queryService.listPermissions());
+        return new AdminPermissionListResponse(permissions);
     }
 
     @PostMapping

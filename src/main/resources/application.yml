@@ -39,3 +39,10 @@ firebase:
 app:
   cookie:
     secure: false
+
+notification-batch:
+  enabled: true
+  initial-window-seconds: 30
+  max-window-seconds: 60
+  ttl-seconds: 90
+  max-batches-per-tick: 300
