@@ -7,6 +7,7 @@ import org.devkor.apu.saerok_server.domain.admin.announcement.core.repository.An
 import org.devkor.apu.saerok_server.domain.announcement.api.dto.response.AnnouncementDetailResponse;
 import org.devkor.apu.saerok_server.domain.announcement.api.dto.response.AnnouncementListResponse;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,7 @@ public class AnnouncementQueryService {
                 .map(a -> new AnnouncementListResponse.Item(
                         a.getId(),
                         a.getTitle(),
-                        a.getPublishedAt()
+                        OffsetDateTimeLocalizer.toSeoulLocalDateTime(a.getPublishedAt())
                 ))
                 .toList();
 
@@ -44,7 +45,7 @@ public class AnnouncementQueryService {
                 announcement.getId(),
                 announcement.getTitle(),
                 announcement.getContent(),
-                announcement.getPublishedAt()
+                OffsetDateTimeLocalizer.toSeoulLocalDateTime(announcement.getPublishedAt())
         );
     }
 }

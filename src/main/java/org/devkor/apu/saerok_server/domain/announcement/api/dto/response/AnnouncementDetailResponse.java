@@ -2,7 +2,7 @@ package org.devkor.apu.saerok_server.domain.announcement.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Schema(description = "공지사항 상세 응답")
 public record AnnouncementDetailResponse(
@@ -15,7 +15,7 @@ public record AnnouncementDetailResponse(
         @Schema(description = "공지사항 본문 HTML", example = "<p>내용</p>")
         String content,
 
-        @Schema(description = "게시 시각", example = "2024-10-12T09:00:00+09:00")
-        OffsetDateTime publishedAt
+    @Schema(description = "게시 시각", example = "2024-10-12T09:00:00")
+    LocalDateTime publishedAt
 ) {
 }
