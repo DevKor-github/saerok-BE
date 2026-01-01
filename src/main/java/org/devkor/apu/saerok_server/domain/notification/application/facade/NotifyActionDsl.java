@@ -101,11 +101,13 @@ public class NotifyActionDsl {
         public void to(Long recipientId) {
             var notificationSubject = switch (target.type()) {
                 case COLLECTION -> NotificationSubject.COLLECTION;
+                case COMMENT -> NotificationSubject.COMMENT;
             };
 
             var notificationAction = switch (action) {
                 case LIKE -> NotificationAction.LIKE;
                 case COMMENT -> NotificationAction.COMMENT;
+                case REPLY -> NotificationAction.REPLY;
                 case SUGGEST_BIRD_ID -> NotificationAction.SUGGEST_BIRD_ID;
             };
 
