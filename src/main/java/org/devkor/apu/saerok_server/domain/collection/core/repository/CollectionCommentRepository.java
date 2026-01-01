@@ -26,7 +26,9 @@ public class CollectionCommentRepository {
 
     public List<UserBirdCollectionComment> findByCollectionId(Long collectionId) {
         return em.createQuery(
-                        "SELECT c FROM UserBirdCollectionComment c " +
+                        "SELECT DISTINCT c FROM UserBirdCollectionComment c " +
+                                "LEFT JOIN FETCH c.user " +
+                                "LEFT JOIN FETCH c.parent " +
                                 "WHERE c.collection.id = :collectionId " +
                                 "ORDER BY c.createdAt ASC",
                         UserBirdCollectionComment.class)

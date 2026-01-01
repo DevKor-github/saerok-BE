@@ -12,9 +12,9 @@ import java.util.Map;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CollectionCommentWebMapper {
 
-    /* 엔티티 목록 → 래핑된 응답 */
+    /* 엔티티 목록 → 래핑된 응답 (원댓글 + 대댓글 트리 구조) */
     default GetCollectionCommentsResponse toGetCollectionCommentsResponse(
-            List<UserBirdCollectionComment> entities, 
+            List<UserBirdCollectionComment> entities,
             Map<Long, Long> likeCounts,
             Map<Long, Boolean> likeStatuses,
             Map<Long, Boolean> mineStatuses,
@@ -47,36 +47,64 @@ public interface CollectionCommentWebMapper {
                 throw new IllegalStateException("thumbnailProfileImageUrls에 사용자 ID " + userId + "가 없습니다.");
             }
         }
-        
-        List<GetCollectionCommentsResponse.Item> items = entities.stream()
+
+        // 1. 원댓글과 대댓글 분리
+        List<UserBirdCollectionComment> rootComments = entities.stream()
+                .filter(c -> c.getParent() == null)
+                .toList();
+
+        Map<Long, List<UserBirdCollectionComment>> repliesByParentId = entities.stream()
+                .filter(c -> c.getParent() != null)
+                .collect(java.util.stream.Collectors.groupingBy(c -> c.getParent().getId()));
+
+        // 2. 원댓글을 Item으로 변환하고 대댓글 추가
+        List<GetCollectionCommentsResponse.Item> items = rootComments.stream()
                 .map(comment -> {
-                    Long commentId = comment.getId();
-                    Long userId = comment.getUser().getId();
-                    int likeCount = likeCounts.get(commentId).intValue();
-                    Boolean isLiked = likeStatuses.get(commentId);
-                    Boolean isMine = mineStatuses.get(commentId);
-                    String profileImageUrl = profileImageUrls.get(userId);
-                    String thumbnailProfileImageUrl = thumbnailProfileImageUrls.get(userId);
-                    return toCommentItem(comment, likeCount, isLiked, isMine, profileImageUrl, thumbnailProfileImageUrl);
+                    // 대댓글 목록 생성
+                    List<GetCollectionCommentsResponse.Item> replies = repliesByParentId.getOrDefault(comment.getId(), List.of())
+                            .stream()
+                            .sorted(java.util.Comparator.comparing(UserBirdCollectionComment::getCreatedAt))
+                            .map(reply -> buildCommentItem(reply, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, List.of()))
+                            .toList();
+
+                    return buildCommentItem(comment, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, replies);
                 })
                 .toList();
         return new GetCollectionCommentsResponse(items, isMyCollection);
     }
 
-    /* 단일 엔티티 → Item DTO */
-    default GetCollectionCommentsResponse.Item toCommentItem(UserBirdCollectionComment c, int likeCount, Boolean isLiked, Boolean isMine, String profileImageUrl, String thumbnailProfileImageUrl) {
+    /* 댓글 엔티티 → Item DTO (공통 매핑 로직) */
+    private GetCollectionCommentsResponse.Item buildCommentItem(
+            UserBirdCollectionComment c,
+            Map<Long, Long> likeCounts,
+            Map<Long, Boolean> likeStatuses,
+            Map<Long, Boolean> mineStatuses,
+            Map<Long, String> profileImageUrls,
+            Map<Long, String> thumbnailProfileImageUrls,
+            List<GetCollectionCommentsResponse.Item> replies) {
+        Long commentId = c.getId();
+        Long userId = c.getUser().getId();
+        int likeCount = likeCounts.get(commentId).intValue();
+        Boolean isLiked = likeStatuses.get(commentId);
+        Boolean isMine = mineStatuses.get(commentId);
+        String profileImageUrl = profileImageUrls.get(userId);
+        String thumbnailProfileImageUrl = thumbnailProfileImageUrls.get(userId);
+
         return new GetCollectionCommentsResponse.Item(
-                c.getId(),
-                c.getUser().getId(),
+                commentId,
+                userId,
                 c.getUser().getNickname(),
                 profileImageUrl,
                 thumbnailProfileImageUrl,
                 c.getContent(),
+                c.getStatus().name(),
+                c.getParent() != null ? c.getParent().getId() : null,
                 likeCount,
                 isLiked,
                 isMine,
                 OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getCreatedAt()),
-                OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getUpdatedAt())
+                OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getUpdatedAt()),
+                replies
         );
     }
 }
