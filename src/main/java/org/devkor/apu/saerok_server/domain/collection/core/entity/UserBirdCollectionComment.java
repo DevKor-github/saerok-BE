@@ -61,4 +61,12 @@ public class UserBirdCollectionComment extends Auditable {
         this.status = CommentStatus.BANNED;
     }
 
+    public boolean isActive() {
+        return this.status == CommentStatus.ACTIVE;
+    }
+
+    public boolean isReply() {
+        return this.parent != null;
+    }
+
 }
