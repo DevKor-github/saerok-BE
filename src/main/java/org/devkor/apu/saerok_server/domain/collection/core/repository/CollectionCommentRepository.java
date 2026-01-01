@@ -36,7 +36,9 @@ public class CollectionCommentRepository {
 
     public long countByCollectionId(Long collectionId) {
         return em.createQuery(
-                        "SELECT COUNT(c) FROM UserBirdCollectionComment c WHERE c.collection.id = :collectionId",
+                        "SELECT COUNT(c) FROM UserBirdCollectionComment c " +
+                                "WHERE c.collection.id = :collectionId " +
+                                "AND c.status = org.devkor.apu.saerok_server.domain.collection.core.entity.CommentStatus.ACTIVE",
                         Long.class)
                 .setParameter("collectionId", collectionId)
                 .getSingleResult();
@@ -54,7 +56,7 @@ public class CollectionCommentRepository {
     /* ────────────────────────────── 성능 최적화: 배치 메서드 ────────────────────────────── */
 
     /**
-     * 여러 컬렉션의 댓글 수를 한 번에 조회
+     * 여러 컬렉션의 ACTIVE 댓글 수를 한 번에 조회
      * 반환 맵은 요청한 ID를 모두 포함하며, 없으면 0으로 채운다.
      */
     public Map<Long, Long> countByCollectionIds(List<Long> collectionIds) {
@@ -66,6 +68,7 @@ public class CollectionCommentRepository {
                         "SELECT c.collection.id, COUNT(c) " +
                                 "FROM UserBirdCollectionComment c " +
                                 "WHERE c.collection.id IN :ids " +
+                                "AND c.status = org.devkor.apu.saerok_server.domain.collection.core.entity.CommentStatus.ACTIVE " +
                                 "GROUP BY c.collection.id",
                         Object[].class)
                 .setParameter("ids", collectionIds)
