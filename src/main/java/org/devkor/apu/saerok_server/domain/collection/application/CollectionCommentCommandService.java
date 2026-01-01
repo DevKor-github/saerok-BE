@@ -70,36 +70,24 @@ public class CollectionCommentCommandService {
         commentRepository.save(comment);
 
         // 알림 전송
-        if (parentComment != null) {
-            // 1. 원댓글 작성자에게 REPLY 알림 (자신의 댓글이 아닌 경우)
-            if (!parentComment.getUser().getId().equals(userId)) {
-                notifyAction
-                        .by(Actor.of(userId, user.getNickname()))
-                        .on(Target.comment(parentComment.getId()))
-                        .did(ActionKind.REPLY)
-                        .comment(req.content())
-                        .to(parentComment.getUser().getId());
-            }
+        // 대댓글인 경우: 원댓글 작성자에게 REPLY 알림
+        if (parentComment != null && !parentComment.getUser().getId().equals(userId)) {
+            notifyAction
+                    .by(Actor.of(userId, user.getNickname()))
+                    .on(Target.comment(parentComment.getId()))
+                    .did(ActionKind.REPLY)
+                    .comment(req.content())
+                    .to(parentComment.getUser().getId());
+        }
 
-            // 2. 컬렉션 작성자에게 COMMENT 알림 (자신의 컬렉션이 아닌 경우)
-            if (!collection.getUser().getId().equals(userId)) {
-                notifyAction
-                        .by(Actor.of(userId, user.getNickname()))
-                        .on(Target.collection(collectionId))
-                        .did(ActionKind.COMMENT)
-                        .comment(req.content())
-                        .to(collection.getUser().getId());
-            }
-        } else {
-            // 원댓글: 컬렉션 소유자에게 알림 (자신의 컬렉션이 아닌 경우)
-            if (!collection.getUser().getId().equals(userId)) {
-                notifyAction
-                        .by(Actor.of(userId, user.getNickname()))
-                        .on(Target.collection(collectionId))
-                        .did(ActionKind.COMMENT)
-                        .comment(req.content())
-                        .to(collection.getUser().getId());
-            }
+        // 컬렉션 작성자에게 COMMENT 알림 (원댓글/대댓글 공통)
+        if (!collection.getUser().getId().equals(userId)) {
+            notifyAction
+                    .by(Actor.of(userId, user.getNickname()))
+                    .on(Target.collection(collectionId))
+                    .did(ActionKind.COMMENT)
+                    .comment(req.content())
+                    .to(collection.getUser().getId());
         }
         
         return new CreateCollectionCommentResponse(comment.getId());
