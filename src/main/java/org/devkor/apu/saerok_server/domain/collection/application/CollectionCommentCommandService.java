@@ -147,6 +147,11 @@ public class CollectionCommentCommandService {
             throw new ForbiddenException("해당 댓글에 대한 삭제 권한이 없어요");
         }
 
-        commentRepository.remove(comment);
+        // 대댓글이 있는 경우 soft delete, 없으면 hard delete
+        if (commentRepository.hasReplies(commentId)) {
+            comment.softDelete();
+        } else {
+            commentRepository.remove(comment);
+        }
     }
 }

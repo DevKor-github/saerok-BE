@@ -42,6 +42,15 @@ public class CollectionCommentRepository {
                 .getSingleResult();
     }
 
+    public boolean hasReplies(Long commentId) {
+        Long count = em.createQuery(
+                        "SELECT COUNT(c) FROM UserBirdCollectionComment c WHERE c.parent.id = :commentId",
+                        Long.class)
+                .setParameter("commentId", commentId)
+                .getSingleResult();
+        return count > 0;
+    }
+
     /* ────────────────────────────── 성능 최적화: 배치 메서드 ────────────────────────────── */
 
     /**
