@@ -13,6 +13,7 @@ public enum NotificationType {
     // ---- Action Notification Types ----
     LIKED_ON_COLLECTION,
     COMMENTED_ON_COLLECTION,
+    REPLIED_TO_COMMENT,
     SUGGESTED_BIRD_ID_ON_COLLECTION,
 
     // ---- System Notification Types ----
