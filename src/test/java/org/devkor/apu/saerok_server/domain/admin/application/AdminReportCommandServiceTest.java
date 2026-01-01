@@ -192,14 +192,15 @@ class AdminReportCommandServiceTest {
     }
 
     @Test
-    @DisplayName("deleteCommentByReport: 삭제 + 신고 정리 + 감사 로그(reason 포함)")
-    void deleteCommentByReport_success() {
+    @DisplayName("deleteCommentByReport: 대댓글 없는 경우 → hard delete + 신고 정리 + 감사 로그(reason 포함)")
+    void deleteCommentByReport_noReplies_hardDelete() {
         long reportId = 70L; long cmId = 900L; long colId = 10L;
         var rep = commentReport(reportId, cmId, colId, 11L, 21L, "bye");
         when(commentReportRepository.findById(reportId)).thenReturn(Optional.of(rep));
         UserBirdCollectionComment cm = UserBirdCollectionComment.of(user(21L), collection(colId), "bye");
         ReflectionTestUtils.setField(cm, "id", cmId);
         when(commentRepository.findById(cmId)).thenReturn(Optional.of(cm));
+        when(commentRepository.hasReplies(cmId)).thenReturn(false);
         stubAdminUser();
 
         ArgumentCaptor<AdminAuditLog> cap = ArgumentCaptor.forClass(AdminAuditLog.class);
@@ -208,6 +209,7 @@ class AdminReportCommandServiceTest {
 
         verify(commentReportRepository).deleteByCommentId(cmId);
         verify(commentRepository).remove(cm);
+        assertThat(cm.getStatus()).isEqualTo(org.devkor.apu.saerok_server.domain.collection.core.entity.CommentStatus.ACTIVE);
         verify(adminAuditLogRepository).save(cap.capture());
 
         AdminAuditLog log = cap.getValue();
@@ -215,6 +217,34 @@ class AdminReportCommandServiceTest {
         Map<String, Object> md = log.getMetadata();
         assertThat(md.get("reason")).isEqualTo(REASON);
         assertThat(md.get("commentContentSnapshot")).isEqualTo("bye");
+    }
+
+    @Test
+    @DisplayName("deleteCommentByReport: 대댓글 있는 경우 → soft delete(ban) + 신고 정리 + 감사 로그")
+    void deleteCommentByReport_hasReplies_softDelete() {
+        long reportId = 71L; long cmId = 901L; long colId = 11L;
+        var rep = commentReport(reportId, cmId, colId, 12L, 22L, "parent comment");
+        when(commentReportRepository.findById(reportId)).thenReturn(Optional.of(rep));
+        UserBirdCollectionComment cm = UserBirdCollectionComment.of(user(22L), collection(colId), "parent comment");
+        ReflectionTestUtils.setField(cm, "id", cmId);
+        when(commentRepository.findById(cmId)).thenReturn(Optional.of(cm));
+        when(commentRepository.hasReplies(cmId)).thenReturn(true);
+        stubAdminUser();
+
+        ArgumentCaptor<AdminAuditLog> cap = ArgumentCaptor.forClass(AdminAuditLog.class);
+
+        sut.deleteCommentByReport(ADMIN_ID, reportId, REASON);
+
+        verify(commentReportRepository).deleteByCommentId(cmId);
+        verify(commentRepository, never()).remove(any()); // remove 호출 안 함
+        assertThat(cm.getStatus()).isEqualTo(org.devkor.apu.saerok_server.domain.collection.core.entity.CommentStatus.BANNED);
+        verify(adminAuditLogRepository).save(cap.capture());
+
+        AdminAuditLog log = cap.getValue();
+        assertThat(log.getAction()).isEqualTo(AdminAuditAction.COMMENT_DELETED);
+        Map<String, Object> md = log.getMetadata();
+        assertThat(md.get("reason")).isEqualTo(REASON);
+        assertThat(md.get("commentContentSnapshot")).isEqualTo("parent comment");
     }
 
     @Test
