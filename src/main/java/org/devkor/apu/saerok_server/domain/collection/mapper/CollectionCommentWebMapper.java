@@ -2,7 +2,9 @@ package org.devkor.apu.saerok_server.domain.collection.mapper;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
+import org.devkor.apu.saerok_server.domain.collection.core.service.CommentContentResolver;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
+import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 
@@ -20,7 +22,8 @@ public interface CollectionCommentWebMapper {
             Map<Long, Boolean> mineStatuses,
             Map<Long, String> profileImageUrls,
             Map<Long, String> thumbnailProfileImageUrls,
-            Boolean isMyCollection) {
+            Boolean isMyCollection,
+            @Context CommentContentResolver commentContentResolver) {
         if (entities == null || entities.isEmpty()) {
             return new GetCollectionCommentsResponse(List.of(), isMyCollection);
         }
@@ -64,10 +67,10 @@ public interface CollectionCommentWebMapper {
                     List<GetCollectionCommentsResponse.Item> replies = repliesByParentId.getOrDefault(comment.getId(), List.of())
                             .stream()
                             .sorted(java.util.Comparator.comparing(UserBirdCollectionComment::getCreatedAt))
-                            .map(reply -> buildCommentItem(reply, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, List.of()))
+                            .map(reply -> buildCommentItem(reply, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, List.of(), commentContentResolver))
                             .toList();
 
-                    return buildCommentItem(comment, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, replies);
+                    return buildCommentItem(comment, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, replies, commentContentResolver);
                 })
                 .toList();
         return new GetCollectionCommentsResponse(items, isMyCollection);
@@ -81,7 +84,8 @@ public interface CollectionCommentWebMapper {
             Map<Long, Boolean> mineStatuses,
             Map<Long, String> profileImageUrls,
             Map<Long, String> thumbnailProfileImageUrls,
-            List<GetCollectionCommentsResponse.Item> replies) {
+            List<GetCollectionCommentsResponse.Item> replies,
+            CommentContentResolver commentContentResolver) {
         Long commentId = c.getId();
         Long userId = c.getUser().getId();
         int likeCount = likeCounts.get(commentId).intValue();
@@ -90,13 +94,16 @@ public interface CollectionCommentWebMapper {
         String profileImageUrl = profileImageUrls.get(userId);
         String thumbnailProfileImageUrl = thumbnailProfileImageUrls.get(userId);
 
+        // 댓글 상태에 따라 content 대체
+        String content = commentContentResolver.resolveContent(c.getContent(), c.getStatus());
+
         return new GetCollectionCommentsResponse.Item(
                 commentId,
                 userId,
                 c.getUser().getNickname(),
                 profileImageUrl,
                 thumbnailProfileImageUrl,
-                c.getContent(),
+                content,
                 c.getStatus().name(),
                 c.getParent() != null ? c.getParent().getId() : null,
                 likeCount,
