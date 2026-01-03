@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.service.CommentContentResolver;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
@@ -55,6 +56,7 @@ class CollectionCommentCommandServiceTest {
     @Mock CollectionCommentLikeRepository   commentLikeRepo;
     @Mock CollectionCommentWebMapper        collectionCommentWebMapper;
     @Mock UserProfileImageUrlService        userProfileImageUrlService;
+    @Mock CommentContentResolver            commentContentResolver;
 
     private static User user(long id) {
         User u = new User();
@@ -95,7 +97,7 @@ class CollectionCommentCommandServiceTest {
         sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo, notifyActionDsl);
 
         querySut = new CollectionCommentQueryService(
-                commentRepo, collectionRepo, commentLikeRepo, collectionCommentWebMapper, userProfileImageUrlService
+                commentRepo, collectionRepo, commentLikeRepo, collectionCommentWebMapper, userProfileImageUrlService, commentContentResolver
         );
     }
 

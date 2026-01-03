@@ -7,6 +7,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.service.CommentContentResolver;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
@@ -40,6 +41,7 @@ class CollectionCommentQueryServiceTest {
     @Mock CollectionCommentLikeRepository        commentLikeRepo;
     @Mock CollectionCommentWebMapper             mapper;
     @Mock UserProfileImageUrlService             userProfileImageUrlService;
+    @Mock CommentContentResolver                 commentContentResolver;
 
     private static UserBirdCollection collection(long id, Long userId) {
         UserBirdCollection c = new UserBirdCollection();
@@ -57,7 +59,8 @@ class CollectionCommentQueryServiceTest {
                 collectionRepo,
                 commentLikeRepo,
                 mapper,
-                userProfileImageUrlService
+                userProfileImageUrlService,
+                commentContentResolver
         );
     }
 
@@ -92,7 +95,8 @@ class CollectionCommentQueryServiceTest {
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     Map.of(), Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false
+                    profileImageUrls, thumbnailProfileImageUrls, false,
+                    commentContentResolver
             ))
                     .thenReturn(expected);
 
@@ -102,7 +106,8 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     Map.of(), Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false
+                    profileImageUrls, thumbnailProfileImageUrls, false,
+                    commentContentResolver
             );
         }
 
@@ -138,7 +143,8 @@ class CollectionCommentQueryServiceTest {
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false
+                    profileImageUrls, thumbnailProfileImageUrls, false,
+                    commentContentResolver
             ))
                     .thenReturn(expected);
 
@@ -148,7 +154,8 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false
+                    profileImageUrls, thumbnailProfileImageUrls, false,
+                    commentContentResolver
             );
         }
 
@@ -184,7 +191,8 @@ class CollectionCommentQueryServiceTest {
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, true
+                    profileImageUrls, thumbnailProfileImageUrls, true,
+                    commentContentResolver
             ))
                     .thenReturn(expected);
 
@@ -194,7 +202,8 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, true
+                    profileImageUrls, thumbnailProfileImageUrls, true,
+                    commentContentResolver
             );
         }
 
