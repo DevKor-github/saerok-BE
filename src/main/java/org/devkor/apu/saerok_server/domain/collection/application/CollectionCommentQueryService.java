@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.service.CommentContentResolver;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
@@ -29,6 +30,7 @@ public class CollectionCommentQueryService {
     private final CollectionCommentLikeRepository commentLikeRepository;
     private final CollectionCommentWebMapper collectionCommentWebMapper;
     private final UserProfileImageUrlService userProfileImageUrlService;
+    private final CommentContentResolver commentContentResolver;
 
     /* 댓글 목록 (createdAt ASC) */
     public GetCollectionCommentsResponse getComments(Long collectionId, Long userId) {
@@ -72,7 +74,7 @@ public class CollectionCommentQueryService {
         Map<Long, String> thumbnailProfileImageUrls = userProfileImageUrlService.getProfileThumbnailImageUrlsFor(users);
 
         // 7. 응답 생성
-        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, isMyCollection);
+        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, isMyCollection, commentContentResolver);
     }
 
     /* 댓글 개수 */

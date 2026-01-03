@@ -10,6 +10,11 @@ notification-messages:
       push-body: "나의 새록에 댓글을 남겼어요. \"{comment}\""
       batch-push-title: "{actorName} 외 {othersCount}명"
       batch-push-body: "나의 새록에 댓글을 남겼어요."
+    REPLIED_TO_COMMENT:
+      push-title: "{actorName}"
+      push-body: "나의 댓글에 답글을 남겼어요. \"{comment}\""
+      batch-push-title: "{actorName} 외 {othersCount}명"
+      batch-push-body: "나의 댓글에 답글을 남겼어요."
     SUGGESTED_BIRD_ID_ON_COLLECTION:
       push-title: "동정 의견 공유"
       push-body: "두근두근! 새로운 의견이 공유되었어요. 확인해볼까요?"

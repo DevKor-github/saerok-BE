@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
+import org.devkor.apu.saerok_server.domain.collection.core.service.CommentContentResolver;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
 import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
@@ -55,6 +56,7 @@ class CollectionCommentCommandServiceTest {
     @Mock CollectionCommentLikeRepository   commentLikeRepo;
     @Mock CollectionCommentWebMapper        collectionCommentWebMapper;
     @Mock UserProfileImageUrlService        userProfileImageUrlService;
+    @Mock CommentContentResolver            commentContentResolver;
 
     private static User user(long id) {
         User u = new User();
@@ -84,6 +86,10 @@ class CollectionCommentCommandServiceTest {
                     if (target.type() == TargetType.COLLECTION) {
                         extras.put("collectionId", target.id());
                         extras.put("collectionImageUrl", "dummy");
+                    } else if (target.type() == TargetType.COMMENT) {
+                        extras.put("commentId", target.id());
+                        extras.put("collectionId", 999L); // dummy collection id
+                        extras.put("collectionImageUrl", "dummy");
                     }
                     return extras;
                 }
@@ -91,7 +97,7 @@ class CollectionCommentCommandServiceTest {
         sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo, notifyActionDsl);
 
         querySut = new CollectionCommentQueryService(
-                commentRepo, collectionRepo, commentLikeRepo, collectionCommentWebMapper, userProfileImageUrlService
+                commentRepo, collectionRepo, commentLikeRepo, collectionCommentWebMapper, userProfileImageUrlService, commentContentResolver
         );
     }
 
@@ -112,7 +118,7 @@ class CollectionCommentCommandServiceTest {
             doAnswer(inv -> { setField((Object) inv.getArgument(0), "id", COMMENT_ID); return null; })
                     .when(commentRepo).save(any());
 
-            var res = sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("Nice"));
+            var res = sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("Nice", null));
 
             assertThat(res.commentId()).isEqualTo(COMMENT_ID);
             verify(commentRepo).save(any());
@@ -135,7 +141,7 @@ class CollectionCommentCommandServiceTest {
         void userNotFound() {
             when(userRepo.findById(OWNER_ID)).thenReturn(Optional.empty());
             assertThatThrownBy(() ->
-                    sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("x")))
+                    sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("x", null)))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
 
@@ -150,11 +156,157 @@ class CollectionCommentCommandServiceTest {
             doAnswer(inv -> { setField((Object) inv.getArgument(0), "id", COMMENT_ID); return null; })
                     .when(commentRepo).save(any());
 
-            var res = sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("Self comment"));
+            var res = sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("Self comment", null));
 
             assertThat(res.commentId()).isEqualTo(COMMENT_ID);
             verify(commentRepo).save(any());
             verifyNoInteractions(publisher);
+        }
+
+        @Test @DisplayName("대댓글 작성 성공 - 원댓글 작성자와 컬렉션 소유자 모두 다른 경우 (2개 알림)")
+        void createReply_success_twoNotifications() {
+            long commenterId = 1L;
+            long parentCommentOwnerId = 2L;
+            long collectionOwnerId = 3L;
+            long parentCommentId = 200L;
+            long replyId = 300L;
+
+            User commenter = user(commenterId);
+            User parentCommentOwner = user(parentCommentOwnerId);
+            User collectionOwner = user(collectionOwnerId);
+            UserBirdCollection coll = collection(COLL_ID, collectionOwner);
+            UserBirdCollectionComment parentComment = comment(parentCommentId, parentCommentOwner, coll, "parent");
+
+            setField(commenter, "nickname", "replier");
+
+            when(userRepo.findById(commenterId)).thenReturn(Optional.of(commenter));
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
+            when(commentRepo.findById(parentCommentId)).thenReturn(Optional.of(parentComment));
+
+            doAnswer(inv -> { setField((Object) inv.getArgument(0), "id", replyId); return null; })
+                    .when(commentRepo).save(any());
+
+            var res = sut.createComment(commenterId, COLL_ID, new CreateCollectionCommentRequest("reply content", parentCommentId));
+
+            assertThat(res.commentId()).isEqualTo(replyId);
+            verify(commentRepo).save(any());
+
+            ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
+            verify(publisher, times(2)).push(payloadCap.capture());
+
+            var notifications = payloadCap.getAllValues();
+
+            // 첫 번째 알림: 원댓글 작성자에게 REPLY 알림
+            ActionNotificationPayload replyNotif = (ActionNotificationPayload) notifications.get(0);
+            assertThat(replyNotif.subject()).isEqualTo(NotificationSubject.COMMENT);
+            assertThat(replyNotif.action()).isEqualTo(NotificationAction.REPLY);
+            assertThat(replyNotif.recipientId()).isEqualTo(parentCommentOwnerId);
+            assertThat(replyNotif.actorId()).isEqualTo(commenterId);
+
+            // 두 번째 알림: 컬렉션 소유자에게 COMMENT 알림
+            ActionNotificationPayload commentNotif = (ActionNotificationPayload) notifications.get(1);
+            assertThat(commentNotif.subject()).isEqualTo(NotificationSubject.COLLECTION);
+            assertThat(commentNotif.action()).isEqualTo(NotificationAction.COMMENT);
+            assertThat(commentNotif.recipientId()).isEqualTo(collectionOwnerId);
+            assertThat(commentNotif.actorId()).isEqualTo(commenterId);
+        }
+
+        @Test @DisplayName("대댓글 작성 성공 - 원댓글 작성자 = 컬렉션 소유자인 경우 (1개 알림)")
+        void createReply_success_oneNotification() {
+            long commenterId = 1L;
+            long parentAndCollectionOwnerId = 2L;
+            long parentCommentId = 200L;
+            long replyId = 300L;
+
+            User commenter = user(commenterId);
+            User owner = user(parentAndCollectionOwnerId);
+            UserBirdCollection coll = collection(COLL_ID, owner);
+            UserBirdCollectionComment parentComment = comment(parentCommentId, owner, coll, "parent");
+
+            setField(commenter, "nickname", "replier");
+
+            when(userRepo.findById(commenterId)).thenReturn(Optional.of(commenter));
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
+            when(commentRepo.findById(parentCommentId)).thenReturn(Optional.of(parentComment));
+
+            doAnswer(inv -> { setField((Object) inv.getArgument(0), "id", replyId); return null; })
+                    .when(commentRepo).save(any());
+
+            var res = sut.createComment(commenterId, COLL_ID, new CreateCollectionCommentRequest("reply", parentCommentId));
+
+            assertThat(res.commentId()).isEqualTo(replyId);
+
+            ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
+            verify(publisher, times(1)).push(payloadCap.capture());
+
+            // 원댓글 작성자에게만 REPLY 알림 (컬렉션 소유자와 동일인이므로 중복 제거됨)
+            ActionNotificationPayload notif = (ActionNotificationPayload) payloadCap.getValue();
+            assertThat(notif.subject()).isEqualTo(NotificationSubject.COMMENT);
+            assertThat(notif.action()).isEqualTo(NotificationAction.REPLY);
+            assertThat(notif.recipientId()).isEqualTo(parentAndCollectionOwnerId);
+        }
+
+        @Test @DisplayName("삭제된 댓글에 대댓글 작성 → ForbiddenException")
+        void createReply_deletedParent_forbidden() {
+            long parentCommentId = 200L;
+            User commenter = user(OWNER_ID);
+            User owner = user(OTHER_ID);
+            UserBirdCollection coll = collection(COLL_ID, owner);
+            UserBirdCollectionComment parentComment = comment(parentCommentId, owner, coll, "deleted");
+            parentComment.softDelete();
+
+            when(userRepo.findById(OWNER_ID)).thenReturn(Optional.of(commenter));
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
+            when(commentRepo.findById(parentCommentId)).thenReturn(Optional.of(parentComment));
+
+            assertThatThrownBy(() ->
+                    sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("reply", parentCommentId)))
+                    .isExactlyInstanceOf(ForbiddenException.class)
+                    .hasMessageContaining("삭제된 댓글");
+        }
+
+        @Test @DisplayName("대댓글에 대댓글 작성 (depth 제한) → ForbiddenException")
+        void createReply_depthLimit_forbidden() {
+            long rootCommentId = 100L;
+            long replyCommentId = 200L;
+
+            User commenter = user(OWNER_ID);
+            User owner = user(OTHER_ID);
+            UserBirdCollection coll = collection(COLL_ID, owner);
+
+            UserBirdCollectionComment rootComment = comment(rootCommentId, owner, coll, "root");
+            UserBirdCollectionComment replyComment = UserBirdCollectionComment.of(owner, coll, "reply", rootComment);
+            setField(replyComment, "id", replyCommentId);
+
+            when(userRepo.findById(OWNER_ID)).thenReturn(Optional.of(commenter));
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
+            when(commentRepo.findById(replyCommentId)).thenReturn(Optional.of(replyComment));
+
+            assertThatThrownBy(() ->
+                    sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("nested reply", replyCommentId)))
+                    .isExactlyInstanceOf(ForbiddenException.class)
+                    .hasMessageContaining("대댓글");
+        }
+
+        @Test @DisplayName("다른 컬렉션의 댓글에 대댓글 작성 → NotFoundException")
+        void createReply_differentCollection_notFound() {
+            long parentCommentId = 200L;
+            long otherCollectionId = 999L;
+
+            User commenter = user(OWNER_ID);
+            User owner = user(OTHER_ID);
+            UserBirdCollection coll = collection(COLL_ID, owner);
+            UserBirdCollection otherColl = collection(otherCollectionId, owner);
+            UserBirdCollectionComment parentComment = comment(parentCommentId, owner, otherColl, "parent");
+
+            when(userRepo.findById(OWNER_ID)).thenReturn(Optional.of(commenter));
+            when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.of(coll));
+            when(commentRepo.findById(parentCommentId)).thenReturn(Optional.of(parentComment));
+
+            assertThatThrownBy(() ->
+                    sut.createComment(OWNER_ID, COLL_ID, new CreateCollectionCommentRequest("reply", parentCommentId)))
+                    .isExactlyInstanceOf(NotFoundException.class)
+                    .hasMessageContaining("컬렉션");
         }
     }
 
@@ -191,15 +343,64 @@ class CollectionCommentCommandServiceTest {
 
     @Nested @DisplayName("댓글 삭제")
     class Delete {
-        @Test @DisplayName("본인 댓글 삭제 성공")
-        void successByCommentOwner() {
+        @Test @DisplayName("대댓글 없는 댓글 삭제 → hard delete")
+        void delete_noReplies_hardDelete() {
             User owner = user(OWNER_ID);
             UserBirdCollection coll = collection(COLL_ID, owner);
             UserBirdCollectionComment cm = comment(COMMENT_ID, owner, coll, "bye");
 
             when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
+            when(commentRepo.hasReplies(COMMENT_ID)).thenReturn(false);
 
             sut.deleteComment(OWNER_ID, COLL_ID, COMMENT_ID);
+
+            verify(commentRepo).remove(cm);
+            assertThat(cm.getStatus()).isNotEqualTo(org.devkor.apu.saerok_server.domain.collection.core.entity.CommentStatus.DELETED);
+        }
+
+        @Test @DisplayName("대댓글 있는 댓글 삭제 → soft delete")
+        void delete_hasReplies_softDelete() {
+            User owner = user(OWNER_ID);
+            UserBirdCollection coll = collection(COLL_ID, owner);
+            UserBirdCollectionComment cm = comment(COMMENT_ID, owner, coll, "parent with replies");
+
+            when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
+            when(commentRepo.hasReplies(COMMENT_ID)).thenReturn(true);
+
+            sut.deleteComment(OWNER_ID, COLL_ID, COMMENT_ID);
+
+            verify(commentRepo, never()).remove(any());
+            assertThat(cm.getStatus()).isEqualTo(org.devkor.apu.saerok_server.domain.collection.core.entity.CommentStatus.DELETED);
+        }
+
+        @Test @DisplayName("컬렉션 소유자가 남의 댓글 삭제 성공")
+        void delete_byCollectionOwner() {
+            User collectionOwner = user(OWNER_ID);
+            User commentOwner = user(OTHER_ID);
+            UserBirdCollection coll = collection(COLL_ID, collectionOwner);
+            UserBirdCollectionComment cm = comment(COMMENT_ID, commentOwner, coll, "others comment");
+
+            when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
+            when(commentRepo.hasReplies(COMMENT_ID)).thenReturn(false);
+
+            sut.deleteComment(OWNER_ID, COLL_ID, COMMENT_ID);
+
+            verify(commentRepo).remove(cm);
+        }
+
+        @Test @DisplayName("댓글 작성자도 컬렉션 소유자도 아닌 경우 → ForbiddenException")
+        void delete_forbidden() {
+            long thirdPartyId = 999L;
+            User collectionOwner = user(OWNER_ID);
+            User commentOwner = user(OTHER_ID);
+            UserBirdCollection coll = collection(COLL_ID, collectionOwner);
+            UserBirdCollectionComment cm = comment(COMMENT_ID, commentOwner, coll, "not mine");
+
+            when(commentRepo.findById(COMMENT_ID)).thenReturn(Optional.of(cm));
+
+            assertThatThrownBy(() ->
+                    sut.deleteComment(thirdPartyId, COLL_ID, COMMENT_ID))
+                    .isExactlyInstanceOf(ForbiddenException.class);
         }
     }
 

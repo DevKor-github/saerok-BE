@@ -13,12 +13,16 @@ public final class NotificationTypeResolver {
             // subject/action 기반이 아닌 요청은 허용하지 않는다(그룹 토글 폐기).
             throw new IllegalArgumentException("subject/action must be non-null to resolve NotificationType");
         }
-        // 현재 지원 케이스: subject == COLLECTION
         return switch (subject) {
             case COLLECTION -> switch (action) {
                 case LIKE -> NotificationType.LIKED_ON_COLLECTION;
                 case COMMENT -> NotificationType.COMMENTED_ON_COLLECTION;
                 case SUGGEST_BIRD_ID -> NotificationType.SUGGESTED_BIRD_ID_ON_COLLECTION;
+                case REPLY -> throw new IllegalArgumentException("REPLY action is not supported for COLLECTION subject");
+            };
+            case COMMENT -> switch (action) {
+                case REPLY -> NotificationType.REPLIED_TO_COMMENT;
+                case LIKE, COMMENT, SUGGEST_BIRD_ID -> throw new IllegalArgumentException(action + " action is not supported for COMMENT subject");
             };
         };
     }
