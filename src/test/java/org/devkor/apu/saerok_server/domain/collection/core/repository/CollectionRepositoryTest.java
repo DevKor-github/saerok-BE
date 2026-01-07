@@ -4,7 +4,8 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelTyp
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.testsupport.AbstractPostgresContainerTest;
-import org.junit.jupiter.api.BeforeEach;
+import org.devkor.apu.saerok_server.testsupport.builder.CollectionBuilder;
+import org.devkor.apu.saerok_server.testsupport.builder.UserBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
@@ -16,8 +17,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.lang.reflect.Field;
-import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,40 +32,25 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
     @Autowired
     TestEntityManager em;
 
-    GeometryFactory gf;
-
-    Field collUserField;
-
-    @BeforeEach
-    void setUp() throws NoSuchFieldException {
-        gf = new GeometryFactory();
-
-        collUserField = UserBirdCollection.class.getDeclaredField("user");
-        collUserField.setAccessible(true);
-    }
+    private final GeometryFactory gf = new GeometryFactory();
 
     /* ------------------------------------------------------------------
      * helpers
      * ------------------------------------------------------------------ */
     private User newUser() {
-        User user = User.createUser("test+" + System.nanoTime() + "@example.com");
-        em.persist(user);
-        em.flush();
-        return user;
+        return new UserBuilder(em).build();
     }
 
     private UserBirdCollection newCollection(
             User owner,
             Point point,
             AccessLevelType accessLevel
-    ) throws IllegalAccessException {
-        UserBirdCollection c = new UserBirdCollection();
-        collUserField.set(c, owner);
-        c.setLocation(point);
-        c.setAccessLevel(accessLevel);
-        c.setDiscoveredDate(LocalDate.now());
-        em.persist(c);
-        return c;
+    ) {
+        return new CollectionBuilder(em)
+                .owner(owner)
+                .location(point)
+                .accessLevel(accessLevel)
+                .build();
     }
 
     /* ------------------------------------------------------------------
