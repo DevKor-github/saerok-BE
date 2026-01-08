@@ -17,6 +17,11 @@ spring:
     # 마이그레이션 검증 스킵 (이미 실행된 마이그레이션 재검증 불필요)
     validate-on-migrate: false
 
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 0
+
 logging:
   level:
     org.hibernate.SQL: info
