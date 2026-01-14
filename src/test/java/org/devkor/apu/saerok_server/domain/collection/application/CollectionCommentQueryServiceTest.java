@@ -92,11 +92,11 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(thumbnailProfileImageUrls);
 
             GetCollectionCommentsResponse expected =
-                    new GetCollectionCommentsResponse(List.of(), false);
+                    new GetCollectionCommentsResponse(List.of(), false, null);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     Map.of(), Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false,
+                    profileImageUrls, thumbnailProfileImageUrls, false, null,
                     commentContentResolver
             ))
                     .thenReturn(expected);
@@ -107,7 +107,7 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     Map.of(), Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false,
+                    profileImageUrls, thumbnailProfileImageUrls, false, null,
                     commentContentResolver
             );
         }
@@ -140,11 +140,11 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(thumbnailProfileImageUrls);
 
             GetCollectionCommentsResponse expected =
-                    new GetCollectionCommentsResponse(List.of(), false);
+                    new GetCollectionCommentsResponse(List.of(), false, null);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false,
+                    profileImageUrls, thumbnailProfileImageUrls, false, null,
                     commentContentResolver
             ))
                     .thenReturn(expected);
@@ -155,7 +155,7 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false,
+                    profileImageUrls, thumbnailProfileImageUrls, false, null,
                     commentContentResolver
             );
         }
@@ -188,11 +188,11 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(thumbnailProfileImageUrls);
 
             GetCollectionCommentsResponse expected =
-                    new GetCollectionCommentsResponse(List.of(), true);
+                    new GetCollectionCommentsResponse(List.of(), true, null);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, true,
+                    profileImageUrls, thumbnailProfileImageUrls, true, null,
                     commentContentResolver
             ))
                     .thenReturn(expected);
@@ -203,7 +203,7 @@ class CollectionCommentQueryServiceTest {
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, true,
+                    profileImageUrls, thumbnailProfileImageUrls, true, null,
                     commentContentResolver
             );
         }

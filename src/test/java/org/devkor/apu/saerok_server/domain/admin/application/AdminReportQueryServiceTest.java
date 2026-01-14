@@ -165,7 +165,7 @@ class AdminReportQueryServiceTest {
         ReflectionTestUtils.setField(rep, "collection", col);
 
         GetCollectionDetailResponse detail = new GetCollectionDetailResponse();
-        GetCollectionCommentsResponse comments = new GetCollectionCommentsResponse(List.of(), false);
+        GetCollectionCommentsResponse comments = new GetCollectionCommentsResponse(List.of(), false, null);
 
         when(collectionReportRepository.findById(999L)).thenReturn(Optional.of(rep));
         when(collectionImageUrlService.getPrimaryImageUrlFor(col)).thenReturn(Optional.of("img"));
@@ -207,7 +207,7 @@ class AdminReportQueryServiceTest {
         ReflectionTestUtils.setField(rep, "comment", cm);
 
         GetCollectionDetailResponse detail = new GetCollectionDetailResponse();
-        GetCollectionCommentsResponse comments = new GetCollectionCommentsResponse(List.of(), false);
+        GetCollectionCommentsResponse comments = new GetCollectionCommentsResponse(List.of(), false, null);
 
         when(commentReportRepository.findById(777L)).thenReturn(Optional.of(rep));
         when(collectionImageUrlService.getPrimaryImageUrlFor(col)).thenReturn(Optional.empty());
