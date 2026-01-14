@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionCommentRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionCommentRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentCountResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.CommentQueryCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
@@ -418,7 +419,7 @@ class CollectionCommentCommandServiceTest {
         @Test @DisplayName("컬렉션 없음 → NotFoundException")
         void notFound() {
             when(collectionRepo.findById(COLL_ID)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> querySut.getComments(COLL_ID, null))
+            assertThatThrownBy(() -> querySut.getComments(COLL_ID, null, new CommentQueryCommand(null, null)))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
     }

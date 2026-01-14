@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentCountResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.CommentQueryCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
@@ -75,7 +76,7 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(Optional.of(collection(COLL_ID, 999L)));
 
             List<UserBirdCollectionComment> comments = List.of();
-            when(commentRepo.findByCollectionId(COLL_ID))
+            when(commentRepo.findByCollectionId(eq(COLL_ID), any(CommentQueryCommand.class)))
                     .thenReturn(comments);
 
             Map<Long, Long> likeCounts = Map.of();
@@ -100,7 +101,7 @@ class CollectionCommentQueryServiceTest {
             ))
                     .thenReturn(expected);
 
-            var res = sut.getComments(COLL_ID, null);
+            var res = sut.getComments(COLL_ID, null, new CommentQueryCommand(null, null));
 
             assertThat(res).isSameAs(expected);
             verify(mapper).toGetCollectionCommentsResponse(
@@ -119,7 +120,7 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(Optional.of(collection(COLL_ID, 999L)));
 
             List<UserBirdCollectionComment> comments = List.of();
-            when(commentRepo.findByCollectionId(COLL_ID))
+            when(commentRepo.findByCollectionId(eq(COLL_ID), any(CommentQueryCommand.class)))
                     .thenReturn(comments);
 
             Map<Long, Long> likeCounts = Map.of();
@@ -148,7 +149,7 @@ class CollectionCommentQueryServiceTest {
             ))
                     .thenReturn(expected);
 
-            var res = sut.getComments(COLL_ID, userId);
+            var res = sut.getComments(COLL_ID, userId, new CommentQueryCommand(null, null));
 
             assertThat(res).isSameAs(expected);
             verify(mapper).toGetCollectionCommentsResponse(
@@ -167,7 +168,7 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(Optional.of(collection(COLL_ID, userId)));
 
             List<UserBirdCollectionComment> comments = List.of();
-            when(commentRepo.findByCollectionId(COLL_ID))
+            when(commentRepo.findByCollectionId(eq(COLL_ID), any(CommentQueryCommand.class)))
                     .thenReturn(comments);
 
             Map<Long, Long> likeCounts = Map.of();
@@ -196,7 +197,7 @@ class CollectionCommentQueryServiceTest {
             ))
                     .thenReturn(expected);
 
-            var res = sut.getComments(COLL_ID, userId);
+            var res = sut.getComments(COLL_ID, userId, new CommentQueryCommand(null, null));
 
             assertThat(res).isSameAs(expected);
             verify(mapper).toGetCollectionCommentsResponse(
@@ -212,7 +213,7 @@ class CollectionCommentQueryServiceTest {
         void notFound() {
             when(collectionRepo.findById(COLL_ID))
                     .thenReturn(Optional.empty());
-            assertThatThrownBy(() -> sut.getComments(COLL_ID, null))
+            assertThatThrownBy(() -> sut.getComments(COLL_ID, null, new CommentQueryCommand(null, null)))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
     }

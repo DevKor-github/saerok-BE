@@ -1,5 +1,6 @@
 package org.devkor.apu.saerok_server.domain.collection.core.repository;
 
+import org.devkor.apu.saerok_server.domain.collection.application.dto.CommentQueryCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -61,7 +62,7 @@ class CollectionCommentRepositoryTest extends AbstractPostgresContainerTest {
         repo.save(UserBirdCollectionComment.of(u, col, "B"));
         em.flush(); em.clear();
 
-        assertThat(repo.findByCollectionId(col.getId()))
+        assertThat(repo.findByCollectionId(col.getId(), new CommentQueryCommand(null, null)))
                 .extracting(UserBirdCollectionComment::getContent)
                 .containsExactly("A", "B");          // createdAt ASC
 
@@ -132,7 +133,7 @@ class CollectionCommentRepositoryTest extends AbstractPostgresContainerTest {
         repo.save(reply2);
         em.flush(); em.clear();
 
-        var comments = repo.findByCollectionId(col.getId());
+        var comments = repo.findByCollectionId(col.getId(), new CommentQueryCommand(null, null));
 
         assertThat(comments).hasSize(3);
         assertThat(comments)
