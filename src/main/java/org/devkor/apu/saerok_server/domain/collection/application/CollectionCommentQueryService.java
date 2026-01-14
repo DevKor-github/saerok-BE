@@ -17,6 +17,7 @@ import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,10 +43,19 @@ public class CollectionCommentQueryService {
         // 내 컬렉션인지 여부 판단 (비회원인 경우 false)
         boolean isMyCollection = userId != null && userId.equals(collection.getUser().getId());
 
-        // 1. 댓글 목록 조회
+        // 1. 댓글 목록 조회 (페이징 시 size+1개 조회됨)
         List<UserBirdCollectionComment> comments = commentRepository.findByCollectionId(collectionId, command);
-        
-        // 2. 댓글 ID 목록 추출
+
+        // 2. hasNext 판단 및 초과분 제거
+        Boolean hasNext = null;
+        if (command.hasPagination()) {
+            hasNext = comments.size() > command.size();
+            if (hasNext) {
+                comments = new ArrayList<>(comments.subList(0, command.size()));
+            }
+        }
+
+        // 3. 댓글 ID 목록 추출
         List<Long> commentIds = comments.stream()
                 .map(UserBirdCollectionComment::getId)
                 .toList();
@@ -74,8 +84,8 @@ public class CollectionCommentQueryService {
         Map<Long, String> profileImageUrls = userProfileImageUrlService.getProfileImageUrlsFor(users);
         Map<Long, String> thumbnailProfileImageUrls = userProfileImageUrlService.getProfileThumbnailImageUrlsFor(users);
 
-        // 7. 응답 생성
-        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, isMyCollection, commentContentResolver);
+        // 8. 응답 생성
+        return collectionCommentWebMapper.toGetCollectionCommentsResponse(comments, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, isMyCollection, hasNext, commentContentResolver);
     }
 
     /* 댓글 개수 */

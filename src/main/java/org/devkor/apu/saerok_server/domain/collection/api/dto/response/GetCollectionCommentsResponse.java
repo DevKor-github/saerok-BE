@@ -8,7 +8,9 @@ import java.util.List;
 public record GetCollectionCommentsResponse(
     List<Item> items,
     @Schema(description = "내 컬렉션인지 여부", example = "true")
-    Boolean isMyCollection
+    Boolean isMyCollection,
+    @Schema(description = "다음 페이지 존재 여부 (페이징 요청 시에만 유효)", example = "true")
+    Boolean hasNext
 ) {
 
     public record Item(

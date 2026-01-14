@@ -40,12 +40,12 @@ public class CollectionCommentRepository {
         return query.getResultList();
     }
 
-    // 헬퍼 메서드
+    // 헬퍼 메서드 (hasNext 판단을 위해 size+1개 조회)
     private void applyPagination(Query query, CommentQueryCommand command) {
         if (command.hasPagination()) {
             int offset = (command.page() - 1) * command.size();
             query.setFirstResult(offset);
-            query.setMaxResults(command.size());
+            query.setMaxResults(command.size() + 1);
         }
     }
 
