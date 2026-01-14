@@ -23,9 +23,10 @@ public interface CollectionCommentWebMapper {
             Map<Long, String> profileImageUrls,
             Map<Long, String> thumbnailProfileImageUrls,
             Boolean isMyCollection,
+            Boolean hasNext,
             @Context CommentContentResolver commentContentResolver) {
         if (entities == null || entities.isEmpty()) {
-            return new GetCollectionCommentsResponse(List.of(), isMyCollection);
+            return new GetCollectionCommentsResponse(List.of(), isMyCollection, hasNext);
         }
 
         for (UserBirdCollectionComment entity : entities) {
@@ -73,7 +74,7 @@ public interface CollectionCommentWebMapper {
                     return buildCommentItem(comment, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, replies, commentContentResolver);
                 })
                 .toList();
-        return new GetCollectionCommentsResponse(items, isMyCollection);
+        return new GetCollectionCommentsResponse(items, isMyCollection, hasNext);
     }
 
     /* 댓글 엔티티 → Item DTO (공통 매핑 로직) */
