@@ -1,7 +1,9 @@
 package org.devkor.apu.saerok_server.domain.collection.core.repository;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.CommentQueryCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.springframework.stereotype.Repository;
 
@@ -24,16 +26,27 @@ public class CollectionCommentRepository {
 
     public void remove(UserBirdCollectionComment comment) { em.remove(comment); }
 
-    public List<UserBirdCollectionComment> findByCollectionId(Long collectionId) {
-        return em.createQuery(
+    public List<UserBirdCollectionComment> findByCollectionId(Long collectionId, CommentQueryCommand command) {
+        Query query = em.createQuery(
                         "SELECT DISTINCT c FROM UserBirdCollectionComment c " +
                                 "LEFT JOIN FETCH c.user " +
                                 "LEFT JOIN FETCH c.parent " +
                                 "WHERE c.collection.id = :collectionId " +
                                 "ORDER BY c.createdAt ASC",
                         UserBirdCollectionComment.class)
-                .setParameter("collectionId", collectionId)
-                .getResultList();
+                .setParameter("collectionId", collectionId);
+
+        applyPagination(query, command);
+        return query.getResultList();
+    }
+
+    // 헬퍼 메서드
+    private void applyPagination(Query query, CommentQueryCommand command) {
+        if (command.hasPagination()) {
+            int offset = (command.page() - 1) * command.size();
+            query.setFirstResult(offset);
+            query.setMaxResults(command.size());
+        }
     }
 
     public long countByCollectionId(Long collectionId) {
