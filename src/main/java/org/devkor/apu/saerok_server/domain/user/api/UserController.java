@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.user.api.dto.request.ProfileImagePresignRequest;
+import org.devkor.apu.saerok_server.domain.user.api.dto.request.SignupCompleteRequest;
 import org.devkor.apu.saerok_server.domain.user.api.dto.request.UpdateUserProfileRequest;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
@@ -106,6 +107,38 @@ public class UserController {
     ) {
         return userCommandService.updateUserProfile(
                 userWebMapper.toUpdateUserProfileCommand(request, userPrincipal.getId())
+        );
+    }
+
+    @PostMapping("/signup-complete")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "회원가입 완료",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+            회원가입을 완료하고 회원가입 경로를 기록합니다.
+
+            처리 내용:
+            - 닉네임 설정 및 유효성 검증
+            - 회원가입 경로 기록 (INSTAGRAM, OTHER_SNS, FRIEND, COMMUNITY, ETC)
+            - 회원가입 상태를 COMPLETED로 변경
+
+            주의사항:
+            - 회원가입이 이미 완료된 사용자는 호출할 수 없습니다
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "회원가입 완료 성공", content = @Content),
+                    @ApiResponse(responseCode = "400", description = "회원가입 완료 실패 - 닉네임 정책 위반, 중복 완료 등", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
+            }
+    )
+    public void signupComplete(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody SignupCompleteRequest request
+    ) {
+        userCommandService.signupComplete(
+                userWebMapper.toSignupCompleteCommand(request, userPrincipal.getId())
         );
     }
 
