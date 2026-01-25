@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.auth.infra.SocialRevoker;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
+import org.devkor.apu.saerok_server.domain.user.api.dto.response.SignupCompleteResponse;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.dto.SignupCompleteCommand;
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
@@ -317,11 +318,19 @@ class UserCommandServiceTest {
                 u.setNickname(newNick);
                 return null;
             }).when(userProfileUpdateService).changeNickname(same(user), eq("새록이"));
+            doAnswer(invocation -> {
+                User u = invocation.getArgument(0);
+                u.setSignupStatus(SignupStatusType.COMPLETED);
+                return null;
+            }).when(userSignupStatusService).tryCompleteSignup(same(user));
 
             SignupCompleteCommand cmd = new SignupCompleteCommand(userId, "새록이", SignupSourceType.INSTAGRAM);
 
-            sut.signupComplete(cmd);
+            SignupCompleteResponse response = sut.signupComplete(cmd);
 
+            assertThat(response.success()).isTrue();
+            assertThat(response.userId()).isEqualTo(userId);
+            assertThat(response.signupStatus()).isEqualTo(SignupStatusType.COMPLETED);
             verify(userRepository).findById(userId);
             verify(userProfileUpdateService).changeNickname(user, "새록이");
             verify(userSignupStatusService).tryCompleteSignup(user);

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.auth.infra.SocialRevoker;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
+import org.devkor.apu.saerok_server.domain.user.api.dto.response.SignupCompleteResponse;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
 import org.devkor.apu.saerok_server.domain.user.application.dto.SignupCompleteCommand;
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
@@ -63,7 +64,7 @@ public class UserCommandService {
         );
     }
 
-    public void signupComplete(SignupCompleteCommand command) {
+    public SignupCompleteResponse signupComplete(SignupCompleteCommand command) {
         User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
@@ -87,6 +88,8 @@ public class UserCommandService {
 
         // 4) 회원가입 완료 상태로 변경
         userSignupStatusService.tryCompleteSignup(user);
+
+        return new SignupCompleteResponse(user.getId(), user.getSignupStatus(), true);
     }
 
     public ProfileImagePresignResponse generateProfileImagePresignUrl(Long userId, String contentType) {
