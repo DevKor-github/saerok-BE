@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.notification.core.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.application.dto.TokenWithPlatform;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;
 import org.springframework.stereotype.Repository;
