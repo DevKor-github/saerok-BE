@@ -1,5 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.core.repository;
 
+import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSetting;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationType;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;
@@ -32,7 +33,7 @@ class NotificationSettingRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     private UserDevice device(User user, String deviceId) {
-        UserDevice userDevice = UserDevice.create(user, deviceId, "token-" + deviceId);
+        UserDevice userDevice = UserDevice.create(user, deviceId, "token-" + deviceId, DevicePlatform.IOS);
         em.persist(userDevice);
         return userDevice;
     }

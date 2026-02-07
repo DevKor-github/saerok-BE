@@ -1,5 +1,6 @@
 package org.devkor.apu.saerok_server.domain.notification.core.repository;
 
+import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.testsupport.AbstractPostgresContainerTest;
@@ -30,7 +31,7 @@ class UserDeviceRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     private UserDevice device(User user, String deviceId, String token) {
-        UserDevice userDevice = UserDevice.create(user, deviceId, token);
+        UserDevice userDevice = UserDevice.create(user, deviceId, token, DevicePlatform.IOS);
         repo.save(userDevice);
         return userDevice;
     }
@@ -49,29 +50,31 @@ class UserDeviceRepositoryTest extends AbstractPostgresContainerTest {
         assertThat(found.get().getToken()).isEqualTo("token-1");
     }
 
-    @Test @DisplayName("findByUserIdAndDeviceId")
-    void findByUserIdAndDeviceId_returnsMatch() {
+    @Test @DisplayName("findByUserIdAndDeviceIdAndPlatform")
+    void findByUserIdAndDeviceIdAndPlatform_returnsMatch() {
         User user = user();
         device(user, "device-1", "token-1");
         repo.flush(); em.clear();
 
-        Optional<UserDevice> found = repo.findByUserIdAndDeviceId(user.getId(), "device-1");
-        Optional<UserDevice> missing = repo.findByUserIdAndDeviceId(user.getId(), "device-2");
+        Optional<UserDevice> found = repo.findByUserIdAndDeviceIdAndPlatform(user.getId(), "device-1", DevicePlatform.IOS);
+        Optional<UserDevice> missingDevice = repo.findByUserIdAndDeviceIdAndPlatform(user.getId(), "device-2", DevicePlatform.IOS);
+        Optional<UserDevice> missingPlatform = repo.findByUserIdAndDeviceIdAndPlatform(user.getId(), "device-1", DevicePlatform.ANDROID);
 
         assertThat(found).isPresent();
-        assertThat(missing).isEmpty();
+        assertThat(missingDevice).isEmpty();
+        assertThat(missingPlatform).isEmpty();
     }
 
-    @Test @DisplayName("deleteByUserIdAndDeviceId")
-    void deleteByUserIdAndDeviceId_removesDevice() {
+    @Test @DisplayName("deleteByUserIdAndDeviceIdAndPlatform")
+    void deleteByUserIdAndDeviceIdAndPlatform_removesDevice() {
         User user = user();
         device(user, "device-1", "token-1");
         repo.flush(); em.clear();
 
-        repo.deleteByUserIdAndDeviceId(user.getId(), "device-1");
+        repo.deleteByUserIdAndDeviceIdAndPlatform(user.getId(), "device-1", DevicePlatform.IOS);
         repo.flush(); em.clear();
 
-        Optional<UserDevice> found = repo.findByUserIdAndDeviceId(user.getId(), "device-1");
+        Optional<UserDevice> found = repo.findByUserIdAndDeviceIdAndPlatform(user.getId(), "device-1", DevicePlatform.IOS);
         assertThat(found).isEmpty();
     }
 
@@ -119,31 +122,5 @@ class UserDeviceRepositoryTest extends AbstractPostgresContainerTest {
         assertThat(devices).hasSize(2);
         assertThat(devices).extracting(UserDevice::getId)
                 .containsExactlyInAnyOrder(first.getId(), second.getId());
-    }
-
-    @Test @DisplayName("findTokensByUserDeviceIds")
-    void findTokensByUserDeviceIds_returnsTokens() {
-        User user = user();
-        UserDevice first = device(user, "device-1", "token-1");
-        UserDevice second = device(user, "device-2", "token-2");
-        repo.flush(); em.clear();
-
-        List<String> tokens = repo.findTokensByUserDeviceIds(List.of(first.getId(), second.getId()));
-        List<String> emptyTokens = repo.findTokensByUserDeviceIds(List.of());
-
-        assertThat(tokens).containsExactlyInAnyOrder("token-1", "token-2");
-        assertThat(emptyTokens).isEmpty();
-    }
-
-    @Test @DisplayName("findTokensByUserId")
-    void findTokensByUserId_returnsTokens() {
-        User user = user();
-        device(user, "device-1", "token-1");
-        device(user, "device-2", "token-2");
-        repo.flush(); em.clear();
-
-        List<String> tokens = repo.findTokensByUserId(user.getId());
-
-        assertThat(tokens).containsExactlyInAnyOrder("token-1", "token-2");
     }
 }
