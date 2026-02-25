@@ -41,7 +41,10 @@ public class StatBatchScheduler {
                 StatMetric.USER_WITHDRAWAL_DAILY,
                 StatMetric.USER_DAU,
                 StatMetric.USER_WAU,
-                StatMetric.USER_MAU
+                StatMetric.USER_MAU,
+
+                StatMetric.USER_SIGNUP_SOURCE_TOTAL,
+                StatMetric.USER_DEVICE_PLATFORM_TOTAL
         )) {
             var last = dailyRepo.findLastDateOf(metric).orElse(null);
             LocalDate from = (last == null) ? yesterday : last.plusDays(1);
