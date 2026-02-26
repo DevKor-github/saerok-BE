@@ -73,7 +73,7 @@ public class UserDeviceController {
     public void deleteDevice(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable String deviceId,
-            @RequestParam DevicePlatform platform
+            @RequestParam(required = false) DevicePlatform platform
     ) {
         userDeviceCommandService.deleteDevice(userPrincipal.getId(), deviceId, platform);
     }

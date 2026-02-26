@@ -11,7 +11,7 @@ public record RegisterTokenRequest(
     @Schema(description = "푸시 알림 수신용 토큰 (FCM 토큰)", example = "fGKdE...", requiredMode = Schema.RequiredMode.REQUIRED)
     String token,
 
-    @Schema(description = "디바이스 플랫폼", example = "IOS", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "디바이스 플랫폼", example = "IOS", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     DevicePlatform platform
 ) {
 }

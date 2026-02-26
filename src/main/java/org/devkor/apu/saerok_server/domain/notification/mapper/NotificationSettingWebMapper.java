@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.notification.api.dto.request.ToggleNo
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.NotificationSettingsResponse;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.ToggleNotificationResponse;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.ToggleNotificationSettingCommand;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSetting;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,8 @@ import java.util.List;
 public class NotificationSettingWebMapper {
 
     public ToggleNotificationSettingCommand toToggleNotificationSettingCommand(Long userId, ToggleNotificationRequest req) {
-        return new ToggleNotificationSettingCommand(userId, req.deviceId(), req.platform(), req.type());
+        DevicePlatform platform = req.platform() != null ? req.platform() : DevicePlatform.IOS;
+        return new ToggleNotificationSettingCommand(userId, req.deviceId(), platform, req.type());
     }
 
     public ToggleNotificationResponse toToggleNotificationResponse(ToggleNotificationSettingCommand cmd, boolean enabled) {
