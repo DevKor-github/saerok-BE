@@ -9,6 +9,9 @@ import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
+import org.devkor.apu.saerok_server.domain.user.core.entity.SignupSourceType;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -51,6 +54,25 @@ public class StatQueryService {
                 );
 
                 out.add(StatSeriesResponse.multi(m.name(), List.of(minSeries, maxSeries, avgSeries, stdSeries)));
+
+            } else if (m == StatMetric.USER_SIGNUP_SOURCE_TOTAL) {
+                List<StatSeriesResponse.ComponentSeries> components = Arrays.stream(SignupSourceType.values())
+                        .map(src -> new StatSeriesResponse.ComponentSeries(
+                                src.name(),
+                                rows.stream().map(s ->
+                                        new StatSeriesResponse.Point(s.getDate(), numberOrNull(s.getPayload().get(src.name())))).toList()
+                        )).toList();
+                out.add(StatSeriesResponse.multi(m.name(), components));
+
+            } else if (m == StatMetric.USER_DEVICE_PLATFORM_TOTAL) {
+                List<StatSeriesResponse.ComponentSeries> components = Arrays.stream(DevicePlatform.values())
+                        .map(p -> new StatSeriesResponse.ComponentSeries(
+                                p.name(),
+                                rows.stream().map(s ->
+                                        new StatSeriesResponse.Point(s.getDate(), numberOrNull(s.getPayload().get(p.name())))).toList()
+                        )).toList();
+                out.add(StatSeriesResponse.multi(m.name(), components));
+
             } else {
                 List<StatSeriesResponse.Point> points = rows.stream()
                         .map(s -> new StatSeriesResponse.Point(s.getDate(), numberOrNull(s.getPayload().get("value"))))
