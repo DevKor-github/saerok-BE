@@ -47,8 +47,8 @@ public class NotificationSettingController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Parameter(description = "디바이스 ID", required = true, example = "device-123")
             @RequestParam String deviceId,
-            @Parameter(description = "디바이스 플랫폼", required = true, example = "IOS")
-            @RequestParam DevicePlatform platform
+            @Parameter(description = "디바이스 플랫폼", example = "IOS")
+            @RequestParam(required = false) DevicePlatform platform
     ) {
         return notificationSettingQueryService.getNotificationSettings(userPrincipal.getId(), deviceId, platform);
     }
