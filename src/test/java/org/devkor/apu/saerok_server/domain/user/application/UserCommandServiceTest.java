@@ -5,9 +5,12 @@ import org.devkor.apu.saerok_server.domain.auth.core.entity.SocialProviderType;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
 import org.devkor.apu.saerok_server.domain.auth.infra.SocialRevoker;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.ProfileImagePresignResponse;
+import org.devkor.apu.saerok_server.domain.user.api.dto.response.SignupCompleteResponse;
 import org.devkor.apu.saerok_server.domain.user.api.dto.response.UpdateUserProfileResponse;
+import org.devkor.apu.saerok_server.domain.user.application.dto.SignupCompleteCommand;
 import org.devkor.apu.saerok_server.domain.user.application.dto.UpdateUserProfileCommand;
 import org.devkor.apu.saerok_server.domain.user.application.helper.UserHardDeleteHelper;
+import org.devkor.apu.saerok_server.domain.user.core.entity.SignupSourceType;
 import org.devkor.apu.saerok_server.domain.user.core.entity.SignupStatusType;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
@@ -101,7 +104,6 @@ class UserCommandServiceTest {
 
             verify(userRepository).findById(42L);
             verify(userProfileUpdateService).changeNickname(user, "newNick");
-            verify(userSignupStatusService).tryCompleteSignup(user);
             verify(userProfileImageUrlService).getProfileImageUrlFor(user);
             verify(userProfileImageUrlService).getProfileThumbnailImageUrlFor(user);
             verifyNoMoreInteractions(userProfileUpdateService);
@@ -294,6 +296,122 @@ class UserCommandServiceTest {
                     .isInstanceOf(NotFoundException.class);
 
             verifyNoInteractions(userHardDeleteHelper, kakaoRevoker, appleRevoker);
+        }
+    }
+
+    @Nested
+    class SignupComplete {
+
+        @Test
+        @DisplayName("정상 플로우: 닉네임 설정, 회원가입 경로 설정, 상태 COMPLETED로 변경")
+        void ok() {
+            long userId = 42L;
+            User user = new User();
+            ReflectionTestUtils.setField(user, "id", userId);
+            user.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+            ReflectionTestUtils.setField(user, "email", "test@example.com");
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            doAnswer(invocation -> {
+                User u = invocation.getArgument(0);
+                String newNick = invocation.getArgument(1);
+                u.setNickname(newNick);
+                return null;
+            }).when(userProfileUpdateService).changeNickname(same(user), eq("새록이"));
+            doAnswer(invocation -> {
+                User u = invocation.getArgument(0);
+                u.setSignupStatus(SignupStatusType.COMPLETED);
+                return null;
+            }).when(userSignupStatusService).tryCompleteSignup(same(user));
+
+            SignupCompleteCommand cmd = new SignupCompleteCommand(userId, "새록이", SignupSourceType.INSTAGRAM);
+
+            SignupCompleteResponse response = sut.signupComplete(cmd);
+
+            assertThat(response.success()).isTrue();
+            assertThat(response.userId()).isEqualTo(userId);
+            assertThat(response.signupStatus()).isEqualTo(SignupStatusType.COMPLETED);
+            verify(userRepository).findById(userId);
+            verify(userProfileUpdateService).changeNickname(user, "새록이");
+            verify(userSignupStatusService).tryCompleteSignup(user);
+            assertThat(user.getNickname()).isEqualTo("새록이");
+            assertThat(user.getSignupSource()).isEqualTo(SignupSourceType.INSTAGRAM);
+        }
+
+        @Test
+        @DisplayName("이미 회원가입 완료된 사용자는 BadRequestException")
+        void alreadyCompleted_throwsBadRequest() {
+            long userId = 42L;
+            User user = new User();
+            ReflectionTestUtils.setField(user, "id", userId);
+            user.setSignupStatus(SignupStatusType.COMPLETED);
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+            SignupCompleteCommand cmd = new SignupCompleteCommand(userId, "새록이", SignupSourceType.INSTAGRAM);
+
+            assertThatThrownBy(() -> sut.signupComplete(cmd))
+                    .isInstanceOf(BadRequestException.class)
+                    .hasMessageContaining("이미 회원가입이 완료된 사용자입니다");
+
+            verifyNoInteractions(userProfileUpdateService, userSignupStatusService);
+        }
+
+        @Test
+        @DisplayName("닉네임 정책 위반 시 BadRequestException")
+        void invalidNickname_throwsBadRequest() {
+            long userId = 42L;
+            User user = new User();
+            ReflectionTestUtils.setField(user, "id", userId);
+            user.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            doThrow(new IllegalArgumentException("닉네임 정책 위반"))
+                    .when(userProfileUpdateService).changeNickname(user, "badnick");
+
+            SignupCompleteCommand cmd = new SignupCompleteCommand(userId, "badnick", SignupSourceType.INSTAGRAM);
+
+            assertThatThrownBy(() -> sut.signupComplete(cmd))
+                    .isInstanceOf(BadRequestException.class)
+                    .hasMessageContaining("닉네임 정책을 만족하지 않습니다");
+        }
+
+        @Test
+        @DisplayName("회원가입 경로 null이면 BadRequestException")
+        void nullSignupSource_throwsBadRequest() {
+            long userId = 42L;
+            User user = new User();
+            ReflectionTestUtils.setField(user, "id", userId);
+            user.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            doAnswer(invocation -> {
+                User u = invocation.getArgument(0);
+                String newNick = invocation.getArgument(1);
+                u.setNickname(newNick);
+                return null;
+            }).when(userProfileUpdateService).changeNickname(same(user), eq("새록이"));
+
+            SignupCompleteCommand cmd = new SignupCompleteCommand(userId, "새록이", null);
+
+            assertThatThrownBy(() -> sut.signupComplete(cmd))
+                    .isInstanceOf(BadRequestException.class)
+                    .hasMessageContaining("회원가입 경로는 필수입니다");
+
+            verifyNoInteractions(userSignupStatusService);
+        }
+
+        @Test
+        @DisplayName("사용자 없음 시 404")
+        void userNotFound() {
+            given(userRepository.findById(999L)).willReturn(Optional.empty());
+
+            SignupCompleteCommand cmd = new SignupCompleteCommand(999L, "새록이", SignupSourceType.INSTAGRAM);
+
+            assertThatThrownBy(() -> sut.signupComplete(cmd))
+                    .isInstanceOf(NotFoundException.class);
+
+            verifyNoInteractions(userProfileUpdateService, userSignupStatusService);
         }
     }
 }

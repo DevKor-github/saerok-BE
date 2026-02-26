@@ -1,10 +1,8 @@
 package org.devkor.apu.saerok_server.domain.admin.audit.application.dto;
 
-public record AdminAuditQueryCommand(Integer page, Integer size) {
+import org.devkor.apu.saerok_server.global.shared.util.Pageable;
 
-    public boolean hasValidPagination() {
-        if (page == null && size == null) return true;
-        if (page == null || size == null) return false;
-        return page >= 1 && size > 0;
-    }
-}
+public record AdminAuditQueryCommand(
+        Integer page,
+        Integer size
+) implements Pageable {}

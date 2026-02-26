@@ -1,0 +1,4 @@
+comment-replacements:
+  contents:
+    DELETED: "삭제된 댓글이에요."
+    BANNED: "정책에 의해 차단된 댓글이에요."

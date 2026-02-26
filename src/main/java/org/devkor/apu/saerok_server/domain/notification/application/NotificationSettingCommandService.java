@@ -24,7 +24,7 @@ public class NotificationSettingCommandService {
     private final NotificationSettingWebMapper notificationSettingWebMapper;
 
     public ToggleNotificationResponse toggleNotificationSetting(ToggleNotificationSettingCommand command) {
-        UserDevice device = userDeviceRepository.findByUserIdAndDeviceId(command.userId(), command.deviceId())
+        UserDevice device = userDeviceRepository.findByUserIdAndDeviceIdAndPlatform(command.userId(), command.deviceId(), command.platform())
                 .orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
 
         backfillService.ensureDefaults(device);
