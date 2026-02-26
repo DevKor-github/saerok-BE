@@ -26,6 +26,7 @@ public class NotificationSettingQueryService {
     private final NotificationSettingWebMapper mapper;
 
     public NotificationSettingsResponse getNotificationSettings(Long userId, String deviceId, DevicePlatform platform) {
+        platform = platform != null ? platform : DevicePlatform.IOS;
         UserDevice userDevice = userDeviceRepository.findByUserIdAndDeviceIdAndPlatform(userId, deviceId, platform)
                 .orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
 

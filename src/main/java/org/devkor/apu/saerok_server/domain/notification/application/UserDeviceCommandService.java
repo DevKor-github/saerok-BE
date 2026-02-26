@@ -32,19 +32,20 @@ public class UserDeviceCommandService {
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
         if (command.deviceId() == null || command.deviceId().isEmpty()
-                || command.token() == null || command.token().isEmpty()
-                || command.platform() == null) {
-            throw new BadRequestException("deviceId, token, platform은 필수입니다");
+                || command.token() == null || command.token().isEmpty()) {
+            throw new BadRequestException("deviceId, token은 필수입니다");
         }
 
+        DevicePlatform platform = command.platform() != null ? command.platform() : DevicePlatform.IOS;
+
         UserDevice userDevice = userDeviceRepository
-                .findByUserIdAndDeviceIdAndPlatform(command.userId(), command.deviceId(), command.platform())
+                .findByUserIdAndDeviceIdAndPlatform(command.userId(), command.deviceId(), platform)
                 .map(existing -> {
                     existing.updateToken(command.token());
                     return existing;
                 })
                 .orElseGet(() -> {
-                    UserDevice newDevice = UserDevice.create(user, command.deviceId(), command.token(), command.platform());
+                    UserDevice newDevice = UserDevice.create(user, command.deviceId(), command.token(), platform);
                     userDeviceRepository.save(newDevice);
                     userDeviceRepository.flush();
                     return newDevice;
@@ -57,6 +58,7 @@ public class UserDeviceCommandService {
 
     public void deleteDevice(Long userId, String deviceId, DevicePlatform platform) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
+        platform = platform != null ? platform : DevicePlatform.IOS;
         userDeviceRepository.findByUserIdAndDeviceIdAndPlatform(userId, deviceId, platform)
                 .orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
 
