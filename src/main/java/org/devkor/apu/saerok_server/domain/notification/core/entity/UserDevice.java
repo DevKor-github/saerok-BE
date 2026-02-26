@@ -10,7 +10,7 @@ import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 @Entity
 @Table(
         name = "user_device",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "device_id", "platform"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "device_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -30,16 +30,11 @@ public class UserDevice extends Auditable {
     @Column(name = "token", nullable = false, length = 512)
     private String token;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "platform", nullable = false, length = 16)
-    private DevicePlatform platform;
-
-    public static UserDevice create(User user, String deviceId, String token, DevicePlatform platform) {
+    public static UserDevice create(User user, String deviceId, String token) {
         UserDevice userDevice = new UserDevice();
         userDevice.user = user;
         userDevice.deviceId = deviceId;
         userDevice.token = token;
-        userDevice.platform = platform;
         return userDevice;
     }
 

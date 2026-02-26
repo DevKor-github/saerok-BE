@@ -2,13 +2,11 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentCountResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
-import org.devkor.apu.saerok_server.domain.collection.application.dto.CommentQueryCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.collection.core.service.CommentContentResolver;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
@@ -42,7 +40,6 @@ class CollectionCommentQueryServiceTest {
     @Mock CollectionCommentLikeRepository        commentLikeRepo;
     @Mock CollectionCommentWebMapper             mapper;
     @Mock UserProfileImageUrlService             userProfileImageUrlService;
-    @Mock CommentContentResolver                 commentContentResolver;
 
     private static UserBirdCollection collection(long id, Long userId) {
         UserBirdCollection c = new UserBirdCollection();
@@ -60,8 +57,7 @@ class CollectionCommentQueryServiceTest {
                 collectionRepo,
                 commentLikeRepo,
                 mapper,
-                userProfileImageUrlService,
-                commentContentResolver
+                userProfileImageUrlService
         );
     }
 
@@ -76,7 +72,7 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(Optional.of(collection(COLL_ID, 999L)));
 
             List<UserBirdCollectionComment> comments = List.of();
-            when(commentRepo.findByCollectionId(eq(COLL_ID), any(CommentQueryCommand.class)))
+            when(commentRepo.findByCollectionId(COLL_ID))
                     .thenReturn(comments);
 
             Map<Long, Long> likeCounts = Map.of();
@@ -92,23 +88,21 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(thumbnailProfileImageUrls);
 
             GetCollectionCommentsResponse expected =
-                    new GetCollectionCommentsResponse(List.of(), false, null);
+                    new GetCollectionCommentsResponse(List.of(), false);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     Map.of(), Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false, null,
-                    commentContentResolver
+                    profileImageUrls, thumbnailProfileImageUrls, false
             ))
                     .thenReturn(expected);
 
-            var res = sut.getComments(COLL_ID, null, new CommentQueryCommand(null, null));
+            var res = sut.getComments(COLL_ID, null);
 
             assertThat(res).isSameAs(expected);
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     Map.of(), Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false, null,
-                    commentContentResolver
+                    profileImageUrls, thumbnailProfileImageUrls, false
             );
         }
 
@@ -120,7 +114,7 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(Optional.of(collection(COLL_ID, 999L)));
 
             List<UserBirdCollectionComment> comments = List.of();
-            when(commentRepo.findByCollectionId(eq(COLL_ID), any(CommentQueryCommand.class)))
+            when(commentRepo.findByCollectionId(COLL_ID))
                     .thenReturn(comments);
 
             Map<Long, Long> likeCounts = Map.of();
@@ -140,23 +134,21 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(thumbnailProfileImageUrls);
 
             GetCollectionCommentsResponse expected =
-                    new GetCollectionCommentsResponse(List.of(), false, null);
+                    new GetCollectionCommentsResponse(List.of(), false);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false, null,
-                    commentContentResolver
+                    profileImageUrls, thumbnailProfileImageUrls, false
             ))
                     .thenReturn(expected);
 
-            var res = sut.getComments(COLL_ID, userId, new CommentQueryCommand(null, null));
+            var res = sut.getComments(COLL_ID, userId);
 
             assertThat(res).isSameAs(expected);
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, false, null,
-                    commentContentResolver
+                    profileImageUrls, thumbnailProfileImageUrls, false
             );
         }
 
@@ -168,7 +160,7 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(Optional.of(collection(COLL_ID, userId)));
 
             List<UserBirdCollectionComment> comments = List.of();
-            when(commentRepo.findByCollectionId(eq(COLL_ID), any(CommentQueryCommand.class)))
+            when(commentRepo.findByCollectionId(COLL_ID))
                     .thenReturn(comments);
 
             Map<Long, Long> likeCounts = Map.of();
@@ -188,23 +180,21 @@ class CollectionCommentQueryServiceTest {
                     .thenReturn(thumbnailProfileImageUrls);
 
             GetCollectionCommentsResponse expected =
-                    new GetCollectionCommentsResponse(List.of(), true, null);
+                    new GetCollectionCommentsResponse(List.of(), true);
             when(mapper.toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, true, null,
-                    commentContentResolver
+                    profileImageUrls, thumbnailProfileImageUrls, true
             ))
                     .thenReturn(expected);
 
-            var res = sut.getComments(COLL_ID, userId, new CommentQueryCommand(null, null));
+            var res = sut.getComments(COLL_ID, userId);
 
             assertThat(res).isSameAs(expected);
             verify(mapper).toGetCollectionCommentsResponse(
                     comments, likeCounts,
                     likeStatuses, Map.of(),
-                    profileImageUrls, thumbnailProfileImageUrls, true, null,
-                    commentContentResolver
+                    profileImageUrls, thumbnailProfileImageUrls, true
             );
         }
 
@@ -213,7 +203,7 @@ class CollectionCommentQueryServiceTest {
         void notFound() {
             when(collectionRepo.findById(COLL_ID))
                     .thenReturn(Optional.empty());
-            assertThatThrownBy(() -> sut.getComments(COLL_ID, null, new CommentQueryCommand(null, null)))
+            assertThatThrownBy(() -> sut.getComments(COLL_ID, null))
                     .isExactlyInstanceOf(NotFoundException.class);
         }
     }

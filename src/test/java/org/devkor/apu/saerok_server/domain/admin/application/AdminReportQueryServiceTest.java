@@ -8,7 +8,6 @@ import org.devkor.apu.saerok_server.domain.admin.report.application.AdminReportQ
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommentQueryService;
-import org.devkor.apu.saerok_server.domain.collection.application.dto.CommentQueryCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
@@ -165,7 +164,7 @@ class AdminReportQueryServiceTest {
         ReflectionTestUtils.setField(rep, "collection", col);
 
         GetCollectionDetailResponse detail = new GetCollectionDetailResponse();
-        GetCollectionCommentsResponse comments = new GetCollectionCommentsResponse(List.of(), false, null);
+        GetCollectionCommentsResponse comments = new GetCollectionCommentsResponse(List.of(), false);
 
         when(collectionReportRepository.findById(999L)).thenReturn(Optional.of(rep));
         when(collectionImageUrlService.getPrimaryImageUrlFor(col)).thenReturn(Optional.of("img"));
@@ -175,7 +174,7 @@ class AdminReportQueryServiceTest {
         when(userProfileImageUrlService.getProfileThumbnailImageUrlFor(owner)).thenReturn("profile_thumb");
         when(collectionWebMapper.toGetCollectionDetailResponse(col, "img", "profile", "profile_thumb", 10L, 2L, false, false))
                 .thenReturn(detail);
-        when(commentQueryService.getComments(eq(10L), isNull(), any(CommentQueryCommand.class))).thenReturn(comments);
+        when(commentQueryService.getComments(10L, null)).thenReturn(comments);
 
         ReportedCollectionDetailResponse res = sut.getReportedCollectionDetail(999L);
 
@@ -207,7 +206,7 @@ class AdminReportQueryServiceTest {
         ReflectionTestUtils.setField(rep, "comment", cm);
 
         GetCollectionDetailResponse detail = new GetCollectionDetailResponse();
-        GetCollectionCommentsResponse comments = new GetCollectionCommentsResponse(List.of(), false, null);
+        GetCollectionCommentsResponse comments = new GetCollectionCommentsResponse(List.of(), false);
 
         when(commentReportRepository.findById(777L)).thenReturn(Optional.of(rep));
         when(collectionImageUrlService.getPrimaryImageUrlFor(col)).thenReturn(Optional.empty());
@@ -217,7 +216,7 @@ class AdminReportQueryServiceTest {
         when(userProfileImageUrlService.getProfileThumbnailImageUrlFor(owner)).thenReturn("p_thumb");
         when(collectionWebMapper.toGetCollectionDetailResponse(col, null, "p", "p_thumb", 5L, 1L, false, false))
                 .thenReturn(detail);
-        when(commentQueryService.getComments(eq(100L), isNull(), any(CommentQueryCommand.class))).thenReturn(comments);
+        when(commentQueryService.getComments(100L, null)).thenReturn(comments);
 
         ReportedCommentDetailResponse res = sut.getReportedCommentDetail(777L);
 

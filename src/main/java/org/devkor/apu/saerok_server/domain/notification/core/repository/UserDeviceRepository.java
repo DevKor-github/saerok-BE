@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.notification.core.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;
 import org.springframework.stereotype.Repository;
 
@@ -19,12 +18,11 @@ public class UserDeviceRepository {
     public void save(UserDevice userDevice) { em.persist(userDevice); }
     public void flush() { em.flush(); }
 
-    // 특정 디바이스 삭제
-    public void deleteByUserIdAndDeviceIdAndPlatform(Long userId, String deviceId, DevicePlatform platform) {
-        em.createQuery("DELETE FROM UserDevice ud WHERE ud.user.id = :userId AND ud.deviceId = :deviceId AND ud.platform = :platform")
+    // 특정 토큰 삭제
+    public void deleteByUserIdAndDeviceId(Long userId, String deviceId) {
+        em.createQuery("DELETE FROM UserDevice ud WHERE ud.user.id = :userId AND ud.deviceId = :deviceId")
                 .setParameter("userId", userId)
                 .setParameter("deviceId", deviceId)
-                .setParameter("platform", platform)
                 .executeUpdate();
     }
 
@@ -52,14 +50,13 @@ public class UserDeviceRepository {
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
     }
 
-    // 사용자 ID, device_id, platform으로 디바이스 조회
-    public Optional<UserDevice> findByUserIdAndDeviceIdAndPlatform(Long userId, String deviceId, DevicePlatform platform) {
+    // 사용자 ID와 device_id로 디바이스 토큰 조회
+    public Optional<UserDevice> findByUserIdAndDeviceId(Long userId, String deviceId) {
         List<UserDevice> results = em.createQuery(
                 "SELECT ud FROM UserDevice ud " +
-                "WHERE ud.user.id = :userId AND ud.deviceId = :deviceId AND ud.platform = :platform", UserDevice.class)
+                "WHERE ud.user.id = :userId AND ud.deviceId = :deviceId", UserDevice.class)
                 .setParameter("userId", userId)
                 .setParameter("deviceId", deviceId)
-                .setParameter("platform", platform)
                 .setMaxResults(1)
                 .getResultList();
         

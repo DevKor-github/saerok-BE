@@ -26,7 +26,6 @@ spring:
       - "classpath:config/user-profile-images-default.yml"
       - "classpath:config/notification-messages.yml"
       - "classpath:config/image-variants.yml"
-      - "classpath:config/comment-replacements.yml"
 
 api_prefix: /api/v1
 

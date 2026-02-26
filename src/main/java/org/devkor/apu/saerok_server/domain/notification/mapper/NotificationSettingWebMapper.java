@@ -14,7 +14,7 @@ import java.util.List;
 public class NotificationSettingWebMapper {
 
     public ToggleNotificationSettingCommand toToggleNotificationSettingCommand(Long userId, ToggleNotificationRequest req) {
-        return new ToggleNotificationSettingCommand(userId, req.deviceId(), req.platform(), req.type());
+        return new ToggleNotificationSettingCommand(userId, req.deviceId(), req.type());
     }
 
     public ToggleNotificationResponse toToggleNotificationResponse(ToggleNotificationSettingCommand cmd, boolean enabled) {

@@ -40,11 +40,6 @@ public class User extends SoftDeletableAuditable {
     @Setter
     private SignupStatusType signupStatus;
 
-    @Setter
-    @Enumerated(EnumType.STRING)
-    @Column(name = "signup_source", nullable = true)
-    private SignupSourceType signupSource;
-
     @Column(name = "joined_at")
     private OffsetDateTime joinedAt;
 

@@ -64,7 +64,6 @@ public class AnnouncementPublicationService {
             return;
         }
         Map<String, Object> extras = Map.of(
-                "announcementId", announcement.getId(),
                 "title", announcement.getPushTitle(),
                 "body", announcement.getPushBody(),
                 "inAppBody", announcement.getInAppBody()

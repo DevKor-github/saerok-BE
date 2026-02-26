@@ -12,8 +12,5 @@ public enum StatMetric {
     USER_WITHDRAWAL_DAILY,           // 일일 탈퇴자 수 — deleted_at 기준
     USER_DAU,                        // 일일 활성 사용자 수 — user_activity_ping DISTINCT(user_id)
     USER_WAU,                        // 주간 활성 사용자 수(마지막 7일 rolling)
-    USER_MAU,                        // 월간 활성 사용자 수(마지막 30일 rolling)
-
-    USER_SIGNUP_SOURCE_TOTAL,        // 누적 가입 경로별 가입자 수 (스냅샷, 멀티값) — signupCompletedAt 기준
-    USER_DEVICE_PLATFORM_TOTAL       // 누적 플랫폼별 유니크 유저 수 (스냅샷, 멀티값) — UserDevice.createdAt 기준
+    USER_MAU                         // 월간 활성 사용자 수(마지막 30일 rolling)
 }
