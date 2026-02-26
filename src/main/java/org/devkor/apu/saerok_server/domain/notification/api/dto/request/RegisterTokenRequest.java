@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.notification.api.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 
 @Schema(description = "사용자 디바이스 등록/갱신 요청 DTO")
 public record RegisterTokenRequest(
@@ -8,6 +9,9 @@ public record RegisterTokenRequest(
     String deviceId,
 
     @Schema(description = "푸시 알림 수신용 토큰 (FCM 토큰)", example = "fGKdE...", requiredMode = Schema.RequiredMode.REQUIRED)
-    String token
+    String token,
+
+    @Schema(description = "디바이스 플랫폼", example = "IOS", requiredMode = Schema.RequiredMode.REQUIRED)
+    DevicePlatform platform
 ) {
 }
