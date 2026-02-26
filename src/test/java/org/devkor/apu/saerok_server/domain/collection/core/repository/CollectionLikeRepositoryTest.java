@@ -1,19 +1,24 @@
 package org.devkor.apu.saerok_server.domain.collection.core.repository;
 
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.testsupport.AbstractPostgresContainerTest;
-import org.devkor.apu.saerok_server.testsupport.builder.CollectionBuilder;
-import org.devkor.apu.saerok_server.testsupport.builder.UserBuilder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,15 +35,37 @@ class CollectionLikeRepositoryTest extends AbstractPostgresContainerTest {
     @Autowired
     TestEntityManager em;
 
+    GeometryFactory gf;
+    Field collUserField;
+
+    @BeforeEach
+    void setUp() throws NoSuchFieldException {
+        gf = new GeometryFactory();
+
+        collUserField = UserBirdCollection.class.getDeclaredField("user");
+        collUserField.setAccessible(true);
+    }
+
     /* ------------------------------------------------------------------
      * helpers
      * ------------------------------------------------------------------ */
     private User newUser() {
-        return new UserBuilder(em).build();
+        User user = User.createUser("test+" + System.nanoTime() + "@example.com");
+        user.setNickname("user-" + user.hashCode());
+        em.persist(user);
+        em.flush();
+        return user;
     }
 
-    private UserBirdCollection newCollection(User owner) {
-        return new CollectionBuilder(em).owner(owner).build();
+    private UserBirdCollection newCollection(User owner) throws IllegalAccessException {
+        UserBirdCollection c = new UserBirdCollection();
+        collUserField.set(c, owner);
+        c.setAccessLevel(AccessLevelType.PUBLIC);
+        c.setDiscoveredDate(LocalDate.now());
+        Point location = gf.createPoint(new Coordinate(126.9780, 37.5665));
+        c.setLocation(location);
+        em.persist(c);
+        return c;
     }
 
     private UserBirdCollectionLike newLike(User user, UserBirdCollection collection) {

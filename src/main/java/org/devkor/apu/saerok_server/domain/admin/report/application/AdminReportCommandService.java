@@ -153,15 +153,10 @@ public class AdminReportCommandService {
         // 1) 관련 신고 정리
         commentReportRepository.deleteByCommentId(commentId);
 
-        // 2) 댓글 삭제 (대댓글이 있으면 soft delete, 없으면 hard delete)
+        // 2) 댓글 삭제
         UserBirdCollectionComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("해당 댓글이 존재하지 않아요"));
-
-        if (commentRepository.hasReplies(commentId)) {
-            comment.ban();
-        } else {
-            commentRepository.remove(comment);
-        }
+        commentRepository.remove(comment);
 
         // 3) 감사 기록
         User admin = userRepository.findById(adminUserId)

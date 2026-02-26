@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.time.*;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,9 +45,6 @@ public class StatAggregationService {
                 case USER_DAU -> aggregateUserDau(date);
                 case USER_WAU -> aggregateUserWau(date);
                 case USER_MAU -> aggregateUserMau(date);
-
-                case USER_SIGNUP_SOURCE_TOTAL -> aggregateUserSignupSourceTotal(date);
-                case USER_DEVICE_PLATFORM_TOTAL -> aggregateUserDevicePlatformTotal(date);
             }
         }
     }
@@ -222,47 +218,6 @@ public class StatAggregationService {
                 .setParameter(2, end)
                 .getSingleResult();
         dailyRepo.upsertValue(StatMetric.USER_MAU, date, n.longValue());
-    }
-
-    /** 누적 가입 경로별 가입자 수 (스냅샷): signupCompletedAt < end, signupSource IS NOT NULL */
-    private void aggregateUserSignupSourceTotal(LocalDate date) {
-        var end = endExclusive(date);
-
-        @SuppressWarnings("unchecked")
-        List<Object[]> rows = em.createQuery("""
-                SELECT u.signupSource, COUNT(u) FROM User u
-                WHERE u.signupCompletedAt < :end
-                  AND u.signupSource IS NOT NULL
-                GROUP BY u.signupSource
-                """)
-                .setParameter("end", end)
-                .getResultList();
-
-        Map<String, Object> payload = new HashMap<>();
-        for (Object[] row : rows) {
-            payload.put(row[0].toString(), ((Number) row[1]).longValue());
-        }
-        dailyRepo.upsertPayload(StatMetric.USER_SIGNUP_SOURCE_TOTAL, date, payload);
-    }
-
-    /** 누적 플랫폼별 유니크 유저 수 (스냅샷): UserDevice.createdAt < end */
-    private void aggregateUserDevicePlatformTotal(LocalDate date) {
-        var end = endExclusive(date);
-
-        @SuppressWarnings("unchecked")
-        List<Object[]> rows = em.createQuery("""
-                SELECT ud.platform, COUNT(DISTINCT ud.user.id) FROM UserDevice ud
-                WHERE ud.createdAt < :end
-                GROUP BY ud.platform
-                """)
-                .setParameter("end", end)
-                .getResultList();
-
-        Map<String, Object> payload = new HashMap<>();
-        for (Object[] row : rows) {
-            payload.put(row[0].toString(), ((Number) row[1]).longValue());
-        }
-        dailyRepo.upsertPayload(StatMetric.USER_DEVICE_PLATFORM_TOTAL, date, payload);
     }
 
     /* Helpers */

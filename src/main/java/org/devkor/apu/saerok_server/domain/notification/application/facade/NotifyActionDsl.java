@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
 import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
 import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
 import org.devkor.apu.saerok_server.domain.notification.application.port.TargetMetadataPort;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
@@ -102,19 +101,13 @@ public class NotifyActionDsl {
         public void to(Long recipientId) {
             var notificationSubject = switch (target.type()) {
                 case COLLECTION -> NotificationSubject.COLLECTION;
-                case COMMENT -> NotificationSubject.COMMENT;
             };
 
             var notificationAction = switch (action) {
                 case LIKE -> NotificationAction.LIKE;
                 case COMMENT -> NotificationAction.COMMENT;
-                case REPLY -> NotificationAction.REPLY;
                 case SUGGEST_BIRD_ID -> NotificationAction.SUGGEST_BIRD_ID;
             };
-
-            Long relatedId = target.type() == TargetType.COMMENT && extras.containsKey("collectionId")
-                    ? (Long) extras.get("collectionId")
-                    : target.id();
 
             publisher.push(
                     new ActionNotificationPayload(
@@ -123,7 +116,7 @@ public class NotifyActionDsl {
                             actor.name(),
                             notificationSubject,
                             notificationAction,
-                            relatedId,
+                            target.id(),
                             extras
                     )
             );

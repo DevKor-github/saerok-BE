@@ -2,9 +2,7 @@ package org.devkor.apu.saerok_server.domain.collection.mapper;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
-import org.devkor.apu.saerok_server.domain.collection.core.service.CommentContentResolver;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
-import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 
@@ -14,19 +12,17 @@ import java.util.Map;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CollectionCommentWebMapper {
 
-    /* 엔티티 목록 → 래핑된 응답 (원댓글 + 대댓글 트리 구조) */
+    /* 엔티티 목록 → 래핑된 응답 */
     default GetCollectionCommentsResponse toGetCollectionCommentsResponse(
-            List<UserBirdCollectionComment> entities,
+            List<UserBirdCollectionComment> entities, 
             Map<Long, Long> likeCounts,
             Map<Long, Boolean> likeStatuses,
             Map<Long, Boolean> mineStatuses,
             Map<Long, String> profileImageUrls,
             Map<Long, String> thumbnailProfileImageUrls,
-            Boolean isMyCollection,
-            Boolean hasNext,
-            @Context CommentContentResolver commentContentResolver) {
+            Boolean isMyCollection) {
         if (entities == null || entities.isEmpty()) {
-            return new GetCollectionCommentsResponse(List.of(), isMyCollection, hasNext);
+            return new GetCollectionCommentsResponse(List.of(), isMyCollection);
         }
 
         for (UserBirdCollectionComment entity : entities) {
@@ -51,68 +47,36 @@ public interface CollectionCommentWebMapper {
                 throw new IllegalStateException("thumbnailProfileImageUrls에 사용자 ID " + userId + "가 없습니다.");
             }
         }
-
-        // 1. 원댓글과 대댓글 분리
-        List<UserBirdCollectionComment> rootComments = entities.stream()
-                .filter(c -> c.getParent() == null)
-                .toList();
-
-        Map<Long, List<UserBirdCollectionComment>> repliesByParentId = entities.stream()
-                .filter(c -> c.getParent() != null)
-                .collect(java.util.stream.Collectors.groupingBy(c -> c.getParent().getId()));
-
-        // 2. 원댓글을 Item으로 변환하고 대댓글 추가
-        List<GetCollectionCommentsResponse.Item> items = rootComments.stream()
+        
+        List<GetCollectionCommentsResponse.Item> items = entities.stream()
                 .map(comment -> {
-                    // 대댓글 목록 생성
-                    List<GetCollectionCommentsResponse.Item> replies = repliesByParentId.getOrDefault(comment.getId(), List.of())
-                            .stream()
-                            .sorted(java.util.Comparator.comparing(UserBirdCollectionComment::getCreatedAt))
-                            .map(reply -> buildCommentItem(reply, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, List.of(), commentContentResolver))
-                            .toList();
-
-                    return buildCommentItem(comment, likeCounts, likeStatuses, mineStatuses, profileImageUrls, thumbnailProfileImageUrls, replies, commentContentResolver);
+                    Long commentId = comment.getId();
+                    Long userId = comment.getUser().getId();
+                    int likeCount = likeCounts.get(commentId).intValue();
+                    Boolean isLiked = likeStatuses.get(commentId);
+                    Boolean isMine = mineStatuses.get(commentId);
+                    String profileImageUrl = profileImageUrls.get(userId);
+                    String thumbnailProfileImageUrl = thumbnailProfileImageUrls.get(userId);
+                    return toCommentItem(comment, likeCount, isLiked, isMine, profileImageUrl, thumbnailProfileImageUrl);
                 })
                 .toList();
-        return new GetCollectionCommentsResponse(items, isMyCollection, hasNext);
+        return new GetCollectionCommentsResponse(items, isMyCollection);
     }
 
-    /* 댓글 엔티티 → Item DTO (공통 매핑 로직) */
-    private GetCollectionCommentsResponse.Item buildCommentItem(
-            UserBirdCollectionComment c,
-            Map<Long, Long> likeCounts,
-            Map<Long, Boolean> likeStatuses,
-            Map<Long, Boolean> mineStatuses,
-            Map<Long, String> profileImageUrls,
-            Map<Long, String> thumbnailProfileImageUrls,
-            List<GetCollectionCommentsResponse.Item> replies,
-            CommentContentResolver commentContentResolver) {
-        Long commentId = c.getId();
-        Long userId = c.getUser().getId();
-        int likeCount = likeCounts.get(commentId).intValue();
-        Boolean isLiked = likeStatuses.get(commentId);
-        Boolean isMine = mineStatuses.get(commentId);
-        String profileImageUrl = profileImageUrls.get(userId);
-        String thumbnailProfileImageUrl = thumbnailProfileImageUrls.get(userId);
-
-        // 댓글 상태에 따라 content 대체
-        String content = commentContentResolver.resolveContent(c.getContent(), c.getStatus());
-
+    /* 단일 엔티티 → Item DTO */
+    default GetCollectionCommentsResponse.Item toCommentItem(UserBirdCollectionComment c, int likeCount, Boolean isLiked, Boolean isMine, String profileImageUrl, String thumbnailProfileImageUrl) {
         return new GetCollectionCommentsResponse.Item(
-                commentId,
-                userId,
+                c.getId(),
+                c.getUser().getId(),
                 c.getUser().getNickname(),
                 profileImageUrl,
                 thumbnailProfileImageUrl,
-                content,
-                c.getStatus().name(),
-                c.getParent() != null ? c.getParent().getId() : null,
+                c.getContent(),
                 likeCount,
                 isLiked,
                 isMine,
                 OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getCreatedAt()),
-                OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getUpdatedAt()),
-                replies
+                OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getUpdatedAt())
         );
     }
 }

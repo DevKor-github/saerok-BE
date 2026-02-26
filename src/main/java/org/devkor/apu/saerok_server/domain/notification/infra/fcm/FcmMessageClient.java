@@ -37,9 +37,6 @@ public class FcmMessageClient {
         }
     }
 
-    /**
-     * FCM HTTP v1 API는 apns/android 설정을 모두 포함하면 토큰 타입에 따라 자동 분기됨
-     */
     private MulticastMessage buildMulticast(List<String> tokens, PushMessageCommand cmd) {
         Notification notification = Notification.builder()
                 .setTitle(cmd.title())
@@ -53,29 +50,13 @@ public class FcmMessageClient {
         data.put("unreadCount", String.valueOf(cmd.unreadCount()));
 
         int badge = Math.max(0, Math.min(cmd.unreadCount(), 999));
-
-        // iOS (APNs) 설정
-        ApnsConfig apnsConfig = ApnsConfig.builder()
-                .setAps(Aps.builder()
-                        .setBadge(badge)
-                        .setSound("default")
-                        .build())
-                .build();
-
-        // Android 설정
-        AndroidConfig androidConfig = AndroidConfig.builder()
-                .setPriority(AndroidConfig.Priority.HIGH)
-                .setNotification(AndroidNotification.builder()
-                        .setSound("default")
-                        .setDefaultSound(true)
-                        .setPriority(AndroidNotification.Priority.HIGH)
-                        .build())
+        ApnsConfig apns = ApnsConfig.builder()
+                .setAps(Aps.builder().setBadge(badge).setSound("default").build())
                 .build();
 
         MulticastMessage.Builder b = MulticastMessage.builder()
                 .setNotification(notification)
-                .setApnsConfig(apnsConfig)
-                .setAndroidConfig(androidConfig);
+                .setApnsConfig(apns);
         if (!data.isEmpty()) b.putAllData(data);
         tokens.forEach(b::addToken);
         return b.build();
@@ -104,24 +85,13 @@ public class FcmMessageClient {
         data.put("unreadCount", String.valueOf(unreadCount));
 
         int badge = Math.max(0, Math.min(unreadCount, 999));
-
-        // iOS silent push: content-available으로 백그라운드 처리
-        ApnsConfig apnsConfig = ApnsConfig.builder()
-                .setAps(Aps.builder()
-                        .setBadge(badge)
-                        .setContentAvailable(true)
-                        .build())
-                .build();
-
-        // Android data-only: priority normal (Doze 모드 정책 준수)
-        AndroidConfig androidConfig = AndroidConfig.builder()
-                .setPriority(AndroidConfig.Priority.NORMAL)
+        ApnsConfig apns = ApnsConfig.builder()
+                .setAps(Aps.builder().setBadge(badge).setContentAvailable(true).build())
                 .build();
 
         MulticastMessage.Builder builder = MulticastMessage.builder()
                 .putAllData(data)
-                .setApnsConfig(apnsConfig)
-                .setAndroidConfig(androidConfig);
+                .setApnsConfig(apns);
         tokens.forEach(builder::addToken);
         return builder.build();
     }

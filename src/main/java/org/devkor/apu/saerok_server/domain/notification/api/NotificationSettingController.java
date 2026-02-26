@@ -14,7 +14,6 @@ import org.devkor.apu.saerok_server.domain.notification.api.dto.response.Notific
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.ToggleNotificationResponse;
 import org.devkor.apu.saerok_server.domain.notification.application.NotificationSettingCommandService;
 import org.devkor.apu.saerok_server.domain.notification.application.NotificationSettingQueryService;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 import org.devkor.apu.saerok_server.domain.notification.mapper.NotificationSettingWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,11 +45,9 @@ public class NotificationSettingController {
     public NotificationSettingsResponse getNotificationSettings(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Parameter(description = "디바이스 ID", required = true, example = "device-123")
-            @RequestParam String deviceId,
-            @Parameter(description = "디바이스 플랫폼", required = true, example = "IOS")
-            @RequestParam DevicePlatform platform
+            @RequestParam String deviceId
     ) {
-        return notificationSettingQueryService.getNotificationSettings(userPrincipal.getId(), deviceId, platform);
+        return notificationSettingQueryService.getNotificationSettings(userPrincipal.getId(), deviceId);
     }
 
     @PatchMapping("/toggle")

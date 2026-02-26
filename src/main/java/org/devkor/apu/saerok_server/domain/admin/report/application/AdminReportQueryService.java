@@ -8,7 +8,6 @@ import org.devkor.apu.saerok_server.domain.admin.report.api.dto.response.Reporte
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionCommentsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommentQueryService;
-import org.devkor.apu.saerok_server.domain.collection.application.dto.CommentQueryCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
@@ -100,7 +99,7 @@ public class AdminReportQueryService {
                 );
 
         // 댓글 목록 (관리자 기준 isLiked/isMine 계산 불필요)
-        GetCollectionCommentsResponse comments = commentQueryService.getComments(collection.getId(), null, new CommentQueryCommand(null, null));
+        GetCollectionCommentsResponse comments = commentQueryService.getComments(collection.getId(), null);
 
         return new ReportedCollectionDetailResponse(report.getId(), collectionDetail, comments);
     }
@@ -127,7 +126,7 @@ public class AdminReportQueryService {
                 );
 
         // 댓글 목록
-        GetCollectionCommentsResponse comments = commentQueryService.getComments(parentCollection.getId(), null, new CommentQueryCommand(null, null));
+        GetCollectionCommentsResponse comments = commentQueryService.getComments(parentCollection.getId(), null);
 
         // 신고된 댓글 정보
         ReportedCommentDetailResponse.ReportedComment commentDto =

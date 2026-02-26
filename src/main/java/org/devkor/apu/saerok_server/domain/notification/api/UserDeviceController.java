@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.request.RegisterTokenRequest;
 import org.devkor.apu.saerok_server.domain.notification.api.dto.response.RegisterUserDeviceResponse;
 import org.devkor.apu.saerok_server.domain.notification.application.UserDeviceCommandService;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 import org.devkor.apu.saerok_server.domain.notification.mapper.UserDeviceWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.http.HttpStatus;
@@ -72,10 +71,9 @@ public class UserDeviceController {
     )
     public void deleteDevice(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable String deviceId,
-            @RequestParam DevicePlatform platform
+            @PathVariable String deviceId
     ) {
-        userDeviceCommandService.deleteDevice(userPrincipal.getId(), deviceId, platform);
+        userDeviceCommandService.deleteDevice(userPrincipal.getId(), deviceId);
     }
 
     @Hidden

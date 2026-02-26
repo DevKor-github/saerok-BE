@@ -8,9 +8,7 @@ import java.util.List;
 public record GetCollectionCommentsResponse(
     List<Item> items,
     @Schema(description = "내 컬렉션인지 여부", example = "true")
-    Boolean isMyCollection,
-    @Schema(description = "다음 페이지 존재 여부 (페이징 요청 시에만 유효)", example = "true")
-    Boolean hasNext
+    Boolean isMyCollection
 ) {
 
     public record Item(
@@ -26,10 +24,6 @@ public record GetCollectionCommentsResponse(
             String thumbnailProfileImageUrl,
             @Schema(description = "댓글 내용", example = "멋진 관찰 기록이네요!", requiredMode = Schema.RequiredMode.REQUIRED)
             String content,
-            @Schema(description = "댓글 상태 (ACTIVE, DELETED, BANNED)", example = "ACTIVE", requiredMode = Schema.RequiredMode.REQUIRED)
-            String status,
-            @Schema(description = "부모 댓글 ID (대댓글인 경우)", example = "5", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-            Long parentId,
             @Schema(description = "좋아요 수", example = "5", requiredMode = Schema.RequiredMode.REQUIRED)
             int likeCount,
             @Schema(description = "좋아요 눌렀는지 여부", example = "true")
@@ -39,9 +33,7 @@ public record GetCollectionCommentsResponse(
             @Schema(description = "작성 시각", example = "2025-07-05T03:10:00", requiredMode = Schema.RequiredMode.REQUIRED)
             LocalDateTime createdAt,
             @Schema(description = "수정 시각", example = "2025-07-05T04:21:00", requiredMode = Schema.RequiredMode.REQUIRED)
-            LocalDateTime updatedAt,
-            @Schema(description = "대댓글 목록", requiredMode = Schema.RequiredMode.REQUIRED)
-            List<Item> replies
+            LocalDateTime updatedAt
     ) {
 
     }
