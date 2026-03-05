@@ -41,7 +41,7 @@ public record GetCollectionCommentsResponse(
             LocalDateTime createdAt,
             @Schema(description = "수정 시각", example = "2025-07-05T04:21:00", requiredMode = Schema.RequiredMode.REQUIRED)
             LocalDateTime updatedAt,
-            @Schema(description = "대댓글 목록 (대댓글의 replies는 항상 빈 배열)", requiredMode = Schema.RequiredMode.REQUIRED)
+            @Schema(description = "대댓글 목록 (대댓글의 replies는 항상 빈 배열)", example = "[]", requiredMode = Schema.RequiredMode.REQUIRED)
             List<Item> replies
     ) {
 
