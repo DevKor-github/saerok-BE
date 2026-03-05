@@ -47,3 +47,6 @@ notification-batch:
   max-window-seconds: 60
   ttl-seconds: 90
   max-batches-per-tick: 300
+
+springdoc:
+  use-fqn: true
