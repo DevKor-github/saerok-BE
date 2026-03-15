@@ -45,3 +45,5 @@ node_modules
 
 # Firebase Admin Key
 src/main/resources/config/firebase-admin-key.json
+
+.claude
