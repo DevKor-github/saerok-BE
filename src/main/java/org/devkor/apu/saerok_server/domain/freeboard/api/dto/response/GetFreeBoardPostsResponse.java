@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record GetFreeBoardPostsResponse(
-        @Schema(description = "게시글 목록")
+        @Schema(description = "게시글 목록", requiredMode = Schema.RequiredMode.REQUIRED)
         List<Item> items,
-        @Schema(description = "다음 페이지 존재 여부 (페이징 요청 시에만 유효, 미사용 시 null)", example = "true", nullable = true)
+        @Schema(description = "다음 페이지 존재 여부 (페이징 미사용 시 null)", example = "true", nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         Boolean hasNext
 ) {
 
