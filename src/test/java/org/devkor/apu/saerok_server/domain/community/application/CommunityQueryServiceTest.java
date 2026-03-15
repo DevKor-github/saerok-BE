@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQu
 import org.devkor.apu.saerok_server.domain.community.core.repository.CommunityRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
+import org.devkor.apu.saerok_server.domain.freeboard.application.FreeBoardPostQueryService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +34,7 @@ class CommunityQueryServiceTest {
 
     @Mock CommunityRepository communityRepository;
     @Mock CommunityDataAssembler dataAssembler;
+    @Mock FreeBoardPostQueryService freeBoardPostQueryService;
 
     private static User user(Long id, String nickname) {
         User u = new User();
@@ -97,7 +99,8 @@ class CommunityQueryServiceTest {
     void setUp() {
         communityQueryService = new CommunityQueryService(
                 communityRepository,
-                dataAssembler
+                dataAssembler,
+                freeBoardPostQueryService
         );
     }
 
