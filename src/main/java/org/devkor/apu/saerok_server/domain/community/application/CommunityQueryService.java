@@ -8,6 +8,8 @@ import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommuni
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchUsersResponse;
 import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
 import org.devkor.apu.saerok_server.domain.community.core.repository.CommunityRepository;
+import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.FreeBoardPostPreviewResponse;
+import org.devkor.apu.saerok_server.domain.freeboard.application.FreeBoardPostQueryService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ public class CommunityQueryService {
 
     private final CommunityRepository communityRepository;
     private final CommunityDataAssembler dataAssembler;
+    private final FreeBoardPostQueryService freeBoardPostQueryService;
 
     public GetCommunityMainResponse getCommunityMain(Long userId) {
         // 메인 페이지용으로 각각 3개씩 조회
@@ -30,11 +33,13 @@ public class CommunityQueryService {
         List<UserBirdCollection> recentCollections = communityRepository.findRecentPublicCollections(mainCommand);
         List<UserBirdCollection> popularCollections = communityRepository.findPopularCollections(mainCommand);
         List<UserBirdCollection> pendingCollections = communityRepository.findPendingBirdIdCollections(pendingCommand);
+        List<FreeBoardPostPreviewResponse> recentFreeBoardPosts = freeBoardPostQueryService.getRecentPostsForMain(3);
 
         return new GetCommunityMainResponse(
                 dataAssembler.toCollectionInfos(recentCollections, userId),
                 dataAssembler.toCollectionInfos(popularCollections, userId),
-                dataAssembler.toCollectionInfos(pendingCollections, userId)
+                dataAssembler.toCollectionInfos(pendingCollections, userId),
+                recentFreeBoardPosts
         );
     }
 

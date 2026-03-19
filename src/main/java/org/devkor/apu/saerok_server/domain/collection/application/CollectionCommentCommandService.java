@@ -44,8 +44,8 @@ public class CollectionCommentCommandService {
         UserBirdCollectionComment comment;
         UserBirdCollectionComment parentComment = null;
 
-        if (req.commentId() != null) {
-            parentComment = commentRepository.findById(req.commentId())
+        if (req.parentId() != null) {
+            parentComment = commentRepository.findById(req.parentId())
                     .orElseThrow(() -> new NotFoundException("존재하지 않는 댓글 id예요"));
 
             // 같은 컬렉션에 속하는지 확인
