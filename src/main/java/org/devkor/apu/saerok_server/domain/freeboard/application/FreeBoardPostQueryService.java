@@ -29,7 +29,7 @@ public class FreeBoardPostQueryService {
     private final UserProfileImageUrlService userProfileImageUrlService;
 
     /* 게시글 목록 조회 */
-    public GetFreeBoardPostsResponse getPosts(FreeBoardPostQueryCommand command) {
+    public GetFreeBoardPostsResponse getPosts(Long userId, FreeBoardPostQueryCommand command) {
         List<FreeBoardPost> posts = postRepository.findAll(command);
 
         Boolean hasNext = null;
@@ -50,6 +50,7 @@ public class FreeBoardPostQueryService {
         List<GetFreeBoardPostsResponse.Item> items = posts.stream()
                 .map(post -> {
                     Long authorId = post.getUser().getId();
+                    boolean isMine = userId != null && userId.equals(authorId);
                     return new GetFreeBoardPostsResponse.Item(
                             post.getId(),
                             authorId,
@@ -58,6 +59,7 @@ public class FreeBoardPostQueryService {
                             thumbnailProfileImageUrls.get(authorId),
                             post.getContent(),
                             commentCounts.getOrDefault(post.getId(), 0L),
+                            isMine,
                             OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt())
                     );
                 })
