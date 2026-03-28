@@ -76,6 +76,7 @@ public class FreeBoardPostController {
             }
     )
     public GetFreeBoardPostsResponse getPosts(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(required = false) Integer page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(required = false) Integer size
     ) {
@@ -84,7 +85,8 @@ public class FreeBoardPostController {
             throw new BadRequestException("page와 size 값이 유효하지 않아요.");
         }
 
-        return postQueryService.getPosts(command);
+        Long userId = userPrincipal == null ? null : userPrincipal.getId();
+        return postQueryService.getPosts(userId, command);
     }
 
     /* 게시글 상세 조회 */

@@ -56,6 +56,10 @@ public class FreeBoardPostComment extends Auditable {
         this.status = FreeBoardCommentStatus.DELETED;
     }
 
+    public void ban() {
+        this.status = FreeBoardCommentStatus.BANNED;
+    }
+
     public boolean isActive() {
         return this.status == FreeBoardCommentStatus.ACTIVE;
     }
