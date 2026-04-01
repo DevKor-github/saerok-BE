@@ -56,4 +56,18 @@ public class NotificationRepository {
                 .setParameter("userId", userId)
                 .executeUpdate();
     }
+
+    public void batchInsert(List<Notification> notifications, int batchSize) {
+        for (int i = 0; i < notifications.size(); i++) {
+            em.persist(notifications.get(i));
+            if ((i + 1) % batchSize == 0) {
+                em.flush();
+                em.clear();
+            }
+        }
+        if (!notifications.isEmpty() && notifications.size() % batchSize != 0) {
+            em.flush();
+            em.clear();
+        }
+    }
 }
