@@ -49,4 +49,25 @@ public class UserRepository {
                 .setParameter("withdrawn", SignupStatusType.WITHDRAWN)
                 .getResultList();
     }
+
+    public List<Long> findActiveUserIds(int offset, int limit) {
+        return em.createQuery(
+                        "SELECT u.id FROM User u " +
+                        "WHERE u.deletedAt IS NULL AND u.signupStatus <> :withdrawn " +
+                        "ORDER BY u.id",
+                        Long.class)
+                .setParameter("withdrawn", SignupStatusType.WITHDRAWN)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
+    }
+
+    public List<User> findByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        return em.createQuery(
+                        "SELECT u FROM User u WHERE u.id IN :ids",
+                        User.class)
+                .setParameter("ids", ids)
+                .getResultList();
+    }
 }

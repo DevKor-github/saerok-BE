@@ -52,6 +52,20 @@ public class NotificationSettingRepository {
                 .getResultList();
     }
 
+    public List<Long> findEnabledDeviceIdsByUserIdsAndType(List<Long> userIds, NotificationType type) {
+        if (userIds == null || userIds.isEmpty()) return List.of();
+        return em.createQuery("""
+                select ns.userDevice.id
+                  from NotificationSetting ns
+                 where ns.userDevice.user.id in :userIds
+                   and ns.type = :type
+                   and ns.enabled = true
+                """, Long.class)
+                .setParameter("userIds", userIds)
+                .setParameter("type", type)
+                .getResultList();
+    }
+
     public void save(NotificationSetting setting) {
         em.persist(setting);
     }
