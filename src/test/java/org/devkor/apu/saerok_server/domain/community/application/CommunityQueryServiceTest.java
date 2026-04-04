@@ -4,7 +4,9 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelTyp
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityCollectionsResponse;
+import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityMainResponse;
 import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
+import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.FreeBoardPostPreviewResponse;
 import org.devkor.apu.saerok_server.domain.community.core.repository.CommunityRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
@@ -24,6 +26,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
@@ -212,5 +215,45 @@ class CommunityQueryServiceTest {
         assertThat(secondItem.bird()).isNotNull();
         assertThat(secondItem.bird().koreanName()).isEqualTo("까치");
         assertThat(secondItem.note()).isEqualTo("까치를 발견했어요!");
+    }
+
+    @Test
+    @DisplayName("커뮤니티 메인 조회 시 자유게시판 최신 글 5건이 포함된다")
+    void getCommunityMain_returnsRecentFreeBoardPosts() {
+        // Given
+        Long userId = 1L;
+
+        given(communityRepository.findRecentPublicCollections(org.mockito.ArgumentMatchers.any()))
+                .willReturn(List.of());
+        given(communityRepository.findPopularCollections(org.mockito.ArgumentMatchers.any()))
+                .willReturn(List.of());
+        given(communityRepository.findPendingBirdIdCollections(org.mockito.ArgumentMatchers.any()))
+                .willReturn(List.of());
+        given(dataAssembler.toCollectionInfos(List.of(), userId))
+                .willReturn(List.of());
+
+        List<FreeBoardPostPreviewResponse> freeBoardPosts = List.of(
+                new FreeBoardPostPreviewResponse(1L, 10L, "유저A", "https://img/a.jpg", "https://img/thumb/a.webp",
+                        "오늘 한강에서 백로를 봤어요!", LocalDateTime.of(2025, 7, 5, 15, 0), LocalDateTime.of(2025, 7, 5, 15, 0)),
+                new FreeBoardPostPreviewResponse(2L, 11L, "유저B", "https://img/b.jpg", "https://img/thumb/b.webp",
+                        "참새 귀엽다", LocalDateTime.of(2025, 7, 5, 14, 30), LocalDateTime.of(2025, 7, 5, 14, 30)),
+                new FreeBoardPostPreviewResponse(3L, 12L, "유저C", "https://img/c.jpg", "https://img/thumb/c.webp",
+                        "까치 발견!", LocalDateTime.of(2025, 7, 5, 14, 0), LocalDateTime.of(2025, 7, 5, 14, 0)),
+                new FreeBoardPostPreviewResponse(4L, 13L, "유저D", "https://img/d.jpg", "https://img/thumb/d.webp",
+                        "비둘기가 많네요", LocalDateTime.of(2025, 7, 5, 13, 30), LocalDateTime.of(2025, 7, 5, 13, 30)),
+                new FreeBoardPostPreviewResponse(5L, 14L, "유저E", "https://img/e.jpg", "https://img/thumb/e.webp",
+                        "딱따구리 소리가 들려요", LocalDateTime.of(2025, 7, 5, 13, 0), LocalDateTime.of(2025, 7, 5, 13, 0))
+        );
+        given(freeBoardPostQueryService.getRecentPostsForMain(5))
+                .willReturn(freeBoardPosts);
+
+        // When
+        GetCommunityMainResponse response = communityQueryService.getCommunityMain(userId);
+
+        // Then
+        assertThat(response.recentFreeBoardPosts()).hasSize(5);
+        assertThat(response.recentFreeBoardPosts().get(0).postId()).isEqualTo(1L);
+        assertThat(response.recentFreeBoardPosts().get(4).postId()).isEqualTo(5L);
+        then(freeBoardPostQueryService).should().getRecentPostsForMain(5);
     }
 }

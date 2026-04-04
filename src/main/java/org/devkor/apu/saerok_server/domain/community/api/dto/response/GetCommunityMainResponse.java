@@ -17,6 +17,6 @@ public record GetCommunityMainResponse(
         @Schema(description = "동정 요청 새록 목록 (최대 3개)")
         List<CommunityCollectionInfo> pendingCollections,
 
-        @Schema(description = "최근 자유게시판 글 (최대 3개)")
+        @Schema(description = "최근 자유게시판 글 (최대 5개)")
         List<FreeBoardPostPreviewResponse> recentFreeBoardPosts
 ) {}

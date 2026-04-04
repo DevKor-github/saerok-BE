@@ -33,7 +33,7 @@ public class CommunityQueryService {
         List<UserBirdCollection> recentCollections = communityRepository.findRecentPublicCollections(mainCommand);
         List<UserBirdCollection> popularCollections = communityRepository.findPopularCollections(mainCommand);
         List<UserBirdCollection> pendingCollections = communityRepository.findPendingBirdIdCollections(pendingCommand);
-        List<FreeBoardPostPreviewResponse> recentFreeBoardPosts = freeBoardPostQueryService.getRecentPostsForMain(3);
+        List<FreeBoardPostPreviewResponse> recentFreeBoardPosts = freeBoardPostQueryService.getRecentPostsForMain(5);
 
         return new GetCommunityMainResponse(
                 dataAssembler.toCollectionInfos(recentCollections, userId),

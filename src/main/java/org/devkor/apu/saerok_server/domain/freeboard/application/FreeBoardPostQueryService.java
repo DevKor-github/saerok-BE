@@ -117,7 +117,8 @@ public class FreeBoardPostQueryService {
                             profileImageUrls.get(authorId),
                             thumbnailProfileImageUrls.get(authorId),
                             post.getContent(),
-                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt())
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt()),
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getUpdatedAt())
                     );
                 })
                 .toList();

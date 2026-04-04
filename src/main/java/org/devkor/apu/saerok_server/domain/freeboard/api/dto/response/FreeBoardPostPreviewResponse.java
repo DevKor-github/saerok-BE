@@ -18,6 +18,8 @@ public record FreeBoardPostPreviewResponse(
         @Schema(description = "게시글 내용", example = "오늘 한강공원에서 백로를 발견했어요!", requiredMode = Schema.RequiredMode.REQUIRED)
         String content,
         @Schema(description = "작성 시각", example = "2025-07-05T03:10:00", requiredMode = Schema.RequiredMode.REQUIRED)
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        @Schema(description = "최종 수정 시각", example = "2025-07-05T04:20:00", requiredMode = Schema.RequiredMode.REQUIRED)
+        LocalDateTime updatedAt
 ) {
 }
