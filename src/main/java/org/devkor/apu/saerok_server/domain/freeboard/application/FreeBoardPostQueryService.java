@@ -60,7 +60,8 @@ public class FreeBoardPostQueryService {
                             post.getContent(),
                             commentCounts.getOrDefault(post.getId(), 0L),
                             isMine,
-                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt())
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt()),
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getUpdatedAt())
                     );
                 })
                 .toList();
