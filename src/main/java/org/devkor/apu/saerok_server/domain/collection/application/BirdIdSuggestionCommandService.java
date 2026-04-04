@@ -1,23 +1,21 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.*;
+import org.devkor.apu.saerok_server.domain.collection.application.event.CollectionNotificationEvent;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.*;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
-import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.admin.stat.application.BirdIdRequestHistoryRecorder;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 
@@ -30,8 +28,8 @@ public class BirdIdSuggestionCommandService {
     private final CollectionRepository       collectionRepo;
     private final BirdRepository             birdRepo;
     private final UserRepository             userRepo;
-    private final NotifyActionDsl notifyAction;
     private final BirdIdRequestHistoryRecorder birdReqHistory;
+    private final ApplicationEventPublisher  eventPublisher;
 
     public SuggestBirdIdResponse suggest(Long userId, Long collectionId, Long birdId) {
         User user = userRepo.findById(userId)
@@ -88,12 +86,11 @@ public class BirdIdSuggestionCommandService {
         }
         // 최초 제안인 경우에만 알림 발송
         if (!birdAlreadySuggested) {
-            notifyAction
-                    .by(Actor.of(userId, user.getNickname()))
-                    .on(Target.collection(collectionId))
-                    .did(ActionKind.SUGGEST_BIRD_ID)
-                    .suggestedName(bird.getName().getKoreanName())
-                    .to(collection.getUser().getId());
+            eventPublisher.publishEvent(new CollectionNotificationEvent.BirdIdSuggested(
+                    userId, user.getNickname(),
+                    collectionId, collection.getUser().getId(),
+                    bird.getName().getKoreanName()
+            ));
         }
 
         return new SuggestBirdIdResponse(suggestionId);

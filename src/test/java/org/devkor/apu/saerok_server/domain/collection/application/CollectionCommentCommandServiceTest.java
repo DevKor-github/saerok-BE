@@ -11,13 +11,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.repository.Collection
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.service.CommentContentResolver;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionCommentWebMapper;
-import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
-import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
-import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
+import org.devkor.apu.saerok_server.domain.collection.application.event.CollectionNotificationEvent;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.domain.user.core.service.UserProfileImageUrlService;
@@ -28,10 +22,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,7 +45,7 @@ class CollectionCommentCommandServiceTest {
     @Mock CollectionCommentRepository       commentRepo;
     @Mock CollectionRepository              collectionRepo;
     @Mock UserRepository                    userRepo;
-    @Mock NotificationPublisher             publisher;
+    @Mock ApplicationEventPublisher         eventPublisher;
 
     @Mock CollectionCommentLikeRepository   commentLikeRepo;
     @Mock CollectionCommentWebMapper        collectionCommentWebMapper;
@@ -80,22 +73,7 @@ class CollectionCommentCommandServiceTest {
 
     @BeforeEach
     void init() {
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(
-                publisher,
-                (target, base) -> {
-                    Map<String,Object> extras = base == null ? new HashMap<>() : new HashMap<>(base);
-                    if (target.type() == TargetType.COLLECTION) {
-                        extras.put("collectionId", target.id());
-                        extras.put("collectionImageUrl", "dummy");
-                    } else if (target.type() == TargetType.COMMENT) {
-                        extras.put("commentId", target.id());
-                        extras.put("collectionId", 999L); // dummy collection id
-                        extras.put("collectionImageUrl", "dummy");
-                    }
-                    return extras;
-                }
-        );
-        sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo, notifyActionDsl);
+        sut = new CollectionCommentCommandService(commentRepo, collectionRepo, userRepo, eventPublisher);
 
         querySut = new CollectionCommentQueryService(
                 commentRepo, collectionRepo, commentLikeRepo, collectionCommentWebMapper, userProfileImageUrlService, commentContentResolver
@@ -124,18 +102,16 @@ class CollectionCommentCommandServiceTest {
             assertThat(res.commentId()).isEqualTo(COMMENT_ID);
             verify(commentRepo).save(any());
 
-            ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
-            verify(publisher).push(payloadCap.capture());
+            ArgumentCaptor<CollectionNotificationEvent.CommentCreated> eventCap =
+                    ArgumentCaptor.forClass(CollectionNotificationEvent.CommentCreated.class);
+            verify(eventPublisher).publishEvent(eventCap.capture());
 
-            ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
-            assertThat(p.subject()).isEqualTo(NotificationSubject.COLLECTION);
-            assertThat(p.action()).isEqualTo(NotificationAction.COMMENT);
-            assertThat(p.recipientId()).isEqualTo(OTHER_ID);
-            assertThat(p.actorId()).isEqualTo(OWNER_ID);
-            Map<String, Object> extras = p.extras();
-            assertThat(extras.get("collectionId")).isEqualTo(COLL_ID);
-            assertThat(extras.get("comment")).isEqualTo("Nice");
-            assertThat(extras).containsKey("collectionImageUrl");
+            var event = eventCap.getValue();
+            assertThat(event.actorId()).isEqualTo(OWNER_ID);
+            assertThat(event.collectionId()).isEqualTo(COLL_ID);
+            assertThat(event.collectionOwnerId()).isEqualTo(OTHER_ID);
+            assertThat(event.parentCommentId()).isNull();
+            assertThat(event.commentContent()).isEqualTo("Nice");
         }
 
         @Test @DisplayName("사용자 없음 → NotFoundException")
@@ -161,7 +137,9 @@ class CollectionCommentCommandServiceTest {
 
             assertThat(res.commentId()).isEqualTo(COMMENT_ID);
             verify(commentRepo).save(any());
-            verifyNoInteractions(publisher);
+
+            // 자기 컬렉션이어도 이벤트는 발행됨 (Worker에서 self 체크)
+            verify(eventPublisher).publishEvent(any(CollectionNotificationEvent.CommentCreated.class));
         }
 
         @Test @DisplayName("대댓글 작성 성공 - 원댓글 작성자와 컬렉션 소유자 모두 다른 경우 (2개 알림)")
@@ -192,24 +170,17 @@ class CollectionCommentCommandServiceTest {
             assertThat(res.commentId()).isEqualTo(replyId);
             verify(commentRepo).save(any());
 
-            ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
-            verify(publisher, times(2)).push(payloadCap.capture());
+            ArgumentCaptor<CollectionNotificationEvent.CommentCreated> eventCap =
+                    ArgumentCaptor.forClass(CollectionNotificationEvent.CommentCreated.class);
+            verify(eventPublisher).publishEvent(eventCap.capture());
 
-            var notifications = payloadCap.getAllValues();
-
-            // 첫 번째 알림: 원댓글 작성자에게 REPLY 알림
-            ActionNotificationPayload replyNotif = (ActionNotificationPayload) notifications.get(0);
-            assertThat(replyNotif.subject()).isEqualTo(NotificationSubject.COMMENT);
-            assertThat(replyNotif.action()).isEqualTo(NotificationAction.REPLY);
-            assertThat(replyNotif.recipientId()).isEqualTo(parentCommentOwnerId);
-            assertThat(replyNotif.actorId()).isEqualTo(commenterId);
-
-            // 두 번째 알림: 컬렉션 소유자에게 COMMENT 알림
-            ActionNotificationPayload commentNotif = (ActionNotificationPayload) notifications.get(1);
-            assertThat(commentNotif.subject()).isEqualTo(NotificationSubject.COLLECTION);
-            assertThat(commentNotif.action()).isEqualTo(NotificationAction.COMMENT);
-            assertThat(commentNotif.recipientId()).isEqualTo(collectionOwnerId);
-            assertThat(commentNotif.actorId()).isEqualTo(commenterId);
+            var event = eventCap.getValue();
+            assertThat(event.actorId()).isEqualTo(commenterId);
+            assertThat(event.collectionId()).isEqualTo(COLL_ID);
+            assertThat(event.collectionOwnerId()).isEqualTo(collectionOwnerId);
+            assertThat(event.parentCommentId()).isEqualTo(parentCommentId);
+            assertThat(event.parentCommentOwnerId()).isEqualTo(parentCommentOwnerId);
+            assertThat(event.commentContent()).isEqualTo("reply content");
         }
 
         @Test @DisplayName("대댓글 작성 성공 - 원댓글 작성자 = 컬렉션 소유자인 경우 (1개 알림)")
@@ -237,14 +208,15 @@ class CollectionCommentCommandServiceTest {
 
             assertThat(res.commentId()).isEqualTo(replyId);
 
-            ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
-            verify(publisher, times(1)).push(payloadCap.capture());
+            ArgumentCaptor<CollectionNotificationEvent.CommentCreated> eventCap =
+                    ArgumentCaptor.forClass(CollectionNotificationEvent.CommentCreated.class);
+            verify(eventPublisher).publishEvent(eventCap.capture());
 
-            // 원댓글 작성자에게만 REPLY 알림 (컬렉션 소유자와 동일인이므로 중복 제거됨)
-            ActionNotificationPayload notif = (ActionNotificationPayload) payloadCap.getValue();
-            assertThat(notif.subject()).isEqualTo(NotificationSubject.COMMENT);
-            assertThat(notif.action()).isEqualTo(NotificationAction.REPLY);
-            assertThat(notif.recipientId()).isEqualTo(parentAndCollectionOwnerId);
+            var event = eventCap.getValue();
+            assertThat(event.actorId()).isEqualTo(commenterId);
+            assertThat(event.parentCommentId()).isEqualTo(parentCommentId);
+            assertThat(event.parentCommentOwnerId()).isEqualTo(parentAndCollectionOwnerId);
+            assertThat(event.collectionOwnerId()).isEqualTo(parentAndCollectionOwnerId);
         }
 
         @Test @DisplayName("삭제된 댓글에 대댓글 작성 → ForbiddenException")
