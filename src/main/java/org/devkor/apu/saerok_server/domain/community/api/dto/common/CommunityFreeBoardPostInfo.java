@@ -1,10 +1,10 @@
-package org.devkor.apu.saerok_server.domain.freeboard.api.dto.response;
+package org.devkor.apu.saerok_server.domain.community.api.dto.common;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
-public record FreeBoardPostPreviewResponse(
+public record CommunityFreeBoardPostInfo(
         @Schema(description = "게시글 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         Long postId,
         @Schema(description = "작성자 ID", example = "3", requiredMode = Schema.RequiredMode.REQUIRED)

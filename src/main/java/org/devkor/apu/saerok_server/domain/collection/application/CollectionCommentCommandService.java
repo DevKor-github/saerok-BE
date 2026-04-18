@@ -1,24 +1,22 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.CreateCollectionCommentRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.UpdateCollectionCommentRequest;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionCommentResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCollectionCommentResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.event.CollectionNotificationEvent;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionCommentRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
-import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -28,7 +26,7 @@ public class CollectionCommentCommandService {
     private final CollectionCommentRepository commentRepository;
     private final CollectionRepository       collectionRepository;
     private final UserRepository             userRepository;
-    private final NotifyActionDsl notifyAction;
+    private final ApplicationEventPublisher  eventPublisher;
 
     /* 댓글 작성 */
     public CreateCollectionCommentResponse createComment(Long userId,
@@ -70,39 +68,13 @@ public class CollectionCommentCommandService {
         commentRepository.save(comment);
 
         // 알림 전송
-        if (parentComment != null) {
-            // 대댓글인 경우
-            // 1) 원댓글 작성자에게 REPLY 알림
-            if (!parentComment.getUser().getId().equals(userId)) {
-                notifyAction
-                        .by(Actor.of(userId, user.getNickname()))
-                        .on(Target.comment(parentComment.getId()))
-                        .did(ActionKind.REPLY)
-                        .comment(req.content())
-                        .to(parentComment.getUser().getId());
-            }
-
-            // 2) 컬렉션 소유자에게 COMMENT 알림 (원댓글 작성자와 다른 경우에만)
-            if (!collection.getUser().getId().equals(userId)
-                    && !collection.getUser().getId().equals(parentComment.getUser().getId())) {
-                notifyAction
-                        .by(Actor.of(userId, user.getNickname()))
-                        .on(Target.collection(collectionId))
-                        .did(ActionKind.COMMENT)
-                        .comment(req.content())
-                        .to(collection.getUser().getId());
-            }
-        } else {
-            // 원댓글인 경우
-            if (!collection.getUser().getId().equals(userId)) {
-                notifyAction
-                        .by(Actor.of(userId, user.getNickname()))
-                        .on(Target.collection(collectionId))
-                        .did(ActionKind.COMMENT)
-                        .comment(req.content())
-                        .to(collection.getUser().getId());
-            }
-        }
+        eventPublisher.publishEvent(new CollectionNotificationEvent.CommentCreated(
+                userId, user.getNickname(),
+                collectionId, collection.getUser().getId(),
+                parentComment != null ? parentComment.getId() : null,
+                parentComment != null ? parentComment.getUser().getId() : null,
+                req.content()
+        ));
 
         return new CreateCollectionCommentResponse(comment.getId());
     }

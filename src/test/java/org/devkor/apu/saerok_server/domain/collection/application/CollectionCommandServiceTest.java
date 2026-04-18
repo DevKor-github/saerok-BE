@@ -34,6 +34,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.same;
 
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,8 +49,8 @@ class CollectionCommandServiceTest {
     @Mock private ImageDomainService imageDomainService;
     @Mock private CollectionWebMapper collectionWebMapper;
     @Mock private ImageService imageService;
-    @Mock private BirdIdRequestHistoryRecorder birdReqHistory; // ★ 유지
-    @Mock private ImageVariantService imageVariantService;     // ★ 추가
+    @Mock private BirdIdRequestHistoryRecorder birdReqHistory;
+    @Mock private ImageVariantService imageVariantService;
 
     private CollectionCommandService service;
 
@@ -63,8 +64,8 @@ class CollectionCommandServiceTest {
                 imageDomainService,
                 collectionWebMapper,
                 imageService,
-                birdReqHistory,        // ★ 유지
-                imageVariantService    // ★ 추가
+                birdReqHistory,
+                imageVariantService
         );
     }
 
@@ -121,8 +122,7 @@ class CollectionCommandServiceTest {
             assertThat(saved.getNote()).isEqualTo(note);
             assertThat(saved.getAccessLevel()).isEqualTo(accessLevel);
 
-            // ‘대기 시작’ 기록 호출 여부는 상황에 따라 다를 수 있어 엄격 검증은 생략
-            then(birdReqHistory).should().onCollectionCreatedIfPending(eq(saved), any());
+            then(birdReqHistory).should().onCollectionCreatedIfPending(same(saved), any());
         }
 
         @Test

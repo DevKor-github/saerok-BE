@@ -2,7 +2,9 @@ package org.devkor.apu.saerok_server.domain.community.mapper;
 
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
+import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityFreeBoardPostInfo;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityUserInfo;
+import org.devkor.apu.saerok_server.domain.freeboard.application.dto.FreeBoardPostPreview;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.shared.util.OffsetDateTimeLocalizer;
 import org.mapstruct.Mapper;
@@ -47,6 +49,8 @@ public interface CommunityWebMapper {
     @Mapping(target = "profileImageUrl", source = "profileImageUrl")
     @Mapping(target = "thumbnailProfileImageUrl", source = "thumbnailProfileImageUrl")
     CommunityUserInfo toCommunityUserInfo(User user, String profileImageUrl, String thumbnailProfileImageUrl);
+
+    CommunityFreeBoardPostInfo toCommunityFreeBoardPostInfo(FreeBoardPostPreview post);
 
     default CommunityCollectionInfo.BirdInfo mapBirdInfo(UserBirdCollection collection) {
         if (collection.getBird() == null) {
