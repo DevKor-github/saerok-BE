@@ -3,11 +3,13 @@ package org.devkor.apu.saerok_server.domain.community.application;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
+import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityFreeBoardPostInfo;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityMainResponse;
 import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
-import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.FreeBoardPostPreviewResponse;
 import org.devkor.apu.saerok_server.domain.community.core.repository.CommunityRepository;
+import org.devkor.apu.saerok_server.domain.community.mapper.CommunityWebMapper;
+import org.devkor.apu.saerok_server.domain.freeboard.application.dto.FreeBoardPostPreview;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.freeboard.application.FreeBoardPostQueryService;
@@ -37,6 +39,7 @@ class CommunityQueryServiceTest {
 
     @Mock CommunityRepository communityRepository;
     @Mock CommunityDataAssembler dataAssembler;
+    @Mock CommunityWebMapper communityWebMapper;
     @Mock FreeBoardPostQueryService freeBoardPostQueryService;
 
     private static User user(Long id, String nickname) {
@@ -103,6 +106,7 @@ class CommunityQueryServiceTest {
         communityQueryService = new CommunityQueryService(
                 communityRepository,
                 dataAssembler,
+                communityWebMapper,
                 freeBoardPostQueryService
         );
     }
@@ -232,20 +236,29 @@ class CommunityQueryServiceTest {
         given(dataAssembler.toCollectionInfos(List.of(), userId))
                 .willReturn(List.of());
 
-        List<FreeBoardPostPreviewResponse> freeBoardPosts = List.of(
-                new FreeBoardPostPreviewResponse(1L, 10L, "유저A", "https://img/a.jpg", "https://img/thumb/a.webp",
+        List<FreeBoardPostPreview> freeBoardPosts = List.of(
+                new FreeBoardPostPreview(1L, 10L, "유저A", "https://img/a.jpg", "https://img/thumb/a.webp",
                         "오늘 한강에서 백로를 봤어요!", LocalDateTime.of(2025, 7, 5, 15, 0), LocalDateTime.of(2025, 7, 5, 15, 0)),
-                new FreeBoardPostPreviewResponse(2L, 11L, "유저B", "https://img/b.jpg", "https://img/thumb/b.webp",
+                new FreeBoardPostPreview(2L, 11L, "유저B", "https://img/b.jpg", "https://img/thumb/b.webp",
                         "참새 귀엽다", LocalDateTime.of(2025, 7, 5, 14, 30), LocalDateTime.of(2025, 7, 5, 14, 30)),
-                new FreeBoardPostPreviewResponse(3L, 12L, "유저C", "https://img/c.jpg", "https://img/thumb/c.webp",
+                new FreeBoardPostPreview(3L, 12L, "유저C", "https://img/c.jpg", "https://img/thumb/c.webp",
                         "까치 발견!", LocalDateTime.of(2025, 7, 5, 14, 0), LocalDateTime.of(2025, 7, 5, 14, 0)),
-                new FreeBoardPostPreviewResponse(4L, 13L, "유저D", "https://img/d.jpg", "https://img/thumb/d.webp",
+                new FreeBoardPostPreview(4L, 13L, "유저D", "https://img/d.jpg", "https://img/thumb/d.webp",
                         "비둘기가 많네요", LocalDateTime.of(2025, 7, 5, 13, 30), LocalDateTime.of(2025, 7, 5, 13, 30)),
-                new FreeBoardPostPreviewResponse(5L, 14L, "유저E", "https://img/e.jpg", "https://img/thumb/e.webp",
+                new FreeBoardPostPreview(5L, 14L, "유저E", "https://img/e.jpg", "https://img/thumb/e.webp",
                         "딱따구리 소리가 들려요", LocalDateTime.of(2025, 7, 5, 13, 0), LocalDateTime.of(2025, 7, 5, 13, 0))
         );
         given(freeBoardPostQueryService.getRecentPostsForMain(5))
                 .willReturn(freeBoardPosts);
+
+        for (FreeBoardPostPreview post : freeBoardPosts) {
+            given(communityWebMapper.toCommunityFreeBoardPostInfo(post))
+                    .willReturn(new CommunityFreeBoardPostInfo(
+                            post.postId(), post.userId(), post.nickname(),
+                            post.profileImageUrl(), post.thumbnailProfileImageUrl(),
+                            post.content(), post.createdAt(), post.updatedAt()
+                    ));
+        }
 
         // When
         GetCommunityMainResponse response = communityQueryService.getCommunityMain(userId);
@@ -254,6 +267,7 @@ class CommunityQueryServiceTest {
         assertThat(response.recentFreeBoardPosts()).hasSize(5);
         assertThat(response.recentFreeBoardPosts().get(0).postId()).isEqualTo(1L);
         assertThat(response.recentFreeBoardPosts().get(4).postId()).isEqualTo(5L);
+        assertThat(response.recentFreeBoardPosts().get(0)).isInstanceOf(CommunityFreeBoardPostInfo.class);
         then(freeBoardPostQueryService).should().getRecentPostsForMain(5);
     }
 }
