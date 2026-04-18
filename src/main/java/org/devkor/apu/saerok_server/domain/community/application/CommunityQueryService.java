@@ -6,9 +6,10 @@ import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommuni
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityMainResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunitySearchUsersResponse;
+import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityFreeBoardPostInfo;
 import org.devkor.apu.saerok_server.domain.community.application.dto.CommunityQueryCommand;
 import org.devkor.apu.saerok_server.domain.community.core.repository.CommunityRepository;
-import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.FreeBoardPostPreviewResponse;
+import org.devkor.apu.saerok_server.domain.community.mapper.CommunityWebMapper;
 import org.devkor.apu.saerok_server.domain.freeboard.application.FreeBoardPostQueryService;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class CommunityQueryService {
 
     private final CommunityRepository communityRepository;
     private final CommunityDataAssembler dataAssembler;
+    private final CommunityWebMapper communityWebMapper;
     private final FreeBoardPostQueryService freeBoardPostQueryService;
 
     public GetCommunityMainResponse getCommunityMain(Long userId) {
@@ -33,7 +35,9 @@ public class CommunityQueryService {
         List<UserBirdCollection> recentCollections = communityRepository.findRecentPublicCollections(mainCommand);
         List<UserBirdCollection> popularCollections = communityRepository.findPopularCollections(mainCommand);
         List<UserBirdCollection> pendingCollections = communityRepository.findPendingBirdIdCollections(pendingCommand);
-        List<FreeBoardPostPreviewResponse> recentFreeBoardPosts = freeBoardPostQueryService.getRecentPostsForMain(5);
+        List<CommunityFreeBoardPostInfo> recentFreeBoardPosts = freeBoardPostQueryService.getRecentPostsForMain(5).stream()
+                .map(communityWebMapper::toCommunityFreeBoardPostInfo)
+                .toList();
 
         return new GetCommunityMainResponse(
                 dataAssembler.toCollectionInfos(recentCollections, userId),
