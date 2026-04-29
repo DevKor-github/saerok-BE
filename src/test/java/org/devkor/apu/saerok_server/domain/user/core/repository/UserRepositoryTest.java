@@ -138,6 +138,72 @@ class UserRepositoryTest extends AbstractPostgresContainerTest {
         assertThat(activeIds).isEmpty();
     }
 
+    @Test @DisplayName("findActiveNicknameUsers - 활성 닉네임 사용자만 닉네임순으로 조회")
+    void findActiveNicknameUsers() {
+        User charlie = user("charlie@example.com", "charlie");
+        charlie.setSignupStatus(SignupStatusType.COMPLETED);
+        User bravo = user("bravo@example.com", "bravo");
+        bravo.setSignupStatus(SignupStatusType.COMPLETED);
+        User withdrawn = user("withdrawn-nickname@example.com", "alpha");
+        withdrawn.setSignupStatus(SignupStatusType.WITHDRAWN);
+        User deleted = user("deleted-nickname@example.com", "beta");
+        User noNickname = user("no-nickname@example.com", null);
+        noNickname.setSignupStatus(SignupStatusType.COMPLETED);
+        User blankNickname = user("blank-nickname@example.com", "");
+        blankNickname.setSignupStatus(SignupStatusType.COMPLETED);
+        em.flush();
+
+        deleted.softDelete();
+        em.flush(); em.clear();
+
+        List<User> users = repo.findActiveNicknameUsers(null, 0, 20);
+
+        assertThat(users)
+                .extracting(User::getNickname)
+                .containsExactly("bravo", "charlie");
+        assertThat(repo.countActiveNicknameUsers(null)).isEqualTo(2);
+    }
+
+    @Test @DisplayName("findActiveNicknameUsers - 닉네임 검색과 페이징")
+    void findActiveNicknameUsers_queryAndPagination() {
+        User alpha = user("alpha@example.com", "alpha");
+        alpha.setSignupStatus(SignupStatusType.COMPLETED);
+        User alpine = user("alpine@example.com", "alpine");
+        alpine.setSignupStatus(SignupStatusType.COMPLETED);
+        User bravo = user("bravo-query@example.com", "bravo");
+        bravo.setSignupStatus(SignupStatusType.COMPLETED);
+        em.flush(); em.clear();
+
+        List<User> firstPage = repo.findActiveNicknameUsers("alp", 0, 1);
+        List<User> secondPage = repo.findActiveNicknameUsers("alp", 1, 1);
+
+        assertThat(firstPage)
+                .extracting(User::getNickname)
+                .containsExactly("alpha");
+        assertThat(secondPage)
+                .extracting(User::getNickname)
+                .containsExactly("alpine");
+        assertThat(repo.countActiveNicknameUsers("alp")).isEqualTo(2);
+    }
+
+    @Test @DisplayName("findActiveNicknameUsers - 닉네임 중간 문자열 검색")
+    void findActiveNicknameUsers_containsQuery() {
+        User duli = user("duli@example.com", "둘리");
+        duli.setSignupStatus(SignupStatusType.COMPLETED);
+        User pigeon = user("pigeon@example.com", "비둘기");
+        pigeon.setSignupStatus(SignupStatusType.COMPLETED);
+        User magpie = user("magpie@example.com", "까치");
+        magpie.setSignupStatus(SignupStatusType.COMPLETED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.findActiveNicknameUsers("둘", 0, 20);
+
+        assertThat(users)
+                .extracting(User::getNickname)
+                .containsExactly("둘리", "비둘기");
+        assertThat(repo.countActiveNicknameUsers("둘")).isEqualTo(2);
+    }
+
     @Test @DisplayName("save - 중복 닉네임은 제약조건 위반")
     void save_duplicateNickname() {
         User u1 = user("user1@example.com");
