@@ -18,10 +18,11 @@ public class AdminUserQueryService {
 
     public AdminUserListResponse listUsers(String query, int page, int size) {
         String normalizedQuery = normalizeQuery(query);
+        Long idQuery = parseIdQuery(normalizedQuery);
         int offset = (page - 1) * size;
 
-        List<User> users = userRepository.findActiveNicknameUsers(normalizedQuery, offset, size);
-        long totalElements = userRepository.countActiveNicknameUsers(normalizedQuery);
+        List<User> users = userRepository.searchActiveUsers(normalizedQuery, idQuery, offset, size);
+        long totalElements = userRepository.countSearchActiveUsers(normalizedQuery, idQuery);
         int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / size);
 
         List<AdminUserListResponse.Item> items = users.stream()
@@ -36,5 +37,17 @@ public class AdminUserQueryService {
             return null;
         }
         return query.trim();
+    }
+
+    private Long parseIdQuery(String query) {
+        if (query == null) {
+            return null;
+        }
+        try {
+            long value = Long.parseLong(query);
+            return value > 0 ? value : null;
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 }

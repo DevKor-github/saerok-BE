@@ -16,6 +16,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AdminNotificationWorker {
 
+    private static final String CONTENT_DELETED_TITLE = "콘텐츠 삭제 안내";
+    private static final String CONTENT_DELETED_BODY_FORMAT = "회원님의 콘텐츠가 운영정책 위반으로 삭제되었어요. 사유: %s";
+
     private final NotifySystemService notifySystemService;
 
     @Async("pushNotificationExecutor")
@@ -42,10 +45,14 @@ public class AdminNotificationWorker {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(AdminNotificationEvent.ContentDeletedByReport event) {
         try {
-            Map<String, Object> extras = Map.of("reason", event.reason());
+            Map<String, Object> extras = Map.of(
+                    "title", CONTENT_DELETED_TITLE,
+                    "body", CONTENT_DELETED_BODY_FORMAT.formatted(event.reason()),
+                    "reason", event.reason()
+            );
             notifySystemService.notifyUser(
                     event.contentOwnerId(),
-                    NotificationType.SYSTEM_CONTENT_DELETED,
+                    NotificationType.SYSTEM_ADMIN_MESSAGE,
                     null,
                     extras
             );

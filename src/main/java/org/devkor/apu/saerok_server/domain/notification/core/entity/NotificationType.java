@@ -19,5 +19,4 @@ public enum NotificationType {
     // ---- System Notification Types ----
     SYSTEM_PUBLISHED_ANNOUNCEMENT,
     SYSTEM_ADMIN_MESSAGE,
-    SYSTEM_CONTENT_DELETED,
 }
