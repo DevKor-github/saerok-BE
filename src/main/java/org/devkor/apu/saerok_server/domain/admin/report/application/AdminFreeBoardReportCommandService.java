@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.admin.audit.core.entity.AdminAuditAct
 import org.devkor.apu.saerok_server.domain.admin.audit.core.entity.AdminAuditLog;
 import org.devkor.apu.saerok_server.domain.admin.audit.core.entity.AdminAuditTargetType;
 import org.devkor.apu.saerok_server.domain.admin.audit.core.repository.AdminAuditLogRepository;
+import org.devkor.apu.saerok_server.domain.admin.notification.application.event.AdminNotificationEvent;
 import org.devkor.apu.saerok_server.domain.freeboard.core.entity.FreeBoardPost;
 import org.devkor.apu.saerok_server.domain.freeboard.core.entity.FreeBoardPostComment;
 import org.devkor.apu.saerok_server.domain.freeboard.core.entity.FreeBoardPostCommentReport;
@@ -16,6 +17,7 @@ import org.devkor.apu.saerok_server.domain.freeboard.core.repository.FreeBoardPo
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,7 @@ public class AdminFreeBoardReportCommandService {
 
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /* ───────────── 신고 무시 ───────────── */
 
@@ -128,6 +131,10 @@ public class AdminFreeBoardReportCommandService {
                 reportId,
                 metadata
         ));
+
+        // 콘텐츠 삭제 알림
+        eventPublisher.publishEvent(new AdminNotificationEvent.ContentDeletedByReport(
+                report.getReportedUser().getId(), reason));
     }
 
     public void deleteCommentByReport(Long adminUserId, Long reportId, String reason) {
@@ -168,5 +175,9 @@ public class AdminFreeBoardReportCommandService {
                 reportId,
                 metadata
         ));
+
+        // 콘텐츠 삭제 알림
+        eventPublisher.publishEvent(new AdminNotificationEvent.ContentDeletedByReport(
+                report.getReportedUser().getId(), reason));
     }
 }

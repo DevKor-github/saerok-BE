@@ -21,7 +21,7 @@ public record ActionNotificationPayload(
 ) implements NotificationPayload {
 
     public ActionNotificationPayload {
-        extras = (extras == null) ? Map.of() : Map.copyOf(extras);
+        extras = NotificationPayloadExtras.sanitize(extras);
     }
 
     @Override

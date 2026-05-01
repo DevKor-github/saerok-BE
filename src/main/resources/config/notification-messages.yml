@@ -23,3 +23,9 @@ notification-messages:
     SYSTEM_PUBLISHED_ANNOUNCEMENT:
       push-title: "{title}"
       push-body: "{body}"
+    SYSTEM_ADMIN_MESSAGE:
+      push-title: "{title}"
+      push-body: "{body}"
+    SYSTEM_CONTENT_DELETED:
+      push-title: "콘텐츠 삭제 안내"
+      push-body: "회원님의 콘텐츠가 운영정책 위반으로 삭제되었어요. 사유: {reason}"

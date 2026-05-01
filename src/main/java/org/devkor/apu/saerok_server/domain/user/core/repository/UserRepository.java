@@ -62,6 +62,53 @@ public class UserRepository {
                 .getResultList();
     }
 
+    public List<User> findActiveNicknameUsers(String nicknameQuery, int offset, int limit) {
+        String jpql = """
+                SELECT u FROM User u
+                WHERE u.deletedAt IS NULL
+                  AND u.signupStatus <> :withdrawn
+                  AND u.nickname IS NOT NULL
+                  AND TRIM(u.nickname) <> ''
+                """;
+        if (nicknameQuery != null) {
+            jpql += " AND u.nickname LIKE :nicknameQuery";
+        }
+        jpql += " ORDER BY u.nickname ASC, u.id ASC";
+
+        var query = em.createQuery(jpql, User.class)
+                .setParameter("withdrawn", SignupStatusType.WITHDRAWN)
+                .setFirstResult(offset)
+                .setMaxResults(limit);
+
+        if (nicknameQuery != null) {
+            query.setParameter("nicknameQuery", "%" + nicknameQuery + "%");
+        }
+
+        return query.getResultList();
+    }
+
+    public long countActiveNicknameUsers(String nicknameQuery) {
+        String jpql = """
+                SELECT COUNT(u) FROM User u
+                WHERE u.deletedAt IS NULL
+                  AND u.signupStatus <> :withdrawn
+                  AND u.nickname IS NOT NULL
+                  AND TRIM(u.nickname) <> ''
+                """;
+        if (nicknameQuery != null) {
+            jpql += " AND u.nickname LIKE :nicknameQuery";
+        }
+
+        var query = em.createQuery(jpql, Long.class)
+                .setParameter("withdrawn", SignupStatusType.WITHDRAWN);
+
+        if (nicknameQuery != null) {
+            query.setParameter("nicknameQuery", "%" + nicknameQuery + "%");
+        }
+
+        return query.getSingleResult();
+    }
+
     public List<User> findByIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return List.of();
         return em.createQuery(

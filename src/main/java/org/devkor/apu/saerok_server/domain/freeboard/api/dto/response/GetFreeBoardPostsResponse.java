@@ -30,7 +30,9 @@ public record GetFreeBoardPostsResponse(
             @Schema(description = "내가 작성한 게시글 여부 (비로그인 시 false)", example = "false", requiredMode = Schema.RequiredMode.REQUIRED)
             boolean isMine,
             @Schema(description = "작성 시각", example = "2025-07-05T03:10:00", requiredMode = Schema.RequiredMode.REQUIRED)
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            @Schema(description = "최종 수정 시각", example = "2025-07-05T04:20:00", requiredMode = Schema.RequiredMode.REQUIRED)
+            LocalDateTime updatedAt
     ) {
     }
 }

@@ -2,18 +2,16 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.LikeStatusResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.event.CollectionNotificationEvent;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.ActionKind;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Actor;
-import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.Target;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +23,7 @@ public class CollectionLikeCommandService {
     private final CollectionLikeRepository collectionLikeRepository;
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
-    private final NotifyActionDsl notifyAction;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 좋아요 토글 (추가/제거)
@@ -51,13 +49,12 @@ public class CollectionLikeCommandService {
             UserBirdCollectionLike like = new UserBirdCollectionLike(user, collection);
             collectionLikeRepository.save(like);
 
-            // 자신의 컬렉션이 아닌 경우에만 푸시 알림 발송
+            // 알림 전송
             if (!collection.getUser().getId().equals(userId)) {
-                notifyAction
-                        .by(Actor.of(userId, user.getNickname()))
-                        .on(Target.collection(collectionId))
-                        .did(ActionKind.LIKE)
-                        .to(collection.getUser().getId());
+                eventPublisher.publishEvent(new CollectionNotificationEvent.CollectionLiked(
+                        userId, user.getNickname(),
+                        collectionId, collection.getUser().getId()
+                ));
             }
             
             return new LikeStatusResponse(true);

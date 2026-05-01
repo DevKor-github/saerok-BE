@@ -5,6 +5,7 @@ import org.devkor.apu.saerok_server.domain.admin.audit.core.entity.AdminAuditAct
 import org.devkor.apu.saerok_server.domain.admin.audit.core.entity.AdminAuditLog;
 import org.devkor.apu.saerok_server.domain.admin.audit.core.entity.AdminAuditTargetType;
 import org.devkor.apu.saerok_server.domain.admin.audit.core.repository.AdminAuditLogRepository;
+import org.devkor.apu.saerok_server.domain.admin.notification.application.event.AdminNotificationEvent;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionComment;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionCommentReport;
@@ -15,6 +16,7 @@ import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.devkor.apu.saerok_server.global.shared.infra.ImageService;
 import org.devkor.apu.saerok_server.global.shared.util.TransactionUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,7 @@ public class AdminReportCommandService {
     // 감사/행위자 조회
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /* ───────────── 신고 무시 ───────────── */
 
@@ -138,7 +141,11 @@ public class AdminReportCommandService {
                 metadata
         ));
 
-        // 5) 커밋 후 S3 삭제
+        // 5) 콘텐츠 삭제 알림
+        eventPublisher.publishEvent(new AdminNotificationEvent.ContentDeletedByReport(
+                report.getReportedUser().getId(), reason));
+
+        // 6) 커밋 후 S3 삭제
         if (!objectKeys.isEmpty()) {
             TransactionUtils.runAfterCommitOrNow(() -> imageService.deleteAll(objectKeys));
         }
@@ -182,5 +189,9 @@ public class AdminReportCommandService {
                 reportId,
                 metadata
         ));
+
+        // 콘텐츠 삭제 알림
+        eventPublisher.publishEvent(new AdminNotificationEvent.ContentDeletedByReport(
+                report.getReportedUser().getId(), reason));
     }
 }

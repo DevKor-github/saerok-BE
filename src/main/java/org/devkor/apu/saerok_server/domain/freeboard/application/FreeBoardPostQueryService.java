@@ -1,9 +1,9 @@
 package org.devkor.apu.saerok_server.domain.freeboard.application;
 
 import lombok.RequiredArgsConstructor;
-import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.FreeBoardPostPreviewResponse;
 import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.GetFreeBoardPostDetailResponse;
 import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.GetFreeBoardPostsResponse;
+import org.devkor.apu.saerok_server.domain.freeboard.application.dto.FreeBoardPostPreview;
 import org.devkor.apu.saerok_server.domain.freeboard.application.dto.FreeBoardPostQueryCommand;
 import org.devkor.apu.saerok_server.domain.freeboard.core.entity.FreeBoardPost;
 import org.devkor.apu.saerok_server.domain.freeboard.core.repository.FreeBoardPostCommentRepository;
@@ -60,7 +60,8 @@ public class FreeBoardPostQueryService {
                             post.getContent(),
                             commentCounts.getOrDefault(post.getId(), 0L),
                             isMine,
-                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt())
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt()),
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getUpdatedAt())
                     );
                 })
                 .toList();
@@ -94,7 +95,7 @@ public class FreeBoardPostQueryService {
     }
 
     /* 커뮤니티 메인용 최신 게시글 미리보기 */
-    public List<FreeBoardPostPreviewResponse> getRecentPostsForMain(int limit) {
+    public List<FreeBoardPostPreview> getRecentPostsForMain(int limit) {
         FreeBoardPostQueryCommand command = new FreeBoardPostQueryCommand(1, limit);
         List<FreeBoardPost> posts = postRepository.findAll(command);
 
@@ -110,14 +111,15 @@ public class FreeBoardPostQueryService {
         return posts.stream()
                 .map(post -> {
                     Long authorId = post.getUser().getId();
-                    return new FreeBoardPostPreviewResponse(
+                    return new FreeBoardPostPreview(
                             post.getId(),
                             authorId,
                             post.getUser().getNickname(),
                             profileImageUrls.get(authorId),
                             thumbnailProfileImageUrls.get(authorId),
                             post.getContent(),
-                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt())
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getCreatedAt()),
+                            OffsetDateTimeLocalizer.toSeoulLocalDateTime(post.getUpdatedAt())
                     );
                 })
                 .toList();

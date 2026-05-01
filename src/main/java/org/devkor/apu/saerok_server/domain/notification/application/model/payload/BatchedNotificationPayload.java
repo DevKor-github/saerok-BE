@@ -25,7 +25,7 @@ public record BatchedNotificationPayload(
 ) implements NotificationPayload {
 
     public BatchedNotificationPayload {
-        extras = (extras == null) ? Map.of() : Map.copyOf(extras);
+        extras = NotificationPayloadExtras.sanitize(extras);
     }
 
     public static BatchedNotificationPayload fromBatch(NotificationBatch batch) {

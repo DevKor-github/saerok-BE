@@ -21,6 +21,6 @@ public record SystemNotificationPayload(
 ) implements NotificationPayload {
 
     public SystemNotificationPayload {
-        extras = (extras == null) ? Map.of() : Map.copyOf(extras);
+        extras = NotificationPayloadExtras.sanitize(extras);
     }
 }

@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
@@ -39,6 +40,7 @@ class AdminFreeBoardReportCommandServiceTest {
     @Mock FreeBoardPostCommentRepository commentRepository;
     @Mock AdminAuditLogRepository adminAuditLogRepository;
     @Mock UserRepository userRepository;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     private static User user(long id) {
         User u = new User();

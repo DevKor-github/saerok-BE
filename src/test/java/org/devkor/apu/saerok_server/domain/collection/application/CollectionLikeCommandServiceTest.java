@@ -5,13 +5,7 @@ import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollec
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollectionLike;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionLikeRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
-import org.devkor.apu.saerok_server.domain.notification.application.facade.NotificationPublisher;
-import org.devkor.apu.saerok_server.domain.notification.application.facade.NotifyActionDsl;
-import org.devkor.apu.saerok_server.domain.notification.application.model.dsl.TargetType;
-import org.devkor.apu.saerok_server.domain.notification.application.model.payload.ActionNotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.application.model.payload.NotificationPayload;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationSubject;
-import org.devkor.apu.saerok_server.domain.notification.core.entity.NotificationAction;
+import org.devkor.apu.saerok_server.domain.collection.application.event.CollectionNotificationEvent;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
@@ -20,11 +14,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
@@ -38,23 +31,12 @@ class CollectionLikeCommandServiceTest {
     @Mock CollectionLikeRepository collectionLikeRepository;
     @Mock CollectionRepository collectionRepository;
     @Mock UserRepository userRepository;
-    @Mock NotificationPublisher publisher;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @BeforeEach
     void setUp() {
-        NotifyActionDsl notifyActionDsl = new NotifyActionDsl(
-                publisher,
-                (target, base) -> {
-                    Map<String,Object> extras = base == null ? new HashMap<>() : new HashMap<>(base);
-                    if (target.type() == TargetType.COLLECTION) {
-                        extras.put("collectionId", target.id());
-                        extras.put("collectionImageUrl", "dummy");
-                    }
-                    return extras;
-                }
-        );
         collectionLikeCommandService = new CollectionLikeCommandService(
-                collectionLikeRepository, collectionRepository, userRepository, notifyActionDsl
+                collectionLikeRepository, collectionRepository, userRepository, eventPublisher
         );
     }
 
@@ -81,17 +63,13 @@ class CollectionLikeCommandServiceTest {
         assertTrue(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
 
-        ArgumentCaptor<NotificationPayload> payloadCap = ArgumentCaptor.forClass(NotificationPayload.class);
-        verify(publisher).push(payloadCap.capture());
+        ArgumentCaptor<CollectionNotificationEvent.CollectionLiked> eventCap =
+                ArgumentCaptor.forClass(CollectionNotificationEvent.CollectionLiked.class);
+        verify(eventPublisher).publishEvent(eventCap.capture());
 
-        ActionNotificationPayload p = (ActionNotificationPayload) payloadCap.getValue();
-        assertEquals(NotificationSubject.COLLECTION, p.subject());
-        assertEquals(NotificationAction.LIKE, p.action());
-        assertEquals(999L, p.recipientId());
-        assertEquals(userId, p.actorId());
-        Map<String, Object> extras = p.extras();
-        assertEquals(collectionId, extras.get("collectionId"));
-        assertTrue(extras.containsKey("collectionImageUrl"));
+        var event = eventCap.getValue();
+        assertEquals(userId, event.actorId());
+        assertEquals(999L, event.collectionOwnerId());
     }
 
     @Test
@@ -114,7 +92,7 @@ class CollectionLikeCommandServiceTest {
         assertFalse(response.isLiked());
         verify(collectionLikeRepository).existsByUserIdAndCollectionId(userId, collectionId);
         verify(collectionLikeRepository).findByUserIdAndCollectionId(userId, collectionId);
-        verifyNoInteractions(publisher);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test

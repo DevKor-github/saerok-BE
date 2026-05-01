@@ -17,5 +17,7 @@ public enum NotificationType {
     SUGGESTED_BIRD_ID_ON_COLLECTION,
 
     // ---- System Notification Types ----
-    SYSTEM_PUBLISHED_ANNOUNCEMENT
+    SYSTEM_PUBLISHED_ANNOUNCEMENT,
+    SYSTEM_ADMIN_MESSAGE,
+    SYSTEM_CONTENT_DELETED,
 }
