@@ -1,0 +1,3 @@
+UPDATE notification
+SET type = 'SYSTEM_ADMIN_MESSAGE'
+WHERE type = 'SYSTEM_CONTENT_DELETED';

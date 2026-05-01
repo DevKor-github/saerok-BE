@@ -71,12 +71,15 @@ class AdminNotificationWorkerTest {
 
         verify(notifySystemService).notifyUser(
                 eq(42L),
-                eq(NotificationType.SYSTEM_CONTENT_DELETED),
+                eq(NotificationType.SYSTEM_ADMIN_MESSAGE),
                 isNull(),
                 extrasCaptor.capture()
         );
 
-        assertThat(extrasCaptor.getValue()).containsEntry("reason", "커뮤니티 가이드라인 위반");
+        assertThat(extrasCaptor.getValue())
+                .containsEntry("title", "콘텐츠 삭제 안내")
+                .containsEntry("body", "회원님의 콘텐츠가 운영정책 위반으로 삭제되었어요. 사유: 커뮤니티 가이드라인 위반")
+                .containsEntry("reason", "커뮤니티 가이드라인 위반");
     }
 
     @Test
