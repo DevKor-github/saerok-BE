@@ -238,6 +238,44 @@ class UserRepositoryTest extends AbstractPostgresContainerTest {
         assertThat(repo.countSearchActiveUsers("or-", charlie.getId())).isEqualTo(3);
     }
 
+    @Test @DisplayName("searchActiveUsers - 닉네임 null인 활성 사용자도 ID로 검색됨")
+    void searchActiveUsers_byIdAllowsNullNickname() {
+        User profileRequired = user("profile-required@example.com", null);
+        profileRequired.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.searchActiveUsers(null, profileRequired.getId(), 0, 20);
+
+        assertThat(users).extracting(User::getId).containsExactly(profileRequired.getId());
+        assertThat(repo.countSearchActiveUsers(null, profileRequired.getId())).isEqualTo(1);
+    }
+
+    @Test @DisplayName("searchActiveUsers - 닉네임 검색에는 null 닉네임 사용자 제외")
+    void searchActiveUsers_nicknameQueryExcludesNullNickname() {
+        User withNickname = user("with-nick@example.com", "with-nick-target");
+        withNickname.setSignupStatus(SignupStatusType.COMPLETED);
+        User noNickname = user("no-nick@example.com", null);
+        noNickname.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.searchActiveUsers("nick-target", null, 0, 20);
+
+        assertThat(users).extracting(User::getNickname).containsExactly("with-nick-target");
+    }
+
+    @Test @DisplayName("searchActiveUsers - 쿼리 없을 때 닉네임 null 사용자 제외")
+    void searchActiveUsers_noQueryExcludesNullNickname() {
+        User withNickname = user("default-nick@example.com", "default-nick");
+        withNickname.setSignupStatus(SignupStatusType.COMPLETED);
+        User noNickname = user("default-no-nick@example.com", null);
+        noNickname.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.searchActiveUsers(null, null, 0, 20);
+
+        assertThat(users).extracting(User::getNickname).containsExactly("default-nick");
+    }
+
     @Test @DisplayName("searchActiveUsers - 탈퇴/삭제 사용자는 ID 검색에서도 제외")
     void searchActiveUsers_byIdExcludesInactive() {
         User withdrawn = user("inactive-withdrawn@example.com", "withdrawn-user");

@@ -68,8 +68,6 @@ public class UserRepository {
                 SELECT u FROM User u
                 WHERE u.deletedAt IS NULL
                   AND u.signupStatus <> :withdrawn
-                  AND u.nickname IS NOT NULL
-                  AND TRIM(u.nickname) <> ''
                 """;
         jpql += buildSearchPredicate(nicknameQuery, idQuery);
         jpql += " ORDER BY u.nickname ASC, u.id ASC";
@@ -89,8 +87,6 @@ public class UserRepository {
                 SELECT COUNT(u) FROM User u
                 WHERE u.deletedAt IS NULL
                   AND u.signupStatus <> :withdrawn
-                  AND u.nickname IS NOT NULL
-                  AND TRIM(u.nickname) <> ''
                 """;
         jpql += buildSearchPredicate(nicknameQuery, idQuery);
 
@@ -105,16 +101,17 @@ public class UserRepository {
     private String buildSearchPredicate(String nicknameQuery, Long idQuery) {
         boolean hasNickname = nicknameQuery != null;
         boolean hasId = idQuery != null;
+        String nicknamePresent = "(u.nickname IS NOT NULL AND TRIM(u.nickname) <> '')";
         if (hasNickname && hasId) {
-            return " AND (u.nickname LIKE :nicknameQuery OR u.id = :idQuery)";
+            return " AND ((" + nicknamePresent + " AND u.nickname LIKE :nicknameQuery) OR u.id = :idQuery)";
         }
         if (hasNickname) {
-            return " AND u.nickname LIKE :nicknameQuery";
+            return " AND " + nicknamePresent + " AND u.nickname LIKE :nicknameQuery";
         }
         if (hasId) {
             return " AND u.id = :idQuery";
         }
-        return "";
+        return " AND " + nicknamePresent;
     }
 
     private void bindSearchParameters(Query query, String nicknameQuery, Long idQuery) {
