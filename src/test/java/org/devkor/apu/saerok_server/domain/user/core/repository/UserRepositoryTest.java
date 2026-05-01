@@ -138,8 +138,8 @@ class UserRepositoryTest extends AbstractPostgresContainerTest {
         assertThat(activeIds).isEmpty();
     }
 
-    @Test @DisplayName("findActiveNicknameUsers - 활성 닉네임 사용자만 닉네임순으로 조회")
-    void findActiveNicknameUsers() {
+    @Test @DisplayName("searchActiveUsers - 활성 닉네임 사용자만 닉네임순으로 조회")
+    void searchActiveUsers() {
         User charlie = user("charlie@example.com", "charlie");
         charlie.setSignupStatus(SignupStatusType.COMPLETED);
         User bravo = user("bravo@example.com", "bravo");
@@ -156,16 +156,16 @@ class UserRepositoryTest extends AbstractPostgresContainerTest {
         deleted.softDelete();
         em.flush(); em.clear();
 
-        List<User> users = repo.findActiveNicknameUsers(null, 0, 20);
+        List<User> users = repo.searchActiveUsers(null, null, 0, 20);
 
         assertThat(users)
                 .extracting(User::getNickname)
                 .containsExactly("bravo", "charlie");
-        assertThat(repo.countActiveNicknameUsers(null)).isEqualTo(2);
+        assertThat(repo.countSearchActiveUsers(null, null)).isEqualTo(2);
     }
 
-    @Test @DisplayName("findActiveNicknameUsers - 닉네임 검색과 페이징")
-    void findActiveNicknameUsers_queryAndPagination() {
+    @Test @DisplayName("searchActiveUsers - 닉네임 검색과 페이징")
+    void searchActiveUsers_queryAndPagination() {
         User alpha = user("alpha@example.com", "alpha");
         alpha.setSignupStatus(SignupStatusType.COMPLETED);
         User alpine = user("alpine@example.com", "alpine");
@@ -174,8 +174,8 @@ class UserRepositoryTest extends AbstractPostgresContainerTest {
         bravo.setSignupStatus(SignupStatusType.COMPLETED);
         em.flush(); em.clear();
 
-        List<User> firstPage = repo.findActiveNicknameUsers("alp", 0, 1);
-        List<User> secondPage = repo.findActiveNicknameUsers("alp", 1, 1);
+        List<User> firstPage = repo.searchActiveUsers("alp", null, 0, 1);
+        List<User> secondPage = repo.searchActiveUsers("alp", null, 1, 1);
 
         assertThat(firstPage)
                 .extracting(User::getNickname)
@@ -183,11 +183,11 @@ class UserRepositoryTest extends AbstractPostgresContainerTest {
         assertThat(secondPage)
                 .extracting(User::getNickname)
                 .containsExactly("alpine");
-        assertThat(repo.countActiveNicknameUsers("alp")).isEqualTo(2);
+        assertThat(repo.countSearchActiveUsers("alp", null)).isEqualTo(2);
     }
 
-    @Test @DisplayName("findActiveNicknameUsers - 닉네임 중간 문자열 검색")
-    void findActiveNicknameUsers_containsQuery() {
+    @Test @DisplayName("searchActiveUsers - 닉네임 중간 문자열 검색")
+    void searchActiveUsers_containsQuery() {
         User duli = user("duli@example.com", "둘리");
         duli.setSignupStatus(SignupStatusType.COMPLETED);
         User pigeon = user("pigeon@example.com", "비둘기");
@@ -196,12 +196,100 @@ class UserRepositoryTest extends AbstractPostgresContainerTest {
         magpie.setSignupStatus(SignupStatusType.COMPLETED);
         em.flush(); em.clear();
 
-        List<User> users = repo.findActiveNicknameUsers("둘", 0, 20);
+        List<User> users = repo.searchActiveUsers("둘", null, 0, 20);
 
         assertThat(users)
                 .extracting(User::getNickname)
                 .containsExactly("둘리", "비둘기");
-        assertThat(repo.countActiveNicknameUsers("둘")).isEqualTo(2);
+        assertThat(repo.countSearchActiveUsers("둘", null)).isEqualTo(2);
+    }
+
+    @Test @DisplayName("searchActiveUsers - ID 단독 검색")
+    void searchActiveUsers_byIdOnly() {
+        User alpha = user("id-alpha@example.com", "id-alpha");
+        alpha.setSignupStatus(SignupStatusType.COMPLETED);
+        User bravo = user("id-bravo@example.com", "id-bravo");
+        bravo.setSignupStatus(SignupStatusType.COMPLETED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.searchActiveUsers(null, alpha.getId(), 0, 20);
+
+        assertThat(users)
+                .extracting(User::getId)
+                .containsExactly(alpha.getId());
+        assertThat(repo.countSearchActiveUsers(null, alpha.getId())).isEqualTo(1);
+    }
+
+    @Test @DisplayName("searchActiveUsers - ID와 닉네임 OR 검색")
+    void searchActiveUsers_byIdOrNickname() {
+        User alpha = user("or-alpha@example.com", "or-alpha");
+        alpha.setSignupStatus(SignupStatusType.COMPLETED);
+        User bravo = user("or-bravo@example.com", "or-bravo");
+        bravo.setSignupStatus(SignupStatusType.COMPLETED);
+        User charlie = user("or-charlie@example.com", "charlie-other");
+        charlie.setSignupStatus(SignupStatusType.COMPLETED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.searchActiveUsers("or-", charlie.getId(), 0, 20);
+
+        assertThat(users)
+                .extracting(User::getId)
+                .containsExactlyInAnyOrder(alpha.getId(), bravo.getId(), charlie.getId());
+        assertThat(repo.countSearchActiveUsers("or-", charlie.getId())).isEqualTo(3);
+    }
+
+    @Test @DisplayName("searchActiveUsers - 닉네임 null인 활성 사용자도 ID로 검색됨")
+    void searchActiveUsers_byIdAllowsNullNickname() {
+        User profileRequired = user("profile-required@example.com", null);
+        profileRequired.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.searchActiveUsers(null, profileRequired.getId(), 0, 20);
+
+        assertThat(users).extracting(User::getId).containsExactly(profileRequired.getId());
+        assertThat(repo.countSearchActiveUsers(null, profileRequired.getId())).isEqualTo(1);
+    }
+
+    @Test @DisplayName("searchActiveUsers - 닉네임 검색에는 null 닉네임 사용자 제외")
+    void searchActiveUsers_nicknameQueryExcludesNullNickname() {
+        User withNickname = user("with-nick@example.com", "with-nick-target");
+        withNickname.setSignupStatus(SignupStatusType.COMPLETED);
+        User noNickname = user("no-nick@example.com", null);
+        noNickname.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.searchActiveUsers("nick-target", null, 0, 20);
+
+        assertThat(users).extracting(User::getNickname).containsExactly("with-nick-target");
+    }
+
+    @Test @DisplayName("searchActiveUsers - 쿼리 없을 때 닉네임 null 사용자 제외")
+    void searchActiveUsers_noQueryExcludesNullNickname() {
+        User withNickname = user("default-nick@example.com", "default-nick");
+        withNickname.setSignupStatus(SignupStatusType.COMPLETED);
+        User noNickname = user("default-no-nick@example.com", null);
+        noNickname.setSignupStatus(SignupStatusType.PROFILE_REQUIRED);
+        em.flush(); em.clear();
+
+        List<User> users = repo.searchActiveUsers(null, null, 0, 20);
+
+        assertThat(users).extracting(User::getNickname).containsExactly("default-nick");
+    }
+
+    @Test @DisplayName("searchActiveUsers - 탈퇴/삭제 사용자는 ID 검색에서도 제외")
+    void searchActiveUsers_byIdExcludesInactive() {
+        User withdrawn = user("inactive-withdrawn@example.com", "withdrawn-user");
+        withdrawn.setSignupStatus(SignupStatusType.WITHDRAWN);
+        User deleted = user("inactive-deleted@example.com", "deleted-user");
+        deleted.setSignupStatus(SignupStatusType.COMPLETED);
+        em.flush();
+        deleted.softDelete();
+        em.flush(); em.clear();
+
+        assertThat(repo.searchActiveUsers(null, withdrawn.getId(), 0, 20)).isEmpty();
+        assertThat(repo.countSearchActiveUsers(null, withdrawn.getId())).isZero();
+        assertThat(repo.searchActiveUsers(null, deleted.getId(), 0, 20)).isEmpty();
+        assertThat(repo.countSearchActiveUsers(null, deleted.getId())).isZero();
     }
 
     @Test @DisplayName("save - 중복 닉네임은 제약조건 위반")
