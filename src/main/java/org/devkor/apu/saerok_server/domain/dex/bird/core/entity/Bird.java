@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.core.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.contract.HasBodyLength;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 import org.devkor.apu.saerok_server.global.shared.entity.SoftDeletableAuditable;
 
 import java.util.List;
@@ -30,6 +31,10 @@ public class Bird extends SoftDeletableAuditable implements HasBodyLength {
 
     @Column(name = "nibr_url")
     private String nibrUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "conservation_grade", nullable = false)
+    private ConservationGrade conservationGrade = ConservationGrade.NONE;
 
     @OneToMany(mappedBy = "bird", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BirdImage> images;

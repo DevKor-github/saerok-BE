@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.query.repository;
 
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.repository.BirdRepository;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.devkor.apu.saerok_server.testsupport.AbstractPostgresContainerTest;
@@ -45,6 +46,16 @@ public class BirdProfileViewRepositoryTest extends AbstractPostgresContainerTest
         assertEquals(64L, birdProfile.get().getId());
 
         System.out.println(birdProfile.get().toSummaryString());
+    }
+
+    @Test
+    void 새프로필에_보호등급이_포함된다() {
+        // when
+        Optional<BirdProfileView> birdProfile = birdProfileRepository.findById(600L);
+
+        // then
+        assertTrue(birdProfile.isPresent());
+        assertEquals(ConservationGrade.GRADE_I, birdProfile.get().getConservationGrade());
     }
 
     @Test

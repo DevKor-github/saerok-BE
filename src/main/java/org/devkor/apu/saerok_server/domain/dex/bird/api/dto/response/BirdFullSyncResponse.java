@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
 
 import java.time.OffsetDateTime;
@@ -35,6 +36,9 @@ public class BirdFullSyncResponse {
 
         @Schema(description = "NIBR URL", example = "http://nibr...")
         private String nibrUrl;
+
+        @Schema(description = "보호등급", example = "NONE", allowableValues = {"NONE", "GRADE_I", "GRADE_II"})
+        private ConservationGrade conservationGrade;
 
         @Schema(description = "서식지 목록")
         private List<HabitatType> habitats;

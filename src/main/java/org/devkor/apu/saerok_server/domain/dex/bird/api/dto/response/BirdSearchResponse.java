@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 
 import java.util.List;
 
@@ -23,6 +24,9 @@ public class BirdSearchResponse {
 
         @Schema(description = "학명", example = "Pica pica")
         public String scientificName;
+
+        @Schema(description = "보호등급", example = "NONE", allowableValues = {"NONE", "GRADE_I", "GRADE_II"})
+        public ConservationGrade conservationGrade;
 
         @Schema(description = "썸네일 이미지 URL", example = "https://example.com/images/bird-thumb.jpg")
         public String thumbImageUrl;
