@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.core.repository;
 
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.BirdSearchDto;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.dto.CmRangeDto;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.enums.BirdSearchSortDirType;
@@ -44,6 +45,14 @@ class BirdRepositoryTest extends AbstractPostgresContainerTest {
         Optional<Bird> found = repo.findById(bird.getId());
         assertThat(found).isPresent();
         assertThat(found.get().getId()).isEqualTo(bird.getId());
+    }
+
+    @Test @DisplayName("findById returns conservation grade")
+    void findById_returnsConservationGrade() {
+        Optional<Bird> found = repo.findById(600L);
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getConservationGrade()).isEqualTo(ConservationGrade.GRADE_I);
     }
 
     @Test @DisplayName("findById - soft delete 된 새 제외")
