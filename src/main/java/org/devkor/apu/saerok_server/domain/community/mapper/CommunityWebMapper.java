@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.community.mapper;
 
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.domain.collection.core.service.CollectionLocationMasker;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityFreeBoardPostInfo;
 import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityUserInfo;
@@ -11,7 +12,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, imports = OffsetDateTimeLocalizer.class)
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, imports = {OffsetDateTimeLocalizer.class, CollectionLocationMasker.class})
 public interface CommunityWebMapper {
 
     @Mapping(target = "collectionId", source = "collection.id")
@@ -19,10 +20,10 @@ public interface CommunityWebMapper {
     @Mapping(target = "thumbnailImageUrl", source = "thumbnailImageUrl")
     @Mapping(target = "discoveredDate", source = "collection.discoveredDate")
     @Mapping(target = "createdAt", expression = "java(OffsetDateTimeLocalizer.toSeoulLocalDateTime(collection.getCreatedAt()))")
-    @Mapping(target = "latitude", source = "collection.latitude")
-    @Mapping(target = "longitude", source = "collection.longitude")
-    @Mapping(target = "locationAlias", source = "collection.locationAlias")
-    @Mapping(target = "address", source = "collection.address")
+    @Mapping(target = "latitude", expression = "java(CollectionLocationMasker.latitude(collection, isMine))")
+    @Mapping(target = "longitude", expression = "java(CollectionLocationMasker.longitude(collection, isMine))")
+    @Mapping(target = "locationAlias", expression = "java(CollectionLocationMasker.locationAlias(collection, isMine))")
+    @Mapping(target = "address", expression = "java(CollectionLocationMasker.address(collection, isMine))")
     @Mapping(target = "note", source = "collection.note")
     @Mapping(target = "likeCount", source = "likeCount")
     @Mapping(target = "commentCount", source = "commentCount")
@@ -41,7 +42,8 @@ public interface CommunityWebMapper {
             Long commentCount,
             Boolean isLiked,
             Boolean isPopular,
-            Long suggestionUserCount
+            Long suggestionUserCount,
+            boolean isMine
     );
 
     @Mapping(target = "userId", source = "user.id")

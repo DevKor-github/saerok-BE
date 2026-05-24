@@ -55,14 +55,16 @@ public class CollectionRepository {
 
         if (isMineOnly && userId != null) {
             String sqlMineOnly = """
-            SELECT *
+            SELECT c.*
             FROM user_bird_collection c
+            LEFT JOIN bird b ON b.id = c.bird_id
             WHERE ST_DWithin(
                   c.location::geography,
                   CAST(:refPoint AS geography),
                   :radius
                 )
               AND c.user_id = :userId
+              AND (c.bird_id IS NULL OR b.conservation_grade = 'NONE')
             ORDER BY ST_Distance(
                      c.location::geography,
                      CAST(:refPoint AS geography)
@@ -79,8 +81,9 @@ public class CollectionRepository {
         }
 
         String sqlAll = """
-            SELECT *
+            SELECT c.*
             FROM user_bird_collection c
+            LEFT JOIN bird b ON b.id = c.bird_id
             WHERE ST_DWithin(
                   c.location::geography,
                   CAST(:refPoint AS geography),
@@ -90,6 +93,7 @@ public class CollectionRepository {
                    c.access_level = 'PUBLIC'
                 OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
               )
+              AND (c.bird_id IS NULL OR b.conservation_grade = 'NONE')
             ORDER BY ST_Distance(
                      c.location::geography,
                      CAST(:refPoint AS geography)
@@ -111,12 +115,14 @@ public class CollectionRepository {
             String sql = """
             SELECT COUNT(*)
             FROM user_bird_collection c
+            LEFT JOIN bird b ON b.id = c.bird_id
             WHERE ST_DWithin(
                   c.location::geography,
                   CAST(:refPoint AS geography),
                   :radius
                 )
               AND c.user_id = :userId
+              AND (c.bird_id IS NULL OR b.conservation_grade = 'NONE')
             """;
 
             var query = em.createNativeQuery(sql)
@@ -130,6 +136,7 @@ public class CollectionRepository {
         String sql = """
             SELECT COUNT(*)
             FROM user_bird_collection c
+            LEFT JOIN bird b ON b.id = c.bird_id
             WHERE ST_DWithin(
                   c.location::geography,
                   CAST(:refPoint AS geography),
@@ -139,6 +146,7 @@ public class CollectionRepository {
                    c.access_level = 'PUBLIC'
                 OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
               )
+              AND (c.bird_id IS NULL OR b.conservation_grade = 'NONE')
             """;
 
         var query = em.createNativeQuery(sql)
@@ -169,12 +177,14 @@ public class CollectionRepository {
                        ST_Distance(c.location::geography, CAST(:refPoint AS geography)) AS dist,
                        ST_SnapToGrid(ST_Transform(c.location, 3857), :gridSize, :gridSize) AS cell_id
                 FROM user_bird_collection c
+                LEFT JOIN bird b ON b.id = c.bird_id
                 WHERE ST_DWithin(
                       c.location::geography,
                       CAST(:refPoint AS geography),
                       :radius
                     )
                   AND c.user_id = :userId
+                  AND (c.bird_id IS NULL OR b.conservation_grade = 'NONE')
             ), ranked AS (
                 SELECT id,
                        dist,
@@ -203,6 +213,7 @@ public class CollectionRepository {
                    ST_Distance(c.location::geography, CAST(:refPoint AS geography)) AS dist,
                    ST_SnapToGrid(ST_Transform(c.location, 3857), :gridSize, :gridSize) AS cell_id
             FROM user_bird_collection c
+            LEFT JOIN bird b ON b.id = c.bird_id
             WHERE ST_DWithin(
                   c.location::geography,
                   CAST(:refPoint AS geography),
@@ -212,6 +223,7 @@ public class CollectionRepository {
                    c.access_level = 'PUBLIC'
                 OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
               )
+              AND (c.bird_id IS NULL OR b.conservation_grade = 'NONE')
         ), ranked AS (
             SELECT id,
                    dist,

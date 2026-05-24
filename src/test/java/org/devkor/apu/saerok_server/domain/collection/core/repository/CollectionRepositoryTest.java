@@ -2,8 +2,11 @@ package org.devkor.apu.saerok_server.domain.collection.core.repository;
 
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.testsupport.AbstractPostgresContainerTest;
+import org.devkor.apu.saerok_server.testsupport.builder.BirdBuilder;
 import org.devkor.apu.saerok_server.testsupport.builder.CollectionBuilder;
 import org.devkor.apu.saerok_server.testsupport.builder.UserBuilder;
 import org.junit.jupiter.api.DisplayName;
@@ -46,8 +49,18 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
             Point point,
             AccessLevelType accessLevel
     ) {
+        return newCollection(owner, null, point, accessLevel);
+    }
+
+    private UserBirdCollection newCollection(
+            User owner,
+            Bird bird,
+            Point point,
+            AccessLevelType accessLevel
+    ) {
         return new CollectionBuilder(em)
                 .owner(owner)
+                .bird(bird)
                 .location(point)
                 .accessLevel(accessLevel)
                 .build();
@@ -164,6 +177,72 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
+    @DisplayName("주변 조회는 보호등급 새 컬렉션을 결과에서 제외한다")
+    void findNearby_excludesProtectedBirdCollections() throws Exception {
+        // given
+        User owner = newUser();
+        Point ref = gf.createPoint(new Coordinate(126.9780, 37.5665));
+        Point near = gf.createPoint(new Coordinate(126.9781, 37.5664));
+
+        Bird normalBird = new BirdBuilder(em)
+                .korName("normal-nearby-" + System.nanoTime())
+                .build();
+        Bird protectedBird = new BirdBuilder(em)
+                .korName("protected-nearby-" + System.nanoTime())
+                .conservationGrade(ConservationGrade.GRADE_I)
+                .build();
+
+        UserBirdCollection normalCollection = newCollection(owner, normalBird, near, AccessLevelType.PUBLIC);
+        UserBirdCollection protectedCollection = newCollection(owner, protectedBird, near, AccessLevelType.PUBLIC);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<UserBirdCollection> result = collectionRepository.findNearby(ref, 1_000, null, false, null);
+        long candidateCount = collectionRepository.countNearbyCandidates(ref, 1_000, null, false);
+
+        // then
+        assertEquals(1, result.size());
+        assertEquals(1L, candidateCount);
+        assertTrue(result.stream().anyMatch(c -> c.getId().equals(normalCollection.getId())));
+        assertFalse(result.stream().anyMatch(c -> c.getId().equals(protectedCollection.getId())));
+    }
+
+    @Test
+    @DisplayName("mineOnly 주변 조회도 보호등급 새 컬렉션을 결과에서 제외한다")
+    void findNearby_mineOnly_excludesProtectedBirdCollections() throws Exception {
+        // given
+        User owner = newUser();
+        Point ref = gf.createPoint(new Coordinate(126.9780, 37.5665));
+        Point near = gf.createPoint(new Coordinate(126.9781, 37.5664));
+
+        Bird normalBird = new BirdBuilder(em)
+                .korName("normal-mine-nearby-" + System.nanoTime())
+                .build();
+        Bird protectedBird = new BirdBuilder(em)
+                .korName("protected-mine-nearby-" + System.nanoTime())
+                .conservationGrade(ConservationGrade.GRADE_II)
+                .build();
+
+        UserBirdCollection normalCollection = newCollection(owner, normalBird, near, AccessLevelType.PRIVATE);
+        UserBirdCollection protectedCollection = newCollection(owner, protectedBird, near, AccessLevelType.PRIVATE);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<UserBirdCollection> result = collectionRepository.findNearby(ref, 1_000, owner.getId(), true, null);
+        long candidateCount = collectionRepository.countNearbyCandidates(ref, 1_000, owner.getId(), true);
+
+        // then
+        assertEquals(1, result.size());
+        assertEquals(1L, candidateCount);
+        assertTrue(result.stream().anyMatch(c -> c.getId().equals(normalCollection.getId())));
+        assertFalse(result.stream().anyMatch(c -> c.getId().equals(protectedCollection.getId())));
+    }
+
+    @Test
     @DisplayName("findNearbyEven은 셀 단위 라운드로빈으로 균등 샘플링한다")
     void findNearbyEven_returnsBalancedSamplesAcrossCells() throws Exception {
         // given
@@ -199,5 +278,43 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
         assertTrue(result.stream().anyMatch(c -> c.getId().equals(cellC.getId())));
         assertFalse(result.stream().anyMatch(c -> c.getId().equals(cellASecond.getId())),
                 "같은 셀의 두 번째 후보는 limit보다 뒤 순위로 밀려야 한다");
+    }
+
+    @Test
+    @DisplayName("findNearbyEven도 보호등급 새 컬렉션을 결과에서 제외한다")
+    void findNearbyEven_excludesProtectedBirdCollections() throws Exception {
+        // given
+        User owner = newUser();
+        Point ref = gf.createPoint(new Coordinate(126.9780, 37.5665));
+        Point near = gf.createPoint(new Coordinate(126.9781, 37.5664));
+
+        Bird normalBird = new BirdBuilder(em)
+                .korName("normal-even-nearby-" + System.nanoTime())
+                .build();
+        Bird protectedBird = new BirdBuilder(em)
+                .korName("protected-even-nearby-" + System.nanoTime())
+                .conservationGrade(ConservationGrade.GRADE_I)
+                .build();
+
+        UserBirdCollection normalCollection = newCollection(owner, normalBird, near, AccessLevelType.PUBLIC);
+        UserBirdCollection protectedCollection = newCollection(owner, protectedBird, near, AccessLevelType.PUBLIC);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<UserBirdCollection> result = collectionRepository.findNearbyEven(
+                ref,
+                1_000,
+                null,
+                false,
+                10,
+                80
+        );
+
+        // then
+        assertEquals(1, result.size());
+        assertTrue(result.stream().anyMatch(c -> c.getId().equals(normalCollection.getId())));
+        assertFalse(result.stream().anyMatch(c -> c.getId().equals(protectedCollection.getId())));
     }
 }

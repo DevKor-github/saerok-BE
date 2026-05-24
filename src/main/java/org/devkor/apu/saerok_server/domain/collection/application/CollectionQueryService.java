@@ -214,6 +214,7 @@ public class CollectionQueryService {
                     boolean isLikedByMe = command.userId() != null && myLikeMap.getOrDefault(c.getId(), false);
                     String userProfileImageUrl = profileImageMap.get(c.getUser().getId());
                     String thumbnailProfileImageUrl = thumbnailProfileImageMap.get(c.getUser().getId());
+                    boolean isMine = command.userId() != null && command.userId().equals(c.getUser().getId());
 
                     return collectionWebMapper.toGetNearbyCollectionsResponseItem(
                             c,
@@ -223,7 +224,8 @@ public class CollectionQueryService {
                             thumbnailProfileImageUrl,
                             likeCount,
                             commentCount,
-                            isLikedByMe
+                            isLikedByMe,
+                            isMine
                     );
                 })
                 .toList();
