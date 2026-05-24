@@ -4,6 +4,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdDescription;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdTaxonomy;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
@@ -17,6 +18,7 @@ public class BirdBuilder {
     private BirdTaxonomy taxonomy;
     private Double bodyLengthCm = 25.0;
     private String nibrUrl = null;
+    private ConservationGrade conservationGrade = ConservationGrade.NONE;
 
     public BirdBuilder(TestEntityManager em) {
         this.em = em;
@@ -56,6 +58,11 @@ public class BirdBuilder {
         return this;
     }
 
+    public BirdBuilder conservationGrade(ConservationGrade conservationGrade) {
+        this.conservationGrade = conservationGrade;
+        return this;
+    }
+
     /**
      * Builds and persists the Bird.
      */
@@ -78,6 +85,7 @@ public class BirdBuilder {
         // additional fields
         ReflectionTestUtils.setField(bird, "bodyLengthCm", bodyLengthCm);
         ReflectionTestUtils.setField(bird, "nibrUrl", nibrUrl);
+        ReflectionTestUtils.setField(bird, "conservationGrade", conservationGrade);
 
         em.persist(bird);
         em.flush();
