@@ -6,6 +6,7 @@ import org.devkor.apu.saerok_server.domain.freeboard.api.dto.request.CreateFreeB
 import org.devkor.apu.saerok_server.domain.freeboard.api.dto.request.UpdateFreeBoardPostCommentRequest;
 import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.CreateFreeBoardPostCommentResponse;
 import org.devkor.apu.saerok_server.domain.freeboard.api.dto.response.UpdateFreeBoardPostCommentResponse;
+import org.devkor.apu.saerok_server.domain.freeboard.application.event.FreeBoardNotificationEvent;
 import org.devkor.apu.saerok_server.domain.freeboard.core.entity.FreeBoardPost;
 import org.devkor.apu.saerok_server.domain.freeboard.core.entity.FreeBoardPostComment;
 import org.devkor.apu.saerok_server.domain.freeboard.core.repository.FreeBoardPostCommentRepository;
@@ -14,6 +15,7 @@ import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
 import org.devkor.apu.saerok_server.global.shared.exception.ForbiddenException;
 import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,6 +26,7 @@ public class FreeBoardPostCommentCommandService {
     private final FreeBoardPostCommentRepository commentRepository;
     private final FreeBoardPostRepository postRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /* 댓글 작성 */
     public CreateFreeBoardPostCommentResponse createComment(Long userId, Long postId,
@@ -35,8 +38,9 @@ public class FreeBoardPostCommentCommandService {
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게시글 id예요"));
 
         FreeBoardPostComment comment;
+        FreeBoardPostComment parentComment = null;
         if (req.parentId() != null) {
-            FreeBoardPostComment parentComment = commentRepository.findById(req.parentId())
+            parentComment = commentRepository.findById(req.parentId())
                     .orElseThrow(() -> new NotFoundException("존재하지 않는 댓글 id예요"));
 
             if (!parentComment.getPost().getId().equals(postId)) {
@@ -55,6 +59,15 @@ public class FreeBoardPostCommentCommandService {
         }
 
         commentRepository.save(comment);
+
+        eventPublisher.publishEvent(new FreeBoardNotificationEvent.CommentCreated(
+                userId, user.getNickname(),
+                postId, post.getUser().getId(),
+                parentComment != null ? parentComment.getId() : null,
+                parentComment != null ? parentComment.getUser().getId() : null,
+                req.content()
+        ));
+
         return new CreateFreeBoardPostCommentResponse(comment.getId());
     }
 
