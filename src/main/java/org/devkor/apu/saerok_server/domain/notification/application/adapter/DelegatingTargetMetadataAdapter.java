@@ -18,12 +18,16 @@ public class DelegatingTargetMetadataAdapter implements TargetMetadataPort {
 
     private final CollectionTargetMetadataAdapter collectionAdapter;
     private final CommentTargetMetadataAdapter commentAdapter;
+    private final FreeBoardPostTargetMetadataAdapter freeBoardPostAdapter;
+    private final FreeBoardCommentTargetMetadataAdapter freeBoardCommentAdapter;
 
     @Override
     public Map<String, Object> enrich(Target target, Map<String, Object> baseExtras) {
         return switch (target.type()) {
             case COLLECTION -> collectionAdapter.enrich(target, baseExtras);
             case COMMENT -> commentAdapter.enrich(target, baseExtras);
+            case FREE_BOARD_POST -> freeBoardPostAdapter.enrich(target, baseExtras);
+            case FREE_BOARD_COMMENT -> freeBoardCommentAdapter.enrich(target, baseExtras);
         };
     }
 }

@@ -103,6 +103,8 @@ public class NotifyActionDsl {
             var notificationSubject = switch (target.type()) {
                 case COLLECTION -> NotificationSubject.COLLECTION;
                 case COMMENT -> NotificationSubject.COMMENT;
+                case FREE_BOARD_POST -> NotificationSubject.FREE_BOARD_POST;
+                case FREE_BOARD_COMMENT -> NotificationSubject.FREE_BOARD_COMMENT;
             };
 
             var notificationAction = switch (action) {
@@ -112,9 +114,15 @@ public class NotifyActionDsl {
                 case SUGGEST_BIRD_ID -> NotificationAction.SUGGEST_BIRD_ID;
             };
 
-            Long relatedId = target.type() == TargetType.COMMENT && extras.containsKey("collectionId")
-                    ? (Long) extras.get("collectionId")
-                    : target.id();
+            Long relatedId = switch (target.type()) {
+                case COMMENT -> extras.containsKey("collectionId")
+                        ? (Long) extras.get("collectionId")
+                        : target.id();
+                case FREE_BOARD_COMMENT -> extras.containsKey("freeBoardPostId")
+                        ? (Long) extras.get("freeBoardPostId")
+                        : target.id();
+                default -> target.id();
+            };
 
             publisher.push(
                     new ActionNotificationPayload(
