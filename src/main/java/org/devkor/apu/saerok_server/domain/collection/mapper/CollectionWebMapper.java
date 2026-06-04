@@ -9,13 +9,15 @@ import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateColl
 import org.devkor.apu.saerok_server.domain.collection.application.dto.DeleteCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.*;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.domain.collection.core.service.CollectionLocationMasker;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.Named;
 
 @Mapper(
-        componentModel = MappingConstants.ComponentModel.SPRING
+        componentModel = MappingConstants.ComponentModel.SPRING,
+        imports = CollectionLocationMasker.class
 )
 public interface CollectionWebMapper {
 
@@ -58,6 +60,10 @@ public interface CollectionWebMapper {
     @Mapping(target = "commentCount", source = "commentCount")
     @Mapping(target = "isLiked", source = "isLiked")
     @Mapping(target = "isMine", source = "isMine")
+    @Mapping(target = "latitude", expression = "java(CollectionLocationMasker.latitude(collection, isMine))")
+    @Mapping(target = "longitude", expression = "java(CollectionLocationMasker.longitude(collection, isMine))")
+    @Mapping(target = "locationAlias", expression = "java(CollectionLocationMasker.locationAlias(collection, isMine))")
+    @Mapping(target = "address", expression = "java(CollectionLocationMasker.address(collection, isMine))")
     GetCollectionDetailResponse toGetCollectionDetailResponse(UserBirdCollection collection, String imageUrl, String userProfileImageUrl, String thumbnailProfileImageUrl, long likeCount, long commentCount, boolean isLiked, boolean isMine);
 
     @Mapping(target = "collectionId", source = "collection.id")
@@ -71,7 +77,11 @@ public interface CollectionWebMapper {
     @Mapping(target = "user.nickname", source = "collection.user.nickname")
     @Mapping(target = "user.profileImageUrl", source = "userProfileImageUrl")
     @Mapping(target = "user.thumbnailProfileImageUrl", source = "thumbnailProfileImageUrl")
-    GetNearbyCollectionsResponse.Item toGetNearbyCollectionsResponseItem(UserBirdCollection collection, String imageUrl, String thumbnailUrl, String userProfileImageUrl, String thumbnailProfileImageUrl, long likeCount, long commentCount, boolean isLiked);
+    @Mapping(target = "latitude", expression = "java(CollectionLocationMasker.latitude(collection, isMine))")
+    @Mapping(target = "longitude", expression = "java(CollectionLocationMasker.longitude(collection, isMine))")
+    @Mapping(target = "locationAlias", expression = "java(CollectionLocationMasker.locationAlias(collection, isMine))")
+    @Mapping(target = "address", expression = "java(CollectionLocationMasker.address(collection, isMine))")
+    GetNearbyCollectionsResponse.Item toGetNearbyCollectionsResponseItem(UserBirdCollection collection, String imageUrl, String thumbnailUrl, String userProfileImageUrl, String thumbnailProfileImageUrl, long likeCount, long commentCount, boolean isLiked, boolean isMine);
 
     @Named("getBirdId")
     default Long getBirdId(UserBirdCollection collection) {

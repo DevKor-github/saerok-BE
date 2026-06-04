@@ -60,13 +60,14 @@ public class CommunityDataAssembler {
                     long commentCount = collectionCommentRepository.countByCollectionId(collection.getId());
                     boolean isLiked = userId != null && collectionLikeRepository.existsByUserIdAndCollectionId(userId, collection.getId());
                     boolean isPopular = popularStatusMap.getOrDefault(collection.getId(), false);
+                    boolean isMine = userId != null && userId.equals(collection.getUser().getId());
 
                     Long suggestionUserCount = collection.getBird() == null
                             ? suggestionUserCounts.getOrDefault(collection.getId(), 0L)
                             : null;
                     
                     return communityWebMapper.toCommunityCollectionInfo(
-                            collection, imageUrl, thumbnailImageUrl, userProfileImageUrl, thumbnailProfileImageUrl, likeCount, commentCount, isLiked, isPopular, suggestionUserCount
+                            collection, imageUrl, thumbnailImageUrl, userProfileImageUrl, thumbnailProfileImageUrl, likeCount, commentCount, isLiked, isPopular, suggestionUserCount, isMine
                     );
                 })
                 .toList();

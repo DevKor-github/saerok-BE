@@ -22,6 +22,9 @@ public abstract class BirdProfileViewMapper {
     // TODO: 프론트에서 nibrUrl null 처리가 되면, 이 nibrUrl 임시 처리(null 대신 빈 문자열)를 지운다.
     public abstract BirdFullSyncResponse.BirdProfileItem toDto(BirdProfileView birdProfileView);
 
+    @Mapping(target = "s3Url", ignore = true)
+    protected abstract BirdFullSyncResponse.BirdProfileItem.Image toDtoImage(BirdProfileView.Image image);
+
     @AfterMapping
     protected void fillS3Urls(
             BirdProfileView source,

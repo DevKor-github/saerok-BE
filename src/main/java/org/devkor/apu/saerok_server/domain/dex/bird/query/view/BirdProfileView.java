@@ -8,6 +8,7 @@ import org.devkor.apu.saerok_server.domain.dex.bird.core.contract.HasBodyLength;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdDescription;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdTaxonomy;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -39,6 +40,10 @@ public class BirdProfileView implements HasBodyLength {
 
     @Column(name = "nibr_url")
     private String nibrUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "conservation_grade")
+    private ConservationGrade conservationGrade;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "habitats")

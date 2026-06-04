@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.query.view.builder;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdDescription;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdTaxonomy;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -17,6 +18,7 @@ public class BirdProfileViewTestBuilder {
     private BirdDescription description = new BirdDescription();
     private Double bodyLengthCm = 25.0;
     private String nibrUrl = null;
+    private ConservationGrade conservationGrade = ConservationGrade.NONE;
     private List<HabitatType> habitats = List.of();
     private List<BirdProfileView.SeasonWithRarity> seasonsWithRarity = List.of();
     private List<BirdProfileView.Image> images = List.of();
@@ -30,6 +32,7 @@ public class BirdProfileViewTestBuilder {
         ReflectionTestUtils.setField(birdProfileView, "description", description);
         ReflectionTestUtils.setField(birdProfileView, "bodyLengthCm", bodyLengthCm);
         ReflectionTestUtils.setField(birdProfileView, "nibrUrl", nibrUrl);
+        ReflectionTestUtils.setField(birdProfileView, "conservationGrade", conservationGrade);
         ReflectionTestUtils.setField(birdProfileView, "habitats", habitats);
         ReflectionTestUtils.setField(birdProfileView, "seasonsWithRarity", seasonsWithRarity);
         ReflectionTestUtils.setField(birdProfileView, "images", images);

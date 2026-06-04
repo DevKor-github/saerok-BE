@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.testsupport.builder;
 
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
+import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 public class CollectionBuilder {
     private final TestEntityManager em;
     private User owner;
+    private Bird bird;
     private AccessLevelType accessLevel = AccessLevelType.PUBLIC;
     private LocalDate discoveredDate = LocalDate.now();
     private Point location = new GeometryFactory()
@@ -28,6 +30,11 @@ public class CollectionBuilder {
 
     public CollectionBuilder owner(User owner) {
         this.owner = owner;
+        return this;
+    }
+
+    public CollectionBuilder bird(Bird bird) {
+        this.bird = bird;
         return this;
     }
 
@@ -53,6 +60,7 @@ public class CollectionBuilder {
         UserBirdCollection coll = new UserBirdCollection();
         // inject owner
         ReflectionTestUtils.setField(coll, "user", owner);
+        ReflectionTestUtils.setField(coll, "bird", bird);
         coll.setAccessLevel(accessLevel);
         coll.setDiscoveredDate(discoveredDate);
         coll.setLocation(location);

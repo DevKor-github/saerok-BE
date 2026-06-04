@@ -24,6 +24,14 @@ public final class NotificationTypeResolver {
                 case REPLY -> NotificationType.REPLIED_TO_COMMENT;
                 case LIKE, COMMENT, SUGGEST_BIRD_ID -> throw new IllegalArgumentException(action + " action is not supported for COMMENT subject");
             };
+            case FREE_BOARD_POST -> switch (action) {
+                case COMMENT -> NotificationType.COMMENTED_ON_FREE_BOARD_POST;
+                case LIKE, REPLY, SUGGEST_BIRD_ID -> throw new IllegalArgumentException(action + " action is not supported for FREE_BOARD_POST subject");
+            };
+            case FREE_BOARD_COMMENT -> switch (action) {
+                case REPLY -> NotificationType.REPLIED_TO_FREE_BOARD_COMMENT;
+                case LIKE, COMMENT, SUGGEST_BIRD_ID -> throw new IllegalArgumentException(action + " action is not supported for FREE_BOARD_COMMENT subject");
+            };
         };
     }
 }
