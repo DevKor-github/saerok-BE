@@ -70,6 +70,18 @@ public class NotificationSettingRepository {
         em.persist(setting);
     }
 
+    public void insertIfMissing(Long userDeviceId, NotificationType type, boolean enabled) {
+        em.createNativeQuery("""
+                insert into notification_setting (id, user_device_id, type, enabled, created_at, updated_at)
+                values (nextval('notification_setting_seq'), :userDeviceId, :type, :enabled, now(), now())
+                on conflict on constraint uq_notification_setting_user_device_type do nothing
+                """)
+                .setParameter("userDeviceId", userDeviceId)
+                .setParameter("type", type.name())
+                .setParameter("enabled", enabled)
+                .executeUpdate();
+    }
+
     public int deleteByUserId(Long userId) {
         return em.createQuery("""
             delete from NotificationSetting ns
