@@ -42,6 +42,26 @@ public class UserDeviceRepository {
                 .executeUpdate();
     }
 
+    public int deleteConflictingDevicesForRegistration(Long userId, String deviceId, DevicePlatform platform, String token) {
+        return em.createQuery("""
+                DELETE FROM UserDevice ud
+                 WHERE (
+                           ud.token = :token
+                        OR (ud.deviceId = :deviceId AND ud.platform = :platform)
+                       )
+                   AND NOT (
+                           ud.user.id = :userId
+                       AND ud.deviceId = :deviceId
+                       AND ud.platform = :platform
+                   )
+                """)
+                .setParameter("userId", userId)
+                .setParameter("deviceId", deviceId)
+                .setParameter("platform", platform)
+                .setParameter("token", token)
+                .executeUpdate();
+    }
+
     // ID로 디바이스 조회
     public Optional<UserDevice> findById(Long id) {
         List<UserDevice> results = em.createQuery("SELECT ud FROM UserDevice ud WHERE ud.id = :id", UserDevice.class)

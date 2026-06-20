@@ -93,6 +93,55 @@ class UserDeviceRepositoryTest extends AbstractPostgresContainerTest {
         assertThat(devices.getFirst().getToken()).isEqualTo("token-2");
     }
 
+    @Test @DisplayName("deleteConflictingDevicesForRegistration - 등록 대상 외 같은 token 또는 같은 device/platform row 삭제")
+    void deleteConflictingDevicesForRegistration_removesStaleRows() {
+        User currentUser = user();
+        User otherUser = user();
+        device(currentUser, "device-1", "token-1");
+        device(currentUser, "device-3", "token-1");
+        device(otherUser, "device-2", "token-1");
+        device(otherUser, "device-1", "token-2");
+        device(otherUser, "device-4", "token-4");
+        repo.flush(); em.clear();
+
+        int deleted = repo.deleteConflictingDevicesForRegistration(
+                currentUser.getId(),
+                "device-1",
+                DevicePlatform.IOS,
+                "token-1"
+        );
+        repo.flush(); em.clear();
+
+        assertThat(deleted).isEqualTo(3);
+        assertThat(repo.findAllByUserId(currentUser.getId()))
+                .extracting(UserDevice::getDeviceId)
+                .containsExactly("device-1");
+        assertThat(repo.findAllByUserId(otherUser.getId()))
+                .extracting(UserDevice::getDeviceId)
+                .containsExactly("device-4");
+    }
+
+    @Test @DisplayName("deleteConflictingDevicesForRegistration - platform이 다른 같은 deviceId row는 token이 다르면 유지")
+    void deleteConflictingDevicesForRegistration_keepsDifferentPlatformDevice() {
+        User currentUser = user();
+        User otherUser = user();
+        UserDevice androidDevice = UserDevice.create(otherUser, "device-1", "token-android", DevicePlatform.ANDROID);
+        repo.save(androidDevice);
+        repo.flush(); em.clear();
+
+        int deleted = repo.deleteConflictingDevicesForRegistration(
+                currentUser.getId(),
+                "device-1",
+                DevicePlatform.IOS,
+                "token-ios"
+        );
+        repo.flush(); em.clear();
+
+        assertThat(deleted).isZero();
+        assertThat(repo.findByUserIdAndDeviceIdAndPlatform(otherUser.getId(), "device-1", DevicePlatform.ANDROID))
+                .isPresent();
+    }
+
     @Test @DisplayName("deleteByUserId")
     void deleteByUserId_removesAllDevices() {
         User user1 = user();

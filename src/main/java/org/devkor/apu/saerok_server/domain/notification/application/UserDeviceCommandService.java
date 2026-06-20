@@ -16,6 +16,8 @@ import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -37,6 +39,13 @@ public class UserDeviceCommandService {
         }
 
         DevicePlatform platform = command.platform() != null ? command.platform() : DevicePlatform.IOS;
+
+        userDeviceRepository.deleteConflictingDevicesForRegistration(
+                command.userId(),
+                command.deviceId(),
+                platform,
+                command.token()
+        );
 
         UserDevice userDevice = userDeviceRepository
                 .findByUserIdAndDeviceIdAndPlatform(command.userId(), command.deviceId(), platform)
@@ -70,5 +79,15 @@ public class UserDeviceCommandService {
 
         notificationSettingRepository.deleteByUserId(userId);
         userDeviceRepository.deleteByUserId(userId);
+    }
+
+    public void deleteInvalidTokens(List<String> tokens) {
+        if (tokens == null || tokens.isEmpty()) {
+            return;
+        }
+
+        tokens.stream()
+              .distinct()
+              .forEach(userDeviceRepository::deleteByToken);
     }
 }
