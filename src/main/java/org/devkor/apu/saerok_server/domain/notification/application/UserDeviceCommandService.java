@@ -6,7 +6,6 @@ import org.devkor.apu.saerok_server.domain.notification.application.dto.Register
 import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.UserDevice;
 import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
-import org.devkor.apu.saerok_server.domain.notification.core.repository.NotificationSettingRepository;
 import org.devkor.apu.saerok_server.domain.notification.core.service.NotificationSettingBackfillService;
 import org.devkor.apu.saerok_server.domain.notification.mapper.UserDeviceWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
@@ -16,13 +15,14 @@ import org.devkor.apu.saerok_server.global.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class UserDeviceCommandService {
 
     private final UserDeviceRepository userDeviceRepository;
-    private final NotificationSettingRepository notificationSettingRepository;
     private final UserRepository userRepository;
     private final UserDeviceWebMapper userDeviceWebMapper;
     private final NotificationSettingBackfillService backfillService;
@@ -31,17 +31,24 @@ public class UserDeviceCommandService {
         User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
 
-        if (command.deviceId() == null || command.deviceId().isEmpty()
-                || command.token() == null || command.token().isEmpty()) {
+        if (command.deviceId() == null || command.deviceId().isBlank()
+                || command.token() == null || command.token().isBlank()) {
             throw new BadRequestException("deviceId, token은 필수입니다");
         }
 
         DevicePlatform platform = command.platform() != null ? command.platform() : DevicePlatform.IOS;
 
+        userDeviceRepository.deactivateConflictingTokensForRegistration(
+                command.userId(),
+                command.deviceId(),
+                platform,
+                command.token()
+        );
+
         UserDevice userDevice = userDeviceRepository
                 .findByUserIdAndDeviceIdAndPlatform(command.userId(), command.deviceId(), platform)
                 .map(existing -> {
-                    existing.updateToken(command.token());
+                    existing.activateToken(command.token());
                     return existing;
                 })
                 .orElseGet(() -> {
@@ -56,19 +63,26 @@ public class UserDeviceCommandService {
         return userDeviceWebMapper.toRegisterUserDeviceResponse(command, true);
     }
 
-    public void deleteDevice(Long userId, String deviceId, DevicePlatform platform) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
-        platform = platform != null ? platform : DevicePlatform.IOS;
-        userDeviceRepository.findByUserIdAndDeviceIdAndPlatform(userId, deviceId, platform)
-                .orElseThrow(() -> new NotFoundException("해당 디바이스를 찾을 수 없어요"));
+    public void deactivateDeviceIfPresent(Long userId, String deviceId, DevicePlatform platform) {
+        if (deviceId == null || deviceId.isBlank()) {
+            return;
+        }
 
-        userDeviceRepository.deleteByUserIdAndDeviceIdAndPlatform(userId, deviceId, platform);
+        DevicePlatform resolvedPlatform = platform != null ? platform : DevicePlatform.IOS;
+        userDeviceRepository.findByUserIdAndDeviceIdAndPlatform(userId, deviceId, resolvedPlatform)
+                .ifPresent(UserDevice::deactivateToken);
     }
 
-    public void deleteAllTokens(Long userId) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 사용자 id예요"));
+    public void deactivateInvalidTokens(List<String> tokens) {
+        if (tokens == null || tokens.isEmpty()) {
+            return;
+        }
 
-        notificationSettingRepository.deleteByUserId(userId);
-        userDeviceRepository.deleteByUserId(userId);
+        List<String> validTokens = tokens.stream()
+                .filter(token -> token != null && !token.isBlank())
+                .distinct()
+                .toList();
+
+        userDeviceRepository.deactivateByTokens(validTokens);
     }
 }

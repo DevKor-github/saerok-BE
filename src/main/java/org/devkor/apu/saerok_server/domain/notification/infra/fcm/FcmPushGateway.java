@@ -30,7 +30,7 @@ public class FcmPushGateway implements PushGateway {
     @Override
     public void sendToUser(Long userId, NotificationType type, PushMessageCommand cmd) {
 
-        userDeviceRepository.findAllByUserId(userId)
+        userDeviceRepository.findAllActiveByUserId(userId)
                 .forEach(backfillService::ensureDefaults);
 
         List<Long> deviceIds = settingRepository.findEnabledDeviceIdsByUserAndType(userId, type);
@@ -66,7 +66,7 @@ public class FcmPushGateway implements PushGateway {
                 continue;
             }
 
-            userDeviceRepository.findAllByUserId(userId)
+            userDeviceRepository.findAllActiveByUserId(userId)
                     .forEach(backfillService::ensureDefaults);
 
             List<Long> deviceIds = settingRepository.findEnabledDeviceIdsByUserAndType(userId, type);

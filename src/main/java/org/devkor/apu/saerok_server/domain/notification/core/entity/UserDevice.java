@@ -27,7 +27,7 @@ public class UserDevice extends Auditable {
     @Column(name = "device_id", nullable = false, length = 256)
     private String deviceId;
 
-    @Column(name = "token", nullable = false, length = 512)
+    @Column(name = "token", length = 512)
     private String token;
 
     @Enumerated(EnumType.STRING)
@@ -38,10 +38,19 @@ public class UserDevice extends Auditable {
         UserDevice userDevice = new UserDevice();
         userDevice.user = user;
         userDevice.deviceId = deviceId;
-        userDevice.token = token;
         userDevice.platform = platform;
+        userDevice.activateToken(token);
         return userDevice;
     }
 
-    public void updateToken(String newToken) { this.token = newToken; }
+    public void activateToken(String newToken) {
+        if (newToken == null || newToken.isBlank()) {
+            throw new IllegalArgumentException("FCM token은 비어 있을 수 없습니다");
+        }
+        this.token = newToken;
+    }
+
+    public void deactivateToken() {
+        this.token = null;
+    }
 }

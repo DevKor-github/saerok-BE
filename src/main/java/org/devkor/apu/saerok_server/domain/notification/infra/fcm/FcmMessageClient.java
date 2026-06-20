@@ -3,8 +3,8 @@ package org.devkor.apu.saerok_server.domain.notification.infra.fcm;
 import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.devkor.apu.saerok_server.domain.notification.application.UserDeviceCommandService;
 import org.devkor.apu.saerok_server.domain.notification.application.dto.PushMessageCommand;
-import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +19,7 @@ import java.util.Map;
 public class FcmMessageClient {
 
     private final FirebaseMessaging firebaseMessaging;
-    private final UserDeviceRepository userDeviceRepository;
+    private final UserDeviceCommandService userDeviceCommandService;
 
     @Async("pushNotificationExecutor")
     public void sendToDevices(List<String> fcmTokens, PushMessageCommand cmd) {
@@ -147,7 +147,7 @@ public class FcmMessageClient {
 
         if (!invalid.isEmpty()) {
             try {
-                invalid.forEach(userDeviceRepository::deleteByToken);
+                userDeviceCommandService.deactivateInvalidTokens(invalid);
             } catch (Exception e) {
                 log.warn("Invalid FCM tokens cleanup failed ({} tokens): {}", invalid.size(), e.getMessage());
             }

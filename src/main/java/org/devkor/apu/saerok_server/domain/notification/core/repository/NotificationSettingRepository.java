@@ -46,6 +46,7 @@ public class NotificationSettingRepository {
                  where ns.userDevice.user.id = :userId
                    and ns.type = :type
                    and ns.enabled = true
+                   and ns.userDevice.token is not null
                 """, Long.class)
                 .setParameter("userId", userId)
                 .setParameter("type", type)
@@ -60,6 +61,7 @@ public class NotificationSettingRepository {
                  where ns.userDevice.user.id in :userIds
                    and ns.type = :type
                    and ns.enabled = true
+                   and ns.userDevice.token is not null
                 """, Long.class)
                 .setParameter("userIds", userIds)
                 .setParameter("type", type)
