@@ -3,8 +3,8 @@ package org.devkor.apu.saerok_server.domain.auth.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
+import org.devkor.apu.saerok_server.domain.notification.application.UserDeviceCommandService;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
-import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +17,11 @@ public class LogoutService {
 
     private final RefreshTokenProvider refreshTokenProvider;
     private final UserRefreshTokenRepository userRefreshTokenRepository;
-    private final UserDeviceRepository userDeviceRepository;
+    private final UserDeviceCommandService userDeviceCommandService;
 
     public void logout(Long userId, String refreshToken, String deviceId, DevicePlatform platform) {
         revokeRefreshToken(userId, refreshToken);
-        deleteCurrentDevice(userId, deviceId, platform);
+        deactivateCurrentDevice(userId, deviceId, platform);
     }
 
     private void revokeRefreshToken(Long userId, String refreshToken) {
@@ -43,12 +43,11 @@ public class LogoutService {
                 });
     }
 
-    private void deleteCurrentDevice(Long userId, String deviceId, DevicePlatform platform) {
+    private void deactivateCurrentDevice(Long userId, String deviceId, DevicePlatform platform) {
         if (deviceId == null || deviceId.isBlank()) {
             return;
         }
 
-        DevicePlatform resolvedPlatform = platform != null ? platform : DevicePlatform.IOS;
-        userDeviceRepository.deleteByUserIdAndDeviceIdAndPlatform(userId, deviceId, resolvedPlatform);
+        userDeviceCommandService.deactivateDeviceIfPresent(userId, deviceId, platform);
     }
 }

@@ -2,8 +2,8 @@ package org.devkor.apu.saerok_server.domain.auth.application;
 
 import org.devkor.apu.saerok_server.domain.auth.core.entity.UserRefreshToken;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
+import org.devkor.apu.saerok_server.domain.notification.application.UserDeviceCommandService;
 import org.devkor.apu.saerok_server.domain.notification.core.entity.DevicePlatform;
-import org.devkor.apu.saerok_server.domain.notification.core.repository.UserDeviceRepository;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
 import org.junit.jupiter.api.DisplayName;
@@ -28,13 +28,13 @@ class LogoutServiceTest {
 
     @Mock RefreshTokenProvider refreshTokenProvider;
     @Mock UserRefreshTokenRepository userRefreshTokenRepository;
-    @Mock UserDeviceRepository userDeviceRepository;
+    @Mock UserDeviceCommandService userDeviceCommandService;
 
     @InjectMocks LogoutService logoutService;
 
     @Test
-    @DisplayName("로그아웃 시 현재 유저 refresh token을 revoke하고 현재 디바이스 토큰을 삭제한다")
-    void logout_revokesRefreshTokenAndDeletesDevice() {
+    @DisplayName("로그아웃 시 현재 유저 refresh token을 revoke하고 현재 디바이스 토큰을 비활성화한다")
+    void logout_revokesRefreshTokenAndDeactivatesDevice() {
         UserRefreshToken token = refreshTokenFor(user(42L), "refresh-hash");
         given(refreshTokenProvider.hash("raw-refresh")).willReturn("refresh-hash");
         given(userRefreshTokenRepository.findByRefreshTokenHash("refresh-hash")).willReturn(Optional.of(token));
@@ -42,7 +42,7 @@ class LogoutServiceTest {
         logoutService.logout(42L, "raw-refresh", "device-1", DevicePlatform.IOS);
 
         assertThat(token.getRevokedAt()).isNotNull();
-        verify(userDeviceRepository).deleteByUserIdAndDeviceIdAndPlatform(42L, "device-1", DevicePlatform.IOS);
+        verify(userDeviceCommandService).deactivateDeviceIfPresent(42L, "device-1", DevicePlatform.IOS);
     }
 
     @Test
@@ -57,7 +57,7 @@ class LogoutServiceTest {
         logoutService.logout(42L, "raw-refresh", "device-1", null);
 
         assertThat(token.getRevokedAt()).isEqualTo(revokedAt);
-        verify(userDeviceRepository).deleteByUserIdAndDeviceIdAndPlatform(42L, "device-1", DevicePlatform.IOS);
+        verify(userDeviceCommandService).deactivateDeviceIfPresent(42L, "device-1", null);
     }
 
     @Test
@@ -70,7 +70,7 @@ class LogoutServiceTest {
         logoutService.logout(42L, "raw-refresh", "device-1", DevicePlatform.IOS);
 
         assertThat(token.getRevokedAt()).isNull();
-        verify(userDeviceRepository).deleteByUserIdAndDeviceIdAndPlatform(42L, "device-1", DevicePlatform.IOS);
+        verify(userDeviceCommandService).deactivateDeviceIfPresent(42L, "device-1", DevicePlatform.IOS);
     }
 
     @Test
@@ -78,7 +78,7 @@ class LogoutServiceTest {
     void logout_withoutRefreshTokenAndDevice() {
         logoutService.logout(42L, null, null, null);
 
-        verifyNoInteractions(refreshTokenProvider, userRefreshTokenRepository, userDeviceRepository);
+        verifyNoInteractions(refreshTokenProvider, userRefreshTokenRepository, userDeviceCommandService);
     }
 
     @Test
@@ -89,8 +89,8 @@ class LogoutServiceTest {
 
         logoutService.logout(42L, "raw-refresh", "device-1", DevicePlatform.ANDROID);
 
-        verify(userDeviceRepository).deleteByUserIdAndDeviceIdAndPlatform(42L, "device-1", DevicePlatform.ANDROID);
-        verifyNoMoreInteractions(userDeviceRepository);
+        verify(userDeviceCommandService).deactivateDeviceIfPresent(42L, "device-1", DevicePlatform.ANDROID);
+        verifyNoMoreInteractions(userDeviceCommandService);
     }
 
     private User user(Long id) {

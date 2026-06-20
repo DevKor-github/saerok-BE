@@ -147,7 +147,7 @@ public class FcmMessageClient {
 
         if (!invalid.isEmpty()) {
             try {
-                userDeviceCommandService.deleteInvalidTokens(invalid);
+                userDeviceCommandService.deactivateInvalidTokens(invalid);
             } catch (Exception e) {
                 log.warn("Invalid FCM tokens cleanup failed ({} tokens): {}", invalid.size(), e.getMessage());
             }
