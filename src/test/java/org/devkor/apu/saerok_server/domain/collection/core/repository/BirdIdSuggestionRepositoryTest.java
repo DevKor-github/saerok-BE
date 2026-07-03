@@ -45,7 +45,7 @@ class BirdIdSuggestionRepositoryTest extends AbstractPostgresContainerTest {
         UserBirdCollection col = new CollectionBuilder(em).owner(u).build();
         Bird b       = new BirdBuilder(em)
                 .korName("까치")
-                .sciName("Pica pica")
+                .sciName("Pica pica fixture")
                 .build();
 
         BirdIdSuggestion s = new SuggestionBuilder(repo, em)
@@ -77,7 +77,7 @@ class BirdIdSuggestionRepositoryTest extends AbstractPostgresContainerTest {
         UserBirdCollection col = new CollectionBuilder(em).owner(u).build();
         Bird b       = new BirdBuilder(em)
                 .korName("까마귀")
-                .sciName("Corvus corone")
+                .sciName("Corvus corone fixture")
                 .build();
 
         boolean before = repo.existsByUserIdAndCollectionIdAndBirdIdAndType(u.getId(), col.getId(), b.getId(), SuggestionType.AGREE);
@@ -102,11 +102,11 @@ class BirdIdSuggestionRepositoryTest extends AbstractPostgresContainerTest {
 
         Bird b1 = new BirdBuilder(em)
                 .korName("참새")
-                .sciName("Passer montanus")
+                .sciName("Passer montanus fixture")
                 .build();
         Bird b2 = new BirdBuilder(em)
                 .korName("비둘기")
-                .sciName("Columba livia")
+                .sciName("Columba livia fixture")
                 .build();
 
         new SuggestionBuilder(repo, em).user(u1).collection(col).bird(b1).build();
@@ -135,7 +135,7 @@ class BirdIdSuggestionRepositoryTest extends AbstractPostgresContainerTest {
 
         Bird b1 = new BirdBuilder(em)
                 .korName("직박구리")
-                .sciName("Hypsipetes amaurotis")
+                .sciName("Hypsipetes amaurotis fixture")
                 .build();
 
         // b1: 제안(current), 동의(current, other1), 비동의(other2)
@@ -167,7 +167,7 @@ class BirdIdSuggestionRepositoryTest extends AbstractPostgresContainerTest {
         UserBirdCollection col = new CollectionBuilder(em).owner(current).build();
         Bird b1 = new BirdBuilder(em)
                 .korName("참새")
-                .sciName("Passer montanus")
+                .sciName("Passer montanus fixture")
                 .build();
 
         em.flush();
@@ -196,15 +196,15 @@ class BirdIdSuggestionRepositoryTest extends AbstractPostgresContainerTest {
 
         Bird b1 = new BirdBuilder(em)
                 .korName("직박구리")
-                .sciName("Hypsipetes amaurotis")
+                .sciName("Hypsipetes amaurotis fixture")
                 .build();
         Bird b2 = new BirdBuilder(em)
                 .korName("박새")
-                .sciName("Parus major")
+                .sciName("Parus major fixture")
                 .build();
         Bird b3 = new BirdBuilder(em)
                 .korName("까치")
-                .sciName("Pica Serica")
+                .sciName("Pica Serica fixture")
                 .build(); // 제안만 되고 아무도 동의/비동의 안함
 
         // b1: 제안(current), 동의(current, other1), 비동의(other2)
