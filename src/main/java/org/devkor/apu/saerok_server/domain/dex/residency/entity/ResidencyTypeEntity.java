@@ -1,11 +1,13 @@
 package org.devkor.apu.saerok_server.domain.dex.residency.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.hibernate.annotations.Immutable;
 
 @Entity
 @Immutable
 @Table(name = "residency_type")
+@Getter
 public class ResidencyTypeEntity {
 
     @Id
