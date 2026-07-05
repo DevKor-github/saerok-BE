@@ -98,6 +98,15 @@
             - AdminAnnouncementController.deleteAnnouncement()
             - AdminAnnouncementController.generateImagePresignUrl()
 
+## 도감 (Dex)
+
+- 도감 관리(조회/등록/이미지 발급)는 별도 권한 없이 ADMIN_LOGIN 보유 어드민이면 누구나 가능
+    - 관련 메서드:
+        - AdminBirdController.listBirds()
+        - AdminBirdController.getBird()
+        - AdminBirdController.createBird()
+        - AdminBirdController.generateImagePresignUrl()
+
 ## 관리자 역할 관리 (Role Management)
 
 - KEY: ADMIN_ROLE_MY_READ

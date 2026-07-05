@@ -1,11 +1,11 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.core.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.HabitatType;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
+@Getter
 @Table(
         uniqueConstraints = @UniqueConstraint(
                 columnNames = {"bird_id", "habitat_type"}
@@ -24,4 +24,11 @@ public class BirdHabitat {
     @Enumerated(EnumType.STRING)
     @Column(name = "habitat_type")
     private HabitatType habitatType;
+
+    public static BirdHabitat of(Bird bird, HabitatType habitatType) {
+        BirdHabitat habitat = new BirdHabitat();
+        habitat.bird = bird;
+        habitat.habitatType = habitatType;
+        return habitat;
+    }
 }

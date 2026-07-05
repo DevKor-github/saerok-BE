@@ -27,6 +27,32 @@ public class BirdRepository {
                 .findFirst();
     }
 
+    public Bird save(Bird bird) {
+        em.persist(bird);
+        return bird;
+    }
+
+    public boolean existsActiveByScientificName(String scientificName) {
+        return existsActiveByScientificNameExcludingId(scientificName, null);
+    }
+
+    public boolean existsActiveByScientificNameExcludingId(String scientificName, Long excludedId) {
+        if (scientificName == null || scientificName.isBlank()) {
+            return false;
+        }
+        String normalized = scientificName.trim().toLowerCase(Locale.ROOT);
+        return em.createQuery("""
+                        SELECT COUNT(b)
+                        FROM Bird b
+                        WHERE b.deletedAt IS NULL
+                          AND LOWER(TRIM(b.name.scientificName)) = :scientificName
+                          AND (:excludedId IS NULL OR b.id <> :excludedId)
+                        """, Long.class)
+                .setParameter("scientificName", normalized)
+                .setParameter("excludedId", excludedId)
+                .getSingleResult() > 0;
+    }
+
     /**
      * 검색–PostgreSQL 네이티브 쿼리
      */

@@ -5,8 +5,10 @@ import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdDescription;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdName;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.BirdTaxonomy;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.UUID;
 
 /**
  * Builder for creating and persisting Bird fixtures in tests.
@@ -14,7 +16,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 public class BirdBuilder {
     private final TestEntityManager em;
     private String korName = "까치";
-    private String sciName = "Pica pica";
+    private String sciName = "Pica pica test " + UUID.randomUUID();
     private BirdTaxonomy taxonomy;
     private Double bodyLengthCm = 25.0;
     private String nibrUrl = null;
@@ -91,4 +93,5 @@ public class BirdBuilder {
         em.flush();
         return bird;
     }
+
 }

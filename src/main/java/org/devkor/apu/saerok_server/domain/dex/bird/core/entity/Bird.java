@@ -39,6 +39,36 @@ public class Bird extends SoftDeletableAuditable implements HasBodyLength {
     @OneToMany(mappedBy = "bird", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BirdImage> images;
 
+    public static Bird create(BirdName name,
+                              BirdTaxonomy taxonomy,
+                              BirdDescription description,
+                              Double bodyLengthCm,
+                              String nibrUrl,
+                              ConservationGrade conservationGrade) {
+        Bird bird = new Bird();
+        bird.name = name;
+        bird.taxonomy = taxonomy;
+        bird.description = description;
+        bird.bodyLengthCm = bodyLengthCm;
+        bird.nibrUrl = nibrUrl;
+        bird.conservationGrade = conservationGrade == null ? ConservationGrade.NONE : conservationGrade;
+        return bird;
+    }
+
+    public void update(BirdName name,
+                       BirdTaxonomy taxonomy,
+                       BirdDescription description,
+                       Double bodyLengthCm,
+                       String nibrUrl,
+                       ConservationGrade conservationGrade) {
+        this.name = name;
+        this.taxonomy = taxonomy;
+        this.description = description;
+        this.bodyLengthCm = bodyLengthCm;
+        this.nibrUrl = nibrUrl;
+        this.conservationGrade = conservationGrade == null ? ConservationGrade.NONE : conservationGrade;
+    }
+
     @Override
     public Double getBodyLengthCm() {
         return bodyLengthCm;

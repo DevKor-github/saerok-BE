@@ -14,4 +14,5 @@ public enum AdminAuditTargetType {
     FREEBOARD_POST,
     FREEBOARD_COMMENT,
     ADMIN_MESSAGE,
+    BIRD,
 }
