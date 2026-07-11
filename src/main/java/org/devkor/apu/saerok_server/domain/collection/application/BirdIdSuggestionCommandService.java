@@ -41,6 +41,9 @@ public class BirdIdSuggestionCommandService {
         if (collection.getBird() != null)
             throw new BadRequestException("이미 bird_id가 확정된 컬렉션이에요");
 
+        if (!collection.canReceiveBirdIdSuggestions())
+            throw new BadRequestException("동정 의견을 받지 않는 컬렉션이에요");
+
         if (collection.getUser().getId().equals(userId))
             throw new BadRequestException("나 자신의 컬렉션에 동정 의견을 제안할 수 없어요");
 
@@ -106,6 +109,9 @@ public class BirdIdSuggestionCommandService {
         if (collection.getBird() != null)
             throw new BadRequestException("이미 bird_id가 확정된 컬렉션이에요");
 
+        if (!collection.canReceiveBirdIdSuggestions())
+            throw new BadRequestException("동정 의견을 받지 않는 컬렉션이에요");
+
         if (collection.getUser().getId().equals(userId))
             throw new BadRequestException("나 자신의 컬렉션에 동의할 수 없어요");
 
@@ -155,6 +161,9 @@ public class BirdIdSuggestionCommandService {
 
         if (collection.getBird() != null)
             throw new BadRequestException("이미 bird_id가 확정된 컬렉션이에요");
+
+        if (!collection.canReceiveBirdIdSuggestions())
+            throw new BadRequestException("동정 의견을 받지 않는 컬렉션이에요");
 
         if (collection.getUser().getId().equals(userId))
             throw new BadRequestException("나 자신의 컬렉션에 비동의할 수 없어요");

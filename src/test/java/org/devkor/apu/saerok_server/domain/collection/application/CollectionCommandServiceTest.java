@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.application.dto.CreateCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.DeleteCollectionCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.UpdateCollectionCommand;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionImageRepository;
@@ -93,7 +94,7 @@ class CollectionCommandServiceTest {
             ReflectionTestUtils.setField(bird, "id", birdId);
 
             CreateCollectionCommand command = new CreateCollectionCommand(
-                    userId, birdId, date, lat, lon, alias, address, note, accessLevel
+                    userId, birdId, date, lat, lon, alias, address, note, accessLevel, null
             );
 
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -121,15 +122,74 @@ class CollectionCommandServiceTest {
             assertThat(saved.getAddress()).isEqualTo(address);
             assertThat(saved.getNote()).isEqualTo(note);
             assertThat(saved.getAccessLevel()).isEqualTo(accessLevel);
+            assertThat(saved.isBirdIdSuggestionEnabled()).isFalse();
 
-            then(birdReqHistory).should().onCollectionCreatedIfPending(same(saved), any());
+            then(birdReqHistory).should().syncOpenState(same(saved), any());
+        }
+
+        @Test
+        @DisplayName("정상 생성 - birdId가 없고 동정요청 옵션 생략 시 활성화")
+        void createCollection_unknownBird_defaultSuggestionEnabled() {
+            Long userId = 1L;
+            LocalDate date = LocalDate.of(2025, 8, 7);
+            User user = User.createUser("email@example.com");
+            ReflectionTestUtils.setField(user, "id", userId);
+
+            CreateCollectionCommand command = new CreateCollectionCommand(
+                    userId, null, date, 10.0, 20.0, null, null, null, AccessLevelType.PUBLIC, null
+            );
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            willAnswer(invocation -> {
+                UserBirdCollection c = invocation.getArgument(0);
+                ReflectionTestUtils.setField(c, "id", 3L);
+                return 3L;
+            }).given(collectionRepository).save(any(UserBirdCollection.class));
+
+            Long result = service.createCollection(command);
+
+            assertThat(result).isEqualTo(3L);
+            ArgumentCaptor<UserBirdCollection> captor = ArgumentCaptor.forClass(UserBirdCollection.class);
+            then(collectionRepository).should().save(captor.capture());
+            UserBirdCollection saved = captor.getValue();
+            assertThat(saved.isBirdIdSuggestionEnabled()).isTrue();
+            assertThat(saved.canReceiveBirdIdSuggestions()).isTrue();
+            then(birdReqHistory).should().syncOpenState(same(saved), any());
+        }
+
+        @Test
+        @DisplayName("정상 생성 - birdId가 없고 동정요청 옵션 false면 비활성화")
+        void createCollection_unknownBird_suggestionDisabled() {
+            Long userId = 1L;
+            User user = User.createUser("email@example.com");
+            ReflectionTestUtils.setField(user, "id", userId);
+
+            CreateCollectionCommand command = new CreateCollectionCommand(
+                    userId, null, LocalDate.now(), 10.0, 20.0, null, null, null, AccessLevelType.PUBLIC, false
+            );
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            willAnswer(invocation -> {
+                UserBirdCollection c = invocation.getArgument(0);
+                ReflectionTestUtils.setField(c, "id", 3L);
+                return 3L;
+            }).given(collectionRepository).save(any(UserBirdCollection.class));
+
+            service.createCollection(command);
+
+            ArgumentCaptor<UserBirdCollection> captor = ArgumentCaptor.forClass(UserBirdCollection.class);
+            then(collectionRepository).should().save(captor.capture());
+            UserBirdCollection saved = captor.getValue();
+            assertThat(saved.isBirdIdSuggestionEnabled()).isFalse();
+            assertThat(saved.canReceiveBirdIdSuggestions()).isFalse();
+            then(birdReqHistory).should().syncOpenState(same(saved), any());
         }
 
         @Test
         @DisplayName("발견 날짜 누락 시 BadRequestException")
         void createCollection_missingDate_throws() {
             CreateCollectionCommand cmd = new CreateCollectionCommand(
-                    1L, null, null, 10.0, 20.0, null, null, null, AccessLevelType.PUBLIC
+                    1L, null, null, 10.0, 20.0, null, null, null, AccessLevelType.PUBLIC, null
             );
             given(userRepository.findById(1L)).willReturn(Optional.of(User.createUser("e@e")));
 
@@ -142,7 +202,7 @@ class CollectionCommandServiceTest {
         @DisplayName("위치 정보 누락 시 BadRequestException")
         void createCollection_missingLocation_throws() {
             CreateCollectionCommand cmd = new CreateCollectionCommand(
-                    1L, null, LocalDate.now(), null, 20.0, null, null, null, AccessLevelType.PUBLIC
+                    1L, null, LocalDate.now(), null, 20.0, null, null, null, AccessLevelType.PUBLIC, null
             );
             given(userRepository.findById(1L)).willReturn(Optional.of(User.createUser("e@e")));
 
@@ -156,7 +216,7 @@ class CollectionCommandServiceTest {
         void createCollection_noteTooLong_throws() {
             String longNote = "a".repeat(UserBirdCollection.NOTE_MAX_LENGTH + 1);
             CreateCollectionCommand cmd = new CreateCollectionCommand(
-                    1L, null, LocalDate.now(), 10.0, 20.0, null, null, longNote, AccessLevelType.PUBLIC
+                    1L, null, LocalDate.now(), 10.0, 20.0, null, null, longNote, AccessLevelType.PUBLIC, null
             );
             given(userRepository.findById(1L)).willReturn(Optional.of(User.createUser("e@e")));
 
@@ -261,5 +321,69 @@ class CollectionCommandServiceTest {
         }
     }
 
-    // updateCollection 관련 기존 테스트들은 이 변경과 무관하므로 그대로 유지합니다.
+    @Nested
+    @DisplayName("updateCollection 메서드 테스트")
+    class UpdateCollectionTests {
+
+        @Test
+        @DisplayName("birdId가 없는 컬렉션에서 동정요청 옵션을 false로 변경")
+        void updateCollection_disableSuggestion() {
+            Long userId = 1L;
+            Long collId = 2L;
+            User user = User.createUser("e@e");
+            ReflectionTestUtils.setField(user, "id", userId);
+            UserBirdCollection coll = UserBirdCollection.builder()
+                    .user(user)
+                    .bird(null)
+                    .discoveredDate(LocalDate.now())
+                    .location(org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory.create(0, 0))
+                    .accessLevel(AccessLevelType.PUBLIC)
+                    .build();
+            ReflectionTestUtils.setField(coll, "id", collId);
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(collectionRepository.findById(collId)).willReturn(Optional.of(coll));
+            given(collectionImageRepository.findObjectKeysByCollectionId(collId)).willReturn(List.of());
+
+            service.updateCollection(new UpdateCollectionCommand(
+                    userId, collId, null, null, null, null, null, null, null, null, null, false
+            ));
+
+            assertThat(coll.isBirdIdSuggestionEnabled()).isFalse();
+            assertThat(coll.canReceiveBirdIdSuggestions()).isFalse();
+            then(birdReqHistory).should().syncOpenState(same(coll), any());
+        }
+
+        @Test
+        @DisplayName("birdId를 확정 상태에서 null로 변경하고 옵션을 생략하면 동정요청 활성화")
+        void updateCollection_identifiedToUnknown_defaultsSuggestionEnabled() {
+            Long userId = 1L;
+            Long collId = 2L;
+            User user = User.createUser("e@e");
+            ReflectionTestUtils.setField(user, "id", userId);
+            Bird bird = new Bird();
+            ReflectionTestUtils.setField(bird, "id", 10L);
+            UserBirdCollection coll = UserBirdCollection.builder()
+                    .user(user)
+                    .bird(bird)
+                    .discoveredDate(LocalDate.now())
+                    .location(org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory.create(0, 0))
+                    .accessLevel(AccessLevelType.PUBLIC)
+                    .build();
+            ReflectionTestUtils.setField(coll, "id", collId);
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(collectionRepository.findById(collId)).willReturn(Optional.of(coll));
+            given(collectionImageRepository.findObjectKeysByCollectionId(collId)).willReturn(List.of());
+
+            service.updateCollection(new UpdateCollectionCommand(
+                    userId, collId, true, null, null, null, null, null, null, null, null, null
+            ));
+
+            assertThat(coll.getBird()).isNull();
+            assertThat(coll.isBirdIdSuggestionEnabled()).isTrue();
+            assertThat(coll.canReceiveBirdIdSuggestions()).isTrue();
+            then(birdReqHistory).should().syncOpenState(same(coll), any());
+        }
+    }
 }

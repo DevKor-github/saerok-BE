@@ -15,6 +15,7 @@ public record UpdateCollectionCommand (
         String locationAlias,
         String address,
         String note,
-        AccessLevelType accessLevel
+        AccessLevelType accessLevel,
+        Boolean birdIdSuggestionEnabled
 ){
 }

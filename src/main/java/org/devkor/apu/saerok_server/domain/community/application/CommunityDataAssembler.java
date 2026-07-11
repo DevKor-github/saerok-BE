@@ -43,7 +43,7 @@ public class CommunityDataAssembler {
         Map<Long, Boolean> popularStatusMap = popularCollectionRepository.existsByCollectionIds(collectionIds);
 
         List<Long> pendingCollectionIds = collections.stream()
-                .filter(c -> c.getBird() == null)
+                .filter(UserBirdCollection::canReceiveBirdIdSuggestions)
                 .map(UserBirdCollection::getId)
                 .toList();
         Map<Long, Long> suggestionUserCounts = pendingCollectionIds.isEmpty() 
@@ -62,7 +62,7 @@ public class CommunityDataAssembler {
                     boolean isPopular = popularStatusMap.getOrDefault(collection.getId(), false);
                     boolean isMine = userId != null && userId.equals(collection.getUser().getId());
 
-                    Long suggestionUserCount = collection.getBird() == null
+                    Long suggestionUserCount = collection.canReceiveBirdIdSuggestions()
                             ? suggestionUserCounts.getOrDefault(collection.getId(), 0L)
                             : null;
                     

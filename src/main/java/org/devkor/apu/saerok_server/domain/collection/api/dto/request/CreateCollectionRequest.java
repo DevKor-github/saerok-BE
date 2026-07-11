@@ -35,4 +35,7 @@ public class CreateCollectionRequest {
 
     @Schema(description = "공개/비공개 여부", example = "PUBLIC", nullable = true)
     private AccessLevelType accessLevel;
+
+    @Schema(description = "birdId가 null일 때 동정 의견을 받을지 여부. 생략 시 true", example = "true", nullable = true)
+    private Boolean birdIdSuggestionEnabled;
 }
