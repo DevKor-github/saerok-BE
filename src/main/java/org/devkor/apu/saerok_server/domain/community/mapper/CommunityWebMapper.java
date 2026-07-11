@@ -30,6 +30,7 @@ public interface CommunityWebMapper {
     @Mapping(target = "isLiked", source = "isLiked")
     @Mapping(target = "isPopular", source = "isPopular")
     @Mapping(target = "suggestionUserCount", source = "suggestionUserCount")
+    @Mapping(target = "canSuggestBirdId", expression = "java(collection.canReceiveBirdIdSuggestions())")
     @Mapping(target = "bird", expression = "java(mapBirdInfo(collection))")
     @Mapping(target = "user", expression = "java(mapUserInfo(collection, userProfileImageUrl, thumbnailProfileImageUrl))")
     CommunityCollectionInfo toCommunityCollectionInfo(

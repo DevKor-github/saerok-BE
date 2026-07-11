@@ -54,7 +54,9 @@ public class CommunityRepository {
             SELECT c FROM UserBirdCollection c
             JOIN FETCH c.user u
             JOIN BirdIdRequestHistory h ON h.collection.id = c.id AND h.resolvedAt IS NULL
-            WHERE c.accessLevel = :public AND c.bird IS NULL
+            WHERE c.accessLevel = :public
+              AND c.bird IS NULL
+              AND c.birdIdSuggestionEnabled = true
             ORDER BY h.startedAt DESC
             """, UserBirdCollection.class)
                 .setParameter("public", AccessLevelType.PUBLIC);

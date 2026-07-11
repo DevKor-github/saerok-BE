@@ -34,5 +34,8 @@ public record UpdateCollectionResponse(
         String imageUrl,
 
         @Schema(description = "공개/비공개 여부", example = "PUBLIC", nullable = true)
-        AccessLevelType accessLevel
+        AccessLevelType accessLevel,
+
+        @Schema(description = "birdId가 null일 때 동정 의견을 받을지 여부", example = "true")
+        Boolean birdIdSuggestionEnabled
 ) {}

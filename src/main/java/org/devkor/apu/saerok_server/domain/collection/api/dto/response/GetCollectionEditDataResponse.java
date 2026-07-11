@@ -34,6 +34,9 @@ public class GetCollectionEditDataResponse {
     @Schema(description = "컬렉션 공개 범위 (공개/비공개)")
     private AccessLevelType accessLevel;
 
+    @Schema(description = "birdId가 null일 때 동정 의견을 받을지 여부", example = "true")
+    private Boolean birdIdSuggestionEnabled;
+
     @Schema(description = "이미지 ID", example = "300")
     private Long imageId;
 

@@ -60,6 +60,7 @@ public interface CollectionWebMapper {
     @Mapping(target = "commentCount", source = "commentCount")
     @Mapping(target = "isLiked", source = "isLiked")
     @Mapping(target = "isMine", source = "isMine")
+    @Mapping(target = "canSuggestBirdId", expression = "java(collection.canReceiveBirdIdSuggestions())")
     @Mapping(target = "latitude", expression = "java(CollectionLocationMasker.latitude(collection, isMine))")
     @Mapping(target = "longitude", expression = "java(CollectionLocationMasker.longitude(collection, isMine))")
     @Mapping(target = "locationAlias", expression = "java(CollectionLocationMasker.locationAlias(collection, isMine))")

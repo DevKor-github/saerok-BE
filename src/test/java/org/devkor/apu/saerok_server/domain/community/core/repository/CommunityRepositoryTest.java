@@ -218,10 +218,14 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
 
         newCollection(user, bird, AccessLevelType.PUBLIC, null);                 // resolved (bird!=null)
         UserBirdCollection withoutBirdPublic = newCollection(user, null, AccessLevelType.PUBLIC, null); // pending 대상
+        UserBirdCollection suggestionDisabled = newCollection(user, null, AccessLevelType.PUBLIC, null);
+        suggestionDisabled.changeBirdIdSuggestionEnabled(false);
+        em.merge(suggestionDisabled);
         newCollection(user, null, AccessLevelType.PRIVATE, null);               // PRIVATE → 제외
 
         // ★ 핵심: pending 조회는 열린 BirdIdRequestHistory가 있어야 잡힌다
         openPending(withoutBirdPublic, OffsetDateTime.now().minusMinutes(1));
+        openPending(suggestionDisabled, OffsetDateTime.now().minusMinutes(2));
 
         CommunityQueryCommand command = new CommunityQueryCommand(1, 10, null);
 
