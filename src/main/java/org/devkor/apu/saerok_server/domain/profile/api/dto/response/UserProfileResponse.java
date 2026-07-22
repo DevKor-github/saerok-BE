@@ -54,6 +54,9 @@ public record UserProfileResponse(
             LocalDate discoveredDate,
 
             @Schema(description = "컬렉션을 업로드한 날짜", example = "2025-05-17", requiredMode = Schema.RequiredMode.REQUIRED)
-            LocalDate uploadedDate
+            LocalDate uploadedDate,
+
+            @Schema(description = "동정 의견을 받을 수 있는 상태인지 여부", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
+            Boolean canSuggestBirdId
     ) {}
 }

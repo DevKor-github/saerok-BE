@@ -245,6 +245,7 @@ public class CollectionController {
             - commentCount
             - createdAt
             - discoveredDate
+            - canSuggestBirdId
             """,
             responses = {
                     @ApiResponse(

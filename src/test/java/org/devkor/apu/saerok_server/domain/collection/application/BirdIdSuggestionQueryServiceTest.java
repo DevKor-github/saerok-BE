@@ -3,6 +3,7 @@ package org.devkor.apu.saerok_server.domain.collection.application;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetBirdIdSuggestionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetPendingCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.BirdIdSuggestionRepository;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.CollectionRepository;
@@ -69,6 +70,7 @@ class BirdIdSuggestionQueryServiceTest {
         setField(c, "id", id);
         setField(c, "user", owner);
         setField(c, "note", note);
+        c.setAccessLevel(AccessLevelType.PUBLIC);
         // birdIdSuggestionRequestedAt 필드는 제거되었으므로 더 이상 세팅하지 않음
         return c;
     }
@@ -123,12 +125,14 @@ class BirdIdSuggestionQueryServiceTest {
             assertThat(first.imageUrl()).isEqualTo("http://cdn/img/thumb/key1.jpg");
             assertThat(first.profileImageUrl()).isEqualTo("http://cdn/profile/1/profile.jpg");
             assertThat(first.thumbnailProfileImageUrl()).isEqualTo("http://cdn/profile/1/thumbnail.webp");
+            assertThat(first.canSuggestBirdId()).isTrue();
 
             GetPendingCollectionsResponse.Item second = res.items().get(1);
             assertThat(second.collectionId()).isEqualTo(2L);
             assertThat(second.imageUrl()).isNull();
             assertThat(second.profileImageUrl()).isEqualTo("http://cdn/profile/default/default-1.png");
             assertThat(second.thumbnailProfileImageUrl()).isEqualTo("http://cdn/profile/default/thumbnail-1.webp");
+            assertThat(second.canSuggestBirdId()).isTrue();
 
             // 히스토리 조회가 호출됐는지까지 확인
             verify(birdIdRequestHistoryRepository).findOpenStartedAtMapByCollectionIds(List.of(1L, 2L));

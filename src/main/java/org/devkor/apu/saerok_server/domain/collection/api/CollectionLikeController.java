@@ -77,7 +77,7 @@ public class CollectionLikeController {
             security = @SecurityRequirement(name = "bearerAuth"),
             description = "내가 좋아요한 컬렉션 목록을 조회합니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "좋아요한 컬렉션 ID 목록 조회 성공",
+                    @ApiResponse(responseCode = "200", description = "좋아요한 컬렉션 목록 조회 성공",
                             content = @Content(schema = @Schema(implementation = GetLikedCollectionsResponse.class))),
                     @ApiResponse(responseCode = "401", description = "사용자 인증 실패", content = @Content),
                     @ApiResponse(responseCode = "404", description = "사용자가 존재하지 않음", content = @Content)

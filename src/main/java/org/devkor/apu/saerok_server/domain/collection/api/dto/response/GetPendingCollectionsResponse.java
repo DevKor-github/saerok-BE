@@ -32,6 +32,9 @@ public record GetPendingCollectionsResponse(
             String thumbnailProfileImageUrl,
 
             @Schema(description = "동정 의견 요청 시각", example = "2025-07-20T00:23:58.164815", requiredMode = Schema.RequiredMode.REQUIRED)
-            LocalDateTime birdIdSuggestionRequestedAt
+            LocalDateTime birdIdSuggestionRequestedAt,
+
+            @Schema(description = "동정 의견을 받을 수 있는 상태인지 여부", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
+            Boolean canSuggestBirdId
     ) {}
 }

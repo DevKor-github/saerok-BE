@@ -38,6 +38,7 @@ public interface CollectionWebMapper {
     GetCollectionEditDataCommand toGetCollectionDataCommand(Long userId, Long collectionId);
 
     @Mapping(target = "birdId", source = "bird.id")
+    @Mapping(target = "canSuggestBirdId", expression = "java(collection.canReceiveBirdIdSuggestions())")
     GetCollectionEditDataResponse toGetCollectionEditDataResponse(UserBirdCollection collection);
 
     @Mapping(target = "userId", source = "userId")
@@ -45,6 +46,7 @@ public interface CollectionWebMapper {
 
     @Mapping(target = "birdId", source = "collection.bird.id")
     @Mapping(target = "collectionId", source = "collection.id")
+    @Mapping(target = "canSuggestBirdId", expression = "java(collection.canReceiveBirdIdSuggestions())")
     UpdateCollectionResponse toUpdateCollectionResponse(UserBirdCollection collection, String imageUrl);
 
     @Mapping(target = "bird.birdId", source = "collection", qualifiedByName = "getBirdId")
@@ -74,6 +76,7 @@ public interface CollectionWebMapper {
     @Mapping(target = "likeCount", source = "likeCount")
     @Mapping(target = "commentCount", source = "commentCount")
     @Mapping(target = "isLiked", source = "isLiked")
+    @Mapping(target = "canSuggestBirdId", expression = "java(collection.canReceiveBirdIdSuggestions())")
     @Mapping(target = "user.userId", source = "collection.user.id")
     @Mapping(target = "user.nickname", source = "collection.user.nickname")
     @Mapping(target = "user.profileImageUrl", source = "userProfileImageUrl")
