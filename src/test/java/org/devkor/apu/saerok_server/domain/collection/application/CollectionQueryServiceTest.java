@@ -1,10 +1,12 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
+import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
@@ -22,9 +24,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -211,5 +216,45 @@ class CollectionQueryServiceTest {
 
         assertThrows(NotFoundException.class,
                 () -> collectionQueryService.getCollectionDetailResponse(badUserId, collectionId));
+    }
+
+    @Test
+    @DisplayName("내 컬렉션 목록에 동정 의견 가능 여부를 포함한다")
+    void getMyCollections_includesCanSuggestBirdId() throws IllegalAccessException {
+        Long userId = 1L;
+        User owner = new User();
+        userIdField.set(owner, userId);
+
+        UserBirdCollection enabled = UserBirdCollection.builder()
+                .user(owner)
+                .discoveredDate(LocalDate.of(2026, 7, 22))
+                .location(PointFactory.create(37.5, 127.0))
+                .accessLevel(AccessLevelType.PUBLIC)
+                .birdIdSuggestionEnabled(true)
+                .build();
+        collectionIdField.set(enabled, 1L);
+        org.springframework.test.util.ReflectionTestUtils.setField(enabled, "createdAt", OffsetDateTime.now());
+
+        UserBirdCollection disabled = UserBirdCollection.builder()
+                .user(owner)
+                .discoveredDate(LocalDate.of(2026, 7, 21))
+                .location(PointFactory.create(37.5, 127.0))
+                .accessLevel(AccessLevelType.PUBLIC)
+                .birdIdSuggestionEnabled(false)
+                .build();
+        collectionIdField.set(disabled, 2L);
+        org.springframework.test.util.ReflectionTestUtils.setField(disabled, "createdAt", OffsetDateTime.now());
+
+        List<UserBirdCollection> collections = List.of(enabled, disabled);
+        given(userRepository.findById(userId)).willReturn(Optional.of(owner));
+        given(collectionRepository.findByUserId(userId)).willReturn(collections);
+        given(collectionImageUrlService.getPrimaryImageUrlsFor(collections)).willReturn(Map.of());
+        given(collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(collections)).willReturn(Map.of());
+
+        MyCollectionsResponse response = collectionQueryService.getMyCollections(userId);
+
+        assertThat(response.items())
+                .extracting(MyCollectionsResponse.Item::canSuggestBirdId)
+                .containsExactly(true, false);
     }
 }

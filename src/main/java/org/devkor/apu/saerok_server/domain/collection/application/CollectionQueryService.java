@@ -121,7 +121,8 @@ public class CollectionQueryService {
                             likeCount,
                             commentCount,
                             OffsetDateTimeLocalizer.toSeoulLocalDateTime(c.getCreatedAt()),
-                            c.getDiscoveredDate()
+                            c.getDiscoveredDate(),
+                            c.canReceiveBirdIdSuggestions()
                     );
                 })
                 .toList();

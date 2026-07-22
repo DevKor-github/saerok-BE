@@ -70,7 +70,8 @@ public class BirdIdSuggestionQueryService {
                             thumbnailProfileImageUrls.get(c.getUser().getId()),
                             startedAt != null
                                     ? OffsetDateTimeLocalizer.toSeoulLocalDateTime(startedAt)
-                                    : null
+                                    : null,
+                            c.canReceiveBirdIdSuggestions()
                     );
                 })
                 .toList();

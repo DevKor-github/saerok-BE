@@ -31,7 +31,7 @@ public class BirdIdSuggestionController {
     @PermitAll
     @Operation(
             summary  = "동정 의견을 기다리는 컬렉션 목록 조회",
-            description = "bird_id 미확정 PUBLIC 컬렉션 목록을 조회",
+            description = "bird_id가 미확정이고 동정 의견을 받는 PUBLIC 컬렉션 목록을 조회",
             responses = @ApiResponse(
                     responseCode = "200", description = "조회 성공",
                     content      = @Content(schema = @Schema(implementation = GetPendingCollectionsResponse.class))

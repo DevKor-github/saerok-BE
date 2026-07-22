@@ -74,6 +74,7 @@ public interface CollectionWebMapper {
     @Mapping(target = "likeCount", source = "likeCount")
     @Mapping(target = "commentCount", source = "commentCount")
     @Mapping(target = "isLiked", source = "isLiked")
+    @Mapping(target = "canSuggestBirdId", expression = "java(collection.canReceiveBirdIdSuggestions())")
     @Mapping(target = "user.userId", source = "collection.user.id")
     @Mapping(target = "user.nickname", source = "collection.user.nickname")
     @Mapping(target = "user.profileImageUrl", source = "userProfileImageUrl")

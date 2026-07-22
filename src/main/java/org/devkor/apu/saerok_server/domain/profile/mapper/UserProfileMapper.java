@@ -55,7 +55,8 @@ public interface UserProfileMapper {
                         thumbnailUrlMap.get(c.getId()),
                         c.getNote(),
                         c.getDiscoveredDate(),
-                        OffsetDateTimeLocalizer.toSeoulLocalDate(c.getCreatedAt())
+                        OffsetDateTimeLocalizer.toSeoulLocalDate(c.getCreatedAt()),
+                        c.canReceiveBirdIdSuggestions()
                 ))
                 .collect(Collectors.toList());
     }
