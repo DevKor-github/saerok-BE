@@ -37,9 +37,6 @@ public class GetCollectionEditDataResponse {
     @Schema(description = "birdId가 null일 때 동정 의견을 받을지 여부", example = "true")
     private Boolean birdIdSuggestionEnabled;
 
-    @Schema(description = "동정 의견을 받을 수 있는 상태인지 여부", example = "true")
-    private Boolean canSuggestBirdId;
-
     @Schema(description = "이미지 ID", example = "300")
     private Long imageId;
 

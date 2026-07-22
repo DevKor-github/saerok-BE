@@ -1,10 +1,8 @@
 package org.devkor.apu.saerok_server.domain.collection.mapper;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetLikedCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetNearbyCollectionsResponse;
-import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
@@ -38,16 +36,12 @@ class CollectionSuggestionFlagMapperTest {
         GetCollectionDetailResponse detail = collectionWebMapper.toGetCollectionDetailResponse(
                 collection, null, null, null, 0, 0, false, true
         );
-        GetCollectionEditDataResponse editData = collectionWebMapper.toGetCollectionEditDataResponse(collection);
-        UpdateCollectionResponse update = collectionWebMapper.toUpdateCollectionResponse(collection, null);
         GetNearbyCollectionsResponse.Item nearby = collectionWebMapper.toGetNearbyCollectionsResponseItem(
                 collection, null, null, null, null, 0, 0, false, true
         );
         GetLikedCollectionsResponse.Item liked = collectionLikeWebMapper.toLikedCollectionItem(collection);
 
         assertThat(detail.getCanSuggestBirdId()).isTrue();
-        assertThat(editData.getCanSuggestBirdId()).isTrue();
-        assertThat(update.canSuggestBirdId()).isTrue();
         assertThat(nearby.getCanSuggestBirdId()).isTrue();
         assertThat(liked.canSuggestBirdId()).isTrue();
     }
