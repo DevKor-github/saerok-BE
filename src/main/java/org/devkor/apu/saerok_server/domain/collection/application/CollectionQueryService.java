@@ -4,8 +4,10 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollec
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionEditDataResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetNearbyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SearchNearbyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetCollectionEditDataCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.SearchNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.application.strategy.NearbyCollectionsStrategy;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
@@ -38,6 +40,12 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class CollectionQueryService {
+
+    private static final double BIRD_NAME_SEARCH_FALLBACK_RADIUS_METERS = 1_250;
+    private static final double MAX_BIRD_NAME_SEARCH_RADIUS_METERS = 150_000;
+    private static final int DEFAULT_BIRD_NAME_SEARCH_LIMIT = 60;
+    private static final int MAX_BIRD_NAME_SEARCH_LIMIT = 60;
+    private static final int MIN_BIRD_NAME_SEARCH_LIMIT = 10;
 
     private final CollectionRepository collectionRepository;
     private final CollectionImageRepository collectionImageRepository;
@@ -185,6 +193,69 @@ public class CollectionQueryService {
             return response;
         }
 
+        response.setItems(toNearbyCollectionItems(collections, command.userId()));
+        return response;
+    }
+
+    public SearchNearbyCollectionsResponse searchNearbyCollectionsByBirdName(SearchNearbyCollectionsCommand command) {
+        if (command.userId() != null) {
+            userRepository.findById(command.userId()).orElseThrow(() -> new NotFoundException("유효하지 않은 사용자 id예요"));
+        }
+
+        // 1) 근거리 컬렉션 조회 (전략 기반)
+        Point refPoint = PointFactory.create(command.latitude(), command.longitude());
+        double radiusMeters = Math.min(command.initialRadiusMeters(), MAX_BIRD_NAME_SEARCH_RADIUS_METERS);
+        int attempt = 0;
+
+        while (true) {
+            List<UserBirdCollection> collections = collectionRepository.findNearbyByBirdName(
+                    refPoint,
+                    radiusMeters,
+                    command.query().trim(),
+                    command.userId(),
+                    calculateBirdNameSearchLimit(command.limit(), attempt)
+            );
+
+            if (!collections.isEmpty()) {
+                SearchNearbyCollectionsResponse response = new SearchNearbyCollectionsResponse();
+                response.setItems(toNearbyCollectionItems(collections, command.userId()));
+                response.setNoResults(false);
+                return response;
+            }
+
+            if (radiusMeters >= MAX_BIRD_NAME_SEARCH_RADIUS_METERS) {
+                SearchNearbyCollectionsResponse response = new SearchNearbyCollectionsResponse();
+                response.setItems(List.of());
+                response.setNoResults(true);
+                return response;
+            }
+
+            radiusMeters = nextBirdNameSearchRadius(radiusMeters);
+            attempt++;
+        }
+    }
+
+    private double nextBirdNameSearchRadius(double currentRadiusMeters) {
+        if (currentRadiusMeters < BIRD_NAME_SEARCH_FALLBACK_RADIUS_METERS) {
+            return BIRD_NAME_SEARCH_FALLBACK_RADIUS_METERS;
+        }
+        return Math.min(currentRadiusMeters * 2, MAX_BIRD_NAME_SEARCH_RADIUS_METERS);
+    }
+
+    private int calculateBirdNameSearchLimit(Integer requestedLimit, int attempt) {
+        int initialLimit = Math.min(
+                requestedLimit == null ? DEFAULT_BIRD_NAME_SEARCH_LIMIT : requestedLimit,
+                MAX_BIRD_NAME_SEARCH_LIMIT
+        );
+        int minimumLimit = Math.min(initialLimit, MIN_BIRD_NAME_SEARCH_LIMIT);
+        return Math.max(minimumLimit, initialLimit / (1 << attempt));
+    }
+
+    private List<GetNearbyCollectionsResponse.Item> toNearbyCollectionItems(
+            List<UserBirdCollection> collections,
+            Long userId
+    ) {
+
         // 2) 연관(작성자/새) 엔티티를 미리 불러와(prefetch) LAZY N+1 차단
         List<Long> collectionIds = collections.stream().map(UserBirdCollection::getId).toList();
         collectionRepository.prefetchUserAndBirdByIds(collectionIds);
@@ -198,8 +269,8 @@ public class CollectionQueryService {
         Map<Long, Long> commentCounts = collectionCommentRepository.countByCollectionIds(collectionIds);
 
         // 5) 내가 좋아요 눌렀는지 배치 조회
-        Map<Long, Boolean> myLikeMap = (command.userId() != null)
-                ? collectionLikeRepository.findLikeStatusByUserIdAndCollectionIds(command.userId(), collectionIds)
+        Map<Long, Boolean> myLikeMap = (userId != null)
+                ? collectionLikeRepository.findLikeStatusByUserIdAndCollectionIds(userId, collectionIds)
                 : new LinkedHashMap<>();
 
         // 6) 작성자 프로필 이미지 배치 조회
@@ -212,10 +283,10 @@ public class CollectionQueryService {
                 .map(c -> {
                     long likeCount = likeCounts.getOrDefault(c.getId(), 0L);
                     long commentCount = commentCounts.getOrDefault(c.getId(), 0L);
-                    boolean isLikedByMe = command.userId() != null && myLikeMap.getOrDefault(c.getId(), false);
+                    boolean isLikedByMe = userId != null && myLikeMap.getOrDefault(c.getId(), false);
                     String userProfileImageUrl = profileImageMap.get(c.getUser().getId());
                     String thumbnailProfileImageUrl = thumbnailProfileImageMap.get(c.getUser().getId());
-                    boolean isMine = command.userId() != null && command.userId().equals(c.getUser().getId());
+                    boolean isMine = userId != null && userId.equals(c.getUser().getId());
 
                     return collectionWebMapper.toGetNearbyCollectionsResponseItem(
                             c,
@@ -231,7 +302,6 @@ public class CollectionQueryService {
                 })
                 .toList();
 
-        response.setItems(items);
-        return response;
+        return items;
     }
 }

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.request.*;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.CreateCollectionImageResponse;
@@ -17,11 +18,13 @@ import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollec
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetNearbyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.PresignResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SearchNearbyCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.UpdateCollectionResponse;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionImageCommandService;
 import org.devkor.apu.saerok_server.domain.collection.application.CollectionQueryService;
 import org.devkor.apu.saerok_server.domain.collection.application.dto.GetNearbyCollectionsCommand;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.SearchNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.NearbyCollectionsMode;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
@@ -368,6 +371,54 @@ public class CollectionController {
     ) {
         Long userId = userPrincipal.getId();
         collectionImageCommandService.deleteCollectionImage(userId, collectionId, imageId);
+    }
+
+    @PostMapping("/nearby/search")
+    @PermitAll
+    @Operation(
+            summary = "새 이름으로 주위 컬렉션 검색 (인증: optional)",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+                    현재 위치를 기준으로 새 한국어 이름에 검색어가 포함된 컬렉션을 조회합니다.
+
+                    - `radiusMeters`는 필수이며, 프론트 지도 반경을 미터 단위로 전달합니다.
+                    - `radiusMeters`가 1.25km 미만이면 해당 반경을 한 번 검색한 뒤 1.25km로 확장합니다.
+                    - 이후 검색 결과가 없으면 반경을 두 배씩 확장하고, 최대 150km까지 조회합니다.
+                    - 최대 반경에도 결과가 없으면 `noResults`가 true로 반환됩니다.
+                    - 검색 결과는 기본 최대 60건이며, 반경 확장마다 최대 개수가 절반으로 줄고 기본 요청은 최소 10건으로 유지됩니다.
+                      클라이언트가 10건보다 작은 limit을 지정하면 그 값을 넘지 않습니다.
+                    - 현재는 동정 완료된 새의 한국어 이름만 검색합니다. `tempBirdName`은 아직 검색에 포함하지 않습니다.
+                    """,
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = SearchNearbyCollectionsRequest.class))
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200", description = "검색 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = SearchNearbyCollectionsResponse.class)
+                            )
+                    ),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content)
+            }
+    )
+    public SearchNearbyCollectionsResponse searchNearbyCollectionsByBirdName(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Valid @RequestBody SearchNearbyCollectionsRequest request
+    ) {
+        Long userId = userPrincipal == null ? null : userPrincipal.getId();
+        return collectionQueryService.searchNearbyCollectionsByBirdName(
+                new SearchNearbyCollectionsCommand(
+                        userId,
+                        request.getLatitude(),
+                        request.getLongitude(),
+                        request.getRadiusMeters(),
+                        request.getQuery(),
+                        request.getLimit()
+                )
+        );
     }
 
     @GetMapping("/nearby")
