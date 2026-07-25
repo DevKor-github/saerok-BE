@@ -177,6 +177,62 @@ class CollectionRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
+    @DisplayName("새 이름 주변 검색은 반경 안의 부분 일치 컬렉션만 반환한다")
+    void findNearbyByBirdName_returnsOnlyMatchingCollectionsWithinRadius() throws Exception {
+        User owner = newUser();
+        Point ref = gf.createPoint(new Coordinate(126.9780, 37.5665));
+        Point near = gf.createPoint(new Coordinate(126.9781, 37.5664));
+        Point far = gf.createPoint(new Coordinate(127.1000, 37.5665));
+
+        Bird matchingBird = new BirdBuilder(em).korName("까치").build();
+        Bird otherBird = new BirdBuilder(em).korName("직박구리").build();
+
+        UserBirdCollection matchingCollection = newCollection(owner, matchingBird, near, AccessLevelType.PUBLIC);
+        newCollection(owner, otherBird, near, AccessLevelType.PUBLIC);
+        newCollection(owner, matchingBird, far, AccessLevelType.PUBLIC);
+
+        em.flush();
+        em.clear();
+
+        List<UserBirdCollection> result = collectionRepository.findNearbyByBirdName(
+                ref,
+                1_000,
+                "까",
+                null,
+                null
+        );
+
+        assertEquals(1, result.size());
+        assertEquals(matchingCollection.getId(), result.getFirst().getId());
+    }
+
+    @Test
+    @DisplayName("익명 새 이름 주변 검색은 공개 컬렉션만 반환한다")
+    void findNearbyByBirdName_anonymous_returnsOnlyPublicCollections() throws Exception {
+        User owner = newUser();
+        Point ref = gf.createPoint(new Coordinate(126.9780, 37.5665));
+        Point near = gf.createPoint(new Coordinate(126.9781, 37.5664));
+        Bird magpie = new BirdBuilder(em).korName("까치").build();
+
+        UserBirdCollection publicCollection = newCollection(owner, magpie, near, AccessLevelType.PUBLIC);
+        newCollection(owner, magpie, near, AccessLevelType.PRIVATE);
+
+        em.flush();
+        em.clear();
+
+        List<UserBirdCollection> result = collectionRepository.findNearbyByBirdName(
+                ref,
+                1_000,
+                "까치",
+                null,
+                null
+        );
+
+        assertEquals(1, result.size());
+        assertEquals(publicCollection.getId(), result.getFirst().getId());
+    }
+
+    @Test
     @DisplayName("주변 조회는 보호등급 새 컬렉션을 결과에서 제외한다")
     void findNearby_excludesProtectedBirdCollections() throws Exception {
         // given
