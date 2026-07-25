@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CollectionQueryService {
 
+    private static final double BIRD_NAME_SEARCH_FALLBACK_RADIUS_METERS = 1_250;
     private static final double MAX_BIRD_NAME_SEARCH_RADIUS_METERS = 150_000;
     private static final int DEFAULT_BIRD_NAME_SEARCH_LIMIT = 60;
     private static final int MAX_BIRD_NAME_SEARCH_LIMIT = 60;
@@ -229,9 +230,16 @@ public class CollectionQueryService {
                 return response;
             }
 
-            radiusMeters = Math.min(radiusMeters * 2, MAX_BIRD_NAME_SEARCH_RADIUS_METERS);
+            radiusMeters = nextBirdNameSearchRadius(radiusMeters);
             attempt++;
         }
+    }
+
+    private double nextBirdNameSearchRadius(double currentRadiusMeters) {
+        if (currentRadiusMeters < BIRD_NAME_SEARCH_FALLBACK_RADIUS_METERS) {
+            return BIRD_NAME_SEARCH_FALLBACK_RADIUS_METERS;
+        }
+        return Math.min(currentRadiusMeters * 2, MAX_BIRD_NAME_SEARCH_RADIUS_METERS);
     }
 
     private int calculateBirdNameSearchLimit(Integer requestedLimit, int attempt) {

@@ -270,15 +270,19 @@ class CollectionQueryServiceTest {
                 null,
                 37.5665,
                 126.9780,
-                5_000.0,
+                1_250.0,
                 "까치",
                 null
         );
-        given(collectionRepository.findNearbyByBirdName(any(), eq(5_000.0), eq("까치"), eq(null), eq(60)))
+        given(collectionRepository.findNearbyByBirdName(any(), eq(1_250.0), eq("까치"), eq(null), eq(60)))
                 .willReturn(List.of());
-        given(collectionRepository.findNearbyByBirdName(any(), eq(10_000.0), eq("까치"), eq(null), eq(30)))
+        given(collectionRepository.findNearbyByBirdName(any(), eq(2_500.0), eq("까치"), eq(null), eq(30)))
                 .willReturn(List.of());
-        given(collectionRepository.findNearbyByBirdName(any(), eq(20_000.0), eq("까치"), eq(null), eq(15)))
+        given(collectionRepository.findNearbyByBirdName(any(), eq(5_000.0), eq("까치"), eq(null), eq(15)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(10_000.0), eq("까치"), eq(null), eq(10)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(20_000.0), eq("까치"), eq(null), eq(10)))
                 .willReturn(List.of());
         given(collectionRepository.findNearbyByBirdName(any(), eq(40_000.0), eq("까치"), eq(null), eq(10)))
                 .willReturn(List.of());
@@ -293,9 +297,11 @@ class CollectionQueryServiceTest {
         assertTrue(response.getItems().isEmpty());
 
         var inOrder = inOrder(collectionRepository);
-        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(5_000.0), eq("까치"), eq(null), eq(60));
-        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(10_000.0), eq("까치"), eq(null), eq(30));
-        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(20_000.0), eq("까치"), eq(null), eq(15));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(1_250.0), eq("까치"), eq(null), eq(60));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(2_500.0), eq("까치"), eq(null), eq(30));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(5_000.0), eq("까치"), eq(null), eq(15));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(10_000.0), eq("까치"), eq(null), eq(10));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(20_000.0), eq("까치"), eq(null), eq(10));
         inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(40_000.0), eq("까치"), eq(null), eq(10));
         inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(80_000.0), eq("까치"), eq(null), eq(10));
         inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(150_000.0), eq("까치"), eq(null), eq(10));
@@ -314,13 +320,13 @@ class CollectionQueryServiceTest {
                 null,
                 37.5665,
                 126.9780,
-                5_000.0,
+                10.0,
                 "까치",
                 5
         );
-        given(collectionRepository.findNearbyByBirdName(any(), eq(5_000.0), eq("까치"), eq(null), eq(5)))
+        given(collectionRepository.findNearbyByBirdName(any(), eq(10.0), eq("까치"), eq(null), eq(5)))
                 .willReturn(List.of());
-        given(collectionRepository.findNearbyByBirdName(any(), eq(10_000.0), eq("까치"), eq(null), eq(5)))
+        given(collectionRepository.findNearbyByBirdName(any(), eq(1_250.0), eq("까치"), eq(null), eq(5)))
                 .willReturn(List.of(collection));
         given(collectionImageUrlService.getPrimaryImageUrlsFor(List.of(collection))).willReturn(Map.of());
         given(collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(List.of(collection))).willReturn(Map.of());
@@ -335,7 +341,7 @@ class CollectionQueryServiceTest {
         assertEquals(1, response.getItems().size());
 
         var inOrder = inOrder(collectionRepository);
-        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(5_000.0), eq("까치"), eq(null), eq(5));
-        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(10_000.0), eq("까치"), eq(null), eq(5));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(10.0), eq("까치"), eq(null), eq(5));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(1_250.0), eq("까치"), eq(null), eq(5));
     }
 }
