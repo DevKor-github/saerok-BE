@@ -111,6 +111,53 @@ public class CollectionRepository {
         return query.getResultList();
     }
 
+    /**
+     * 중심점 반경 안에서 새 한국어 이름으로 컬렉션을 부분 검색한다.
+     * tempBirdName은 아직 사용하지 않으므로 현재 검색 대상에 포함하지 않는다.
+     */
+    @SuppressWarnings("unchecked")
+    public List<UserBirdCollection> findNearbyByBirdName(
+            Point ref,
+            double radiusMeters,
+            String query,
+            Long userId,
+            Integer limit
+    ) {
+        String sql = """
+            SELECT c.*
+            FROM user_bird_collection c
+            JOIN bird b ON b.id = c.bird_id
+            WHERE ST_DWithin(
+                  c.location::geography,
+                  CAST(:refPoint AS geography),
+                  :radius
+                )
+              AND b.korean_name LIKE :query
+              AND (
+                   c.access_level = 'PUBLIC'
+                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
+              )
+              AND (
+                   b.conservation_grade = 'NONE'
+                OR (CAST(:userId AS bigint) IS NOT NULL AND c.user_id = :userId)
+              )
+            ORDER BY ST_Distance(
+                     c.location::geography,
+                     CAST(:refPoint AS geography)
+            )
+            """;
+
+        var nativeQuery = em.createNativeQuery(sql, UserBirdCollection.class)
+                .setParameter("refPoint", ref)
+                .setParameter("radius", radiusMeters)
+                .setParameter("query", "%" + query + "%")
+                .setParameter("userId", userId);
+        if (limit != null) {
+            nativeQuery.setMaxResults(limit);
+        }
+        return nativeQuery.getResultList();
+    }
+
     public long countNearbyCandidates(Point ref, double radiusMeters, Long userId, boolean isMineOnly) {
 
         if (isMineOnly && userId != null) {
