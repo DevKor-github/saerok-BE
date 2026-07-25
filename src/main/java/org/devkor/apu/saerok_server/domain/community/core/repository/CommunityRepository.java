@@ -32,6 +32,22 @@ public class CommunityRepository {
         return query.getResultList();
     }
 
+    /** 특정 조류가 지정된 공개 컬렉션을 최신순으로 조회한다. */
+    public List<UserBirdCollection> findRecentPublicCollectionsByBirdId(Long birdId, int limit) {
+        return em.createQuery("""
+            SELECT c FROM UserBirdCollection c
+            JOIN FETCH c.user u
+            JOIN FETCH c.bird b
+            WHERE c.accessLevel = :public
+              AND b.id = :birdId
+            ORDER BY c.createdAt DESC, c.id DESC
+            """, UserBirdCollection.class)
+                .setParameter("public", AccessLevelType.PUBLIC)
+                .setParameter("birdId", birdId)
+                .setMaxResults(limit)
+                .getResultList();
+    }
+
     // 인기 있는 컬렉션들을 조회 (좋아요 수가 minLikes 이상인 것들 최신순)
     public List<UserBirdCollection> findPopularCollections(CommunityQueryCommand command) {
         Query query = em.createQuery("""

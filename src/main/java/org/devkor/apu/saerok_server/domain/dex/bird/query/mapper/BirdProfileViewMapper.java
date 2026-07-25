@@ -45,6 +45,7 @@ public abstract class BirdProfileViewMapper {
     @Mapping(source = "description.description", target = "description")
     @Mapping(target = "imageUrls", ignore = true)
     @Mapping(target = "sizeCategory", ignore = true)
+    @Mapping(target = "relatedCollections", ignore = true)
     public abstract BirdDetailResponse toBirdDetailResponse(BirdProfileView view);
 
     @AfterMapping

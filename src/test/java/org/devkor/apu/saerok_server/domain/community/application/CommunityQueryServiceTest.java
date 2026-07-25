@@ -224,6 +224,33 @@ class CommunityQueryServiceTest {
     }
 
     @Test
+    @DisplayName("도감 상세용 관련 컬렉션은 최대 5개 조회 결과를 기존 카드 형식으로 조립한다")
+    void getRecentPublicCollectionsByBirdId_assemblesRelatedCollections() {
+        // Given
+        Long birdId = 100L;
+        Long userId = 1L;
+        User owner = user(2L, "테스트유저");
+        Bird bird = bird(birdId, "까치");
+        List<UserBirdCollection> collections = List.of(collection(10L, owner, bird, "까치를 발견했어요!"));
+        CommunityCollectionInfo collectionInfo = collectionInfo(
+                10L, "https://example.com/image.jpg", "https://example.com/thumbnail.webp", "까치를 발견했어요!",
+                1L, 2L, false, null, false,
+                new CommunityCollectionInfo.BirdInfo(birdId, "까치"),
+                new CommunityCollectionInfo.UserInfo(2L, "테스트유저", null, null)
+        );
+        given(communityRepository.findRecentPublicCollectionsByBirdId(birdId, 5)).willReturn(collections);
+        given(dataAssembler.toCollectionInfos(collections, userId)).willReturn(List.of(collectionInfo));
+
+        // When
+        List<CommunityCollectionInfo> result = communityQueryService.getRecentPublicCollectionsByBirdId(birdId, userId);
+
+        // Then
+        assertThat(result).containsExactly(collectionInfo);
+        then(communityRepository).should().findRecentPublicCollectionsByBirdId(birdId, 5);
+        then(dataAssembler).should().toCollectionInfos(collections, userId);
+    }
+
+    @Test
     @DisplayName("커뮤니티 메인 조회 시 자유게시판 최신 글 5건이 포함된다")
     void getCommunityMain_returnsRecentFreeBoardPosts() {
         // Given

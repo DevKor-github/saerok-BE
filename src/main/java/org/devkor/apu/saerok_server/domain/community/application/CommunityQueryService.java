@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.community.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityCollectionsResponse;
 import org.devkor.apu.saerok_server.domain.community.api.dto.response.GetCommunityMainResponse;
@@ -21,6 +22,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CommunityQueryService {
+
+    private static final int BIRD_DETAIL_RELATED_COLLECTION_LIMIT = 5;
 
     private final CommunityRepository communityRepository;
     private final CommunityDataAssembler dataAssembler;
@@ -50,6 +53,14 @@ public class CommunityQueryService {
     public GetCommunityCollectionsResponse getRecentCollections(Long userId, CommunityQueryCommand command) {
         List<UserBirdCollection> collections = communityRepository.findRecentPublicCollections(command);
         return new GetCommunityCollectionsResponse(dataAssembler.toCollectionInfos(collections, userId));
+    }
+
+    public List<CommunityCollectionInfo> getRecentPublicCollectionsByBirdId(Long birdId, Long userId) {
+        List<UserBirdCollection> collections = communityRepository.findRecentPublicCollectionsByBirdId(
+                birdId,
+                BIRD_DETAIL_RELATED_COLLECTION_LIMIT
+        );
+        return dataAssembler.toCollectionInfos(collections, userId);
     }
 
     public GetCommunityCollectionsResponse getPopularCollections(Long userId, CommunityQueryCommand command) {

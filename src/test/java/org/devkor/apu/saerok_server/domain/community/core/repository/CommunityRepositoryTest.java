@@ -168,6 +168,39 @@ class CommunityRepositoryTest extends AbstractPostgresContainerTest {
     }
 
     @Test
+    @DisplayName("특정 조류의 공개 컬렉션만 최신순으로 최대 개수만큼 조회")
+    void findRecentPublicCollectionsByBirdId_returnsLatestPublicCollectionsWithinLimit() {
+        // given
+        User user = newUser("user");
+        Bird targetBird = newBird("참새");
+        Bird otherBird = newBird("까마귀");
+        OffsetDateTime now = OffsetDateTime.now();
+
+        UserBirdCollection oldest = newCollection(user, targetBird, AccessLevelType.PUBLIC, now.minusMinutes(6));
+        UserBirdCollection fifth = newCollection(user, targetBird, AccessLevelType.PUBLIC, now.minusMinutes(5));
+        UserBirdCollection fourth = newCollection(user, targetBird, AccessLevelType.PUBLIC, now.minusMinutes(4));
+        UserBirdCollection third = newCollection(user, targetBird, AccessLevelType.PUBLIC, now.minusMinutes(3));
+        UserBirdCollection second = newCollection(user, targetBird, AccessLevelType.PUBLIC, now.minusMinutes(2));
+        UserBirdCollection latest = newCollection(user, targetBird, AccessLevelType.PUBLIC, now.minusMinutes(1));
+        newCollection(user, targetBird, AccessLevelType.PRIVATE, now);
+        newCollection(user, otherBird, AccessLevelType.PUBLIC, now);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<UserBirdCollection> result = communityRepository.findRecentPublicCollectionsByBirdId(targetBird.getId(), 5);
+
+        // then
+        assertEquals(5, result.size());
+        assertEquals(
+                List.of(latest.getId(), second.getId(), third.getId(), fourth.getId(), fifth.getId()),
+                result.stream().map(UserBirdCollection::getId).toList()
+        );
+        assertFalse(result.stream().anyMatch(collection -> collection.getId().equals(oldest.getId())));
+    }
+
+    @Test
     @DisplayName("PopularCollection 스냅샷에 등록된 PUBLIC 컬렉션만 조회하고 좋아요 수와 무관")
     void findPopular_returnsOnlySnapshotEntries() {
         // given
