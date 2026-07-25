@@ -54,3 +54,10 @@ notification-batch:
 
 springdoc:
   use-fqn: true
+  paths-to-exclude:
+    - ${api_prefix}/admin/**
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter: method
+    doc-expansion: list
+    filter: true

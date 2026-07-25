@@ -18,7 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Bird‑ID Suggestion API", description = "조류 ID 동정 의견 관련 API")
+@Tag(name = "Bird ID Suggestions API", description = "조류 ID 동정 의견 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/collections")

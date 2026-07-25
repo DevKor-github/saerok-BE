@@ -25,7 +25,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 
-@Tag(name = "User API", description = "회원 정보 관련 API")
+@Tag(name = "Users API", description = "회원 정보 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/user/")

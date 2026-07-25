@@ -16,7 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Notification API", description = "알림 관련 API")
+@Tag(name = "Notifications API", description = "알림 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/notifications/tokens")

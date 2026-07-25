@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Tag(name = "User Block API", description = "사용자 차단 API (Mock)")
+@Tag(name = "User Blocks API", description = "사용자 차단 API (Mock)")
 @RestController
 @PreAuthorize("permitAll()")
 @RequestMapping("${api_prefix}/users/blocks")
