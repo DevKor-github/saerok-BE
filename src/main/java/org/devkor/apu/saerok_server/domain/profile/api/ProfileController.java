@@ -14,7 +14,7 @@ import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Profile API", description = "사용자 프로필 조회")
+@Tag(name = "Profiles API", description = "사용자 프로필 조회")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/profile")

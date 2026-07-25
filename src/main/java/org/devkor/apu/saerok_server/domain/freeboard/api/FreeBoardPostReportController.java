@@ -15,7 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "FreeBoard API", description = "자유게시판 관련 API")
+@Tag(name = "Free Board API", description = "자유게시판 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/community/freeboard/posts")

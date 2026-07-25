@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Ad API", description = "클라이언트 광고 노출 및 이벤트 API")
+@Tag(name = "Ads API", description = "클라이언트 광고 노출 및 이벤트 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/ad")

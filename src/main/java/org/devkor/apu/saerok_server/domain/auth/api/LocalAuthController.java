@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("${api_prefix}/local/")
 @RequiredArgsConstructor
-@Tag(name = "로컬 테스트", description = "로컬 개발환경 전용 API")
+@Tag(name = "Local Test API", description = "로컬 개발환경 전용 API")
 public class LocalAuthController {
 
     private final LocalLoginService localLoginService;
