@@ -14,6 +14,12 @@ public enum StatMetric {
     USER_WAU,                        // 주간 활성 사용자 수(마지막 7일 rolling)
     USER_MAU,                        // 월간 활성 사용자 수(마지막 30일 rolling)
 
-    USER_SIGNUP_SOURCE_TOTAL,        // 누적 가입 경로별 가입자 수 (스냅샷, 멀티값) — signupCompletedAt 기준
-    USER_DEVICE_PLATFORM_TOTAL       // 누적 플랫폼별 유니크 유저 수 (스냅샷, 멀티값) — UserDevice.createdAt 기준
+    /** @deprecated 현재 현황 API(/admin/stats/current-users)를 사용한다. 기존 일별 데이터 조회 호환용이다. */
+    @Deprecated
+    USER_SIGNUP_SOURCE_TOTAL,
+    /** @deprecated 현재 현황 API(/admin/stats/current-users)를 사용한다. 기존 일별 데이터 조회 호환용이다. */
+    @Deprecated
+    USER_DEVICE_PLATFORM_TOTAL,
+
+    USER_DEVICE_PLATFORM_SIGNUP_CUMULATIVE // 플랫폼별 누적 가입 사용자 수 (일별 증분 저장, 멀티값)
 }
