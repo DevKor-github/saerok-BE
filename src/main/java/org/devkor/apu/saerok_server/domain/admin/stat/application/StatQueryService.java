@@ -21,15 +21,20 @@ import java.util.*;
 @RequiredArgsConstructor
 public class StatQueryService {
 
+    private static final String UNKNOWN_SIGNUP_SOURCE = "UNKNOWN";
+
     private final DailyStatRepository dailyRepo;
 
+    @SuppressWarnings("deprecation")
     public StatSeriesResponse getSeries(List<StatMetric> metrics, String period) {
         if (metrics == null || metrics.isEmpty()) return StatSeriesResponse.empty();
 
         LocalDateRange range = parsePeriod(period);
         List<StatSeriesResponse.Series> out = new ArrayList<>();
         for (StatMetric m : metrics) {
-            List<DailyStat> rows = dailyRepo.findSeriesByMetric(m, range.startDate(), range.endDate());
+            List<DailyStat> rows = m == StatMetric.USER_DEVICE_PLATFORM_SIGNUP_CUMULATIVE
+                    ? dailyRepo.findSeriesByMetric(m, null, range.endDate())
+                    : dailyRepo.findSeriesByMetric(m, range.startDate(), range.endDate());
 
             if (m == StatMetric.BIRD_ID_RESOLUTION_STATS_28D) {
                 var minSeries = new StatSeriesResponse.ComponentSeries(
@@ -55,12 +60,23 @@ public class StatQueryService {
 
                 out.add(StatSeriesResponse.multi(m.name(), List.of(minSeries, maxSeries, avgSeries, stdSeries)));
 
+            } else if (m == StatMetric.USER_DEVICE_PLATFORM_SIGNUP_CUMULATIVE) {
+                List<StatSeriesResponse.ComponentSeries> components = Arrays.stream(DevicePlatform.values())
+                        .map(platform -> cumulativePlatformSeries(platform, rows, range.startDate()))
+                        .toList();
+                out.add(StatSeriesResponse.multi(m.name(), components));
+
             } else if (m == StatMetric.USER_SIGNUP_SOURCE_TOTAL) {
-                List<StatSeriesResponse.ComponentSeries> components = Arrays.stream(SignupSourceType.values())
+                List<String> keys = new ArrayList<>(Arrays.stream(SignupSourceType.values())
+                        .map(SignupSourceType::name)
+                        .toList());
+                keys.add(UNKNOWN_SIGNUP_SOURCE);
+
+                List<StatSeriesResponse.ComponentSeries> components = keys.stream()
                         .map(src -> new StatSeriesResponse.ComponentSeries(
-                                src.name(),
+                                src,
                                 rows.stream().map(s ->
-                                        new StatSeriesResponse.Point(s.getDate(), numberOrNull(s.getPayload().get(src.name())))).toList()
+                                        new StatSeriesResponse.Point(s.getDate(), numberOrZero(s.getPayload().get(src)))).toList()
                         )).toList();
                 out.add(StatSeriesResponse.multi(m.name(), components));
 
@@ -69,7 +85,7 @@ public class StatQueryService {
                         .map(p -> new StatSeriesResponse.ComponentSeries(
                                 p.name(),
                                 rows.stream().map(s ->
-                                        new StatSeriesResponse.Point(s.getDate(), numberOrNull(s.getPayload().get(p.name())))).toList()
+                                        new StatSeriesResponse.Point(s.getDate(), numberOrZero(s.getPayload().get(p.name())))).toList()
                         )).toList();
                 out.add(StatSeriesResponse.multi(m.name(), components));
 
@@ -85,6 +101,27 @@ public class StatQueryService {
 
     private static Number numberOrNull(Object o) {
         return (o instanceof Number n) ? n : null;
+    }
+
+    private static Number numberOrZero(Object o) {
+        return (o instanceof Number n) ? n : 0L;
+    }
+
+    private StatSeriesResponse.ComponentSeries cumulativePlatformSeries(
+            DevicePlatform platform,
+            List<DailyStat> rows,
+            LocalDate startDate
+    ) {
+        long cumulative = 0L;
+        List<StatSeriesResponse.Point> points = new ArrayList<>();
+
+        for (DailyStat row : rows) {
+            cumulative += numberOrZero(row.getPayload().get(platform.name())).longValue();
+            if (startDate == null || !row.getDate().isBefore(startDate)) {
+                points.add(new StatSeriesResponse.Point(row.getDate(), cumulative));
+            }
+        }
+        return new StatSeriesResponse.ComponentSeries(platform.name(), points);
     }
 
     private LocalDateRange parsePeriod(String period) {

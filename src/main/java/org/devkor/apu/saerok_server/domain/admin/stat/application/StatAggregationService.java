@@ -46,9 +46,8 @@ public class StatAggregationService {
                 case USER_DAU -> aggregateUserDau(date);
                 case USER_WAU -> aggregateUserWau(date);
                 case USER_MAU -> aggregateUserMau(date);
+                case USER_DEVICE_PLATFORM_SIGNUP_CUMULATIVE -> aggregateUserDevicePlatformSignupDaily(date);
 
-                case USER_SIGNUP_SOURCE_TOTAL -> aggregateUserSignupSourceTotal(date);
-                case USER_DEVICE_PLATFORM_TOTAL -> aggregateUserDevicePlatformTotal(date);
             }
         }
     }
@@ -224,45 +223,79 @@ public class StatAggregationService {
         dailyRepo.upsertValue(StatMetric.USER_MAU, date, n.longValue());
     }
 
-    /** 누적 가입 경로별 가입자 수 (스냅샷): signupCompletedAt < end, signupSource IS NOT NULL */
-    private void aggregateUserSignupSourceTotal(LocalDate date) {
+    /**
+     * 플랫폼별 일일 신규 가입 사용자 수를 저장한다.
+     *
+     * <p>사용자-플랫폼마다 첫 기기 등록만 사용하며, 가입 완료와 첫 기기 등록 중 더 늦은 날을
+     * 플랫폼 가입일로 본다. 조회 단계에서 이 일별 증분을 누적해 증가 추이를 만든다.</p>
+     */
+    private void aggregateUserDevicePlatformSignupDaily(LocalDate date) {
+        var start = date.atStartOfDay(KST).toOffsetDateTime();
         var end = endExclusive(date);
+        boolean initialAggregation = dailyRepo
+                .findLastDateOf(StatMetric.USER_DEVICE_PLATFORM_SIGNUP_CUMULATIVE)
+                .isEmpty();
 
-        @SuppressWarnings("unchecked")
         List<Object[]> rows = em.createQuery("""
-                SELECT u.signupSource, COUNT(u) FROM User u
-                WHERE u.signupCompletedAt < :end
-                  AND u.signupSource IS NOT NULL
-                GROUP BY u.signupSource
-                """)
-                .setParameter("end", end)
-                .getResultList();
-
-        Map<String, Object> payload = new HashMap<>();
-        for (Object[] row : rows) {
-            payload.put(row[0].toString(), ((Number) row[1]).longValue());
-        }
-        dailyRepo.upsertPayload(StatMetric.USER_SIGNUP_SOURCE_TOTAL, date, payload);
-    }
-
-    /** 누적 플랫폼별 유니크 유저 수 (스냅샷): UserDevice.createdAt < end */
-    private void aggregateUserDevicePlatformTotal(LocalDate date) {
-        var end = endExclusive(date);
-
-        @SuppressWarnings("unchecked")
-        List<Object[]> rows = em.createQuery("""
-                SELECT ud.platform, COUNT(DISTINCT ud.user.id) FROM UserDevice ud
-                WHERE ud.createdAt < :end
+                SELECT ud.platform, COUNT(DISTINCT u.id) FROM UserDevice ud
+                JOIN ud.user u
+                WHERE ud.createdAt = (
+                    SELECT MIN(ud2.createdAt) FROM UserDevice ud2
+                    WHERE ud2.user.id = u.id
+                      AND ud2.platform = ud.platform
+                )
+                  AND (
+                    (
+                        :initialAggregation = TRUE
+                        AND (
+                            (u.signupCompletedAt IS NOT NULL
+                                AND u.signupCompletedAt < :end
+                                AND ud.createdAt < :end)
+                            OR (u.signupCompletedAt IS NULL
+                                AND u.signupStatus IN (:completed, :withdrawn)
+                                AND u.joinedAt < :end
+                                AND ud.createdAt < :end)
+                        )
+                    )
+                    OR (
+                        :initialAggregation = FALSE
+                        AND (
+                            (
+                                u.signupCompletedAt IS NOT NULL
+                                AND (
+                                    (u.signupCompletedAt >= :start AND u.signupCompletedAt < :end
+                                        AND ud.createdAt <= u.signupCompletedAt)
+                                    OR (ud.createdAt >= :start AND ud.createdAt < :end
+                                        AND u.signupCompletedAt < ud.createdAt)
+                                )
+                            )
+                            OR (
+                                u.signupCompletedAt IS NULL
+                                AND u.signupStatus IN (:completed, :withdrawn)
+                                AND (
+                                    (u.joinedAt >= :start AND u.joinedAt < :end
+                                        AND ud.createdAt <= u.joinedAt)
+                                    OR (ud.createdAt >= :start AND ud.createdAt < :end
+                                        AND u.joinedAt < ud.createdAt)
+                                )
+                            )
+                        )
+                    )
+                )
                 GROUP BY ud.platform
-                """)
+                """, Object[].class)
+                .setParameter("start", start)
                 .setParameter("end", end)
+                .setParameter("initialAggregation", initialAggregation)
+                .setParameter("completed", SignupStatusType.COMPLETED)
+                .setParameter("withdrawn", SignupStatusType.WITHDRAWN)
                 .getResultList();
 
         Map<String, Object> payload = new HashMap<>();
         for (Object[] row : rows) {
             payload.put(row[0].toString(), ((Number) row[1]).longValue());
         }
-        dailyRepo.upsertPayload(StatMetric.USER_DEVICE_PLATFORM_TOTAL, date, payload);
+        dailyRepo.upsertPayload(StatMetric.USER_DEVICE_PLATFORM_SIGNUP_CUMULATIVE, date, payload);
     }
 
     /* Helpers */
