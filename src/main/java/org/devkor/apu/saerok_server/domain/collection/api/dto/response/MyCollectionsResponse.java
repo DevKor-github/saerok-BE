@@ -35,6 +35,9 @@ public record MyCollectionsResponse(
         LocalDateTime createdAt,
 
         @Schema(description = "새 발견 일시", example = "2025-01-15")
-        LocalDate discoveredDate
+        LocalDate discoveredDate,
+
+        @Schema(description = "동정 의견을 받을 수 있는 상태인지 여부", example = "true")
+        Boolean canSuggestBirdId
     ) { }
 }

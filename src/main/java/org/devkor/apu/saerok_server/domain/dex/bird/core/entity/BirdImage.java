@@ -27,4 +27,18 @@ public class BirdImage extends Auditable {
 
     @Column(name = "is_thumb", nullable = false)
     private boolean isThumb;
+
+    public static BirdImage of(Bird bird,
+                               String objectKey,
+                               String originalUrl,
+                               int orderIndex,
+                               boolean isThumb) {
+        BirdImage image = new BirdImage();
+        image.bird = bird;
+        image.objectKey = objectKey;
+        image.originalUrl = originalUrl;
+        image.orderIndex = orderIndex;
+        image.isThumb = isThumb;
+        return image;
+    }
 }

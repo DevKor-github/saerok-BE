@@ -2,6 +2,7 @@ package org.devkor.apu.saerok_server.domain.dex.bird.query.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.dex.bird.query.view.BirdProfileView;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class BirdProfileViewRepository {
 
     private final EntityManager em;
@@ -24,6 +26,51 @@ public class BirdProfileViewRepository {
 
     public List<BirdProfileView> findAll() {
         return em.createQuery("SELECT b FROM BirdProfileView b", BirdProfileView.class).getResultList();
+    }
+
+    public List<BirdProfileView> findAdminPage(String query, int page, int size) {
+        String jpql = """
+                SELECT b FROM BirdProfileView b
+                WHERE b.deletedAt IS NULL
+                """;
+        if (query != null && !query.isBlank()) {
+            jpql += """
+                    AND (
+                        LOWER(b.name.koreanName) LIKE :query
+                        OR LOWER(b.name.scientificName) LIKE :query
+                    )
+                    """;
+        }
+        jpql += " ORDER BY b.updatedAt DESC, b.id DESC";
+
+        var typedQuery = em.createQuery(jpql, BirdProfileView.class)
+                .setFirstResult((page - 1) * size)
+                .setMaxResults(size);
+        if (query != null && !query.isBlank()) {
+            typedQuery.setParameter("query", "%" + query.trim().toLowerCase() + "%");
+        }
+        return typedQuery.getResultList();
+    }
+
+    public long countAdmin(String query) {
+        String jpql = """
+                SELECT COUNT(b) FROM BirdProfileView b
+                WHERE b.deletedAt IS NULL
+                """;
+        if (query != null && !query.isBlank()) {
+            jpql += """
+                    AND (
+                        LOWER(b.name.koreanName) LIKE :query
+                        OR LOWER(b.name.scientificName) LIKE :query
+                    )
+                    """;
+        }
+
+        var typedQuery = em.createQuery(jpql, Long.class);
+        if (query != null && !query.isBlank()) {
+            typedQuery.setParameter("query", "%" + query.trim().toLowerCase() + "%");
+        }
+        return typedQuery.getSingleResult();
     }
 
     public List<BirdProfileView> findByCreatedAtAfter(OffsetDateTime since) {
@@ -76,7 +123,9 @@ public class BirdProfileViewRepository {
     
     @Transactional
     public void refreshMaterializedView() {
-        em.createNativeQuery("REFRESH MATERIALIZED VIEW bird_profile_mv")
+        long startedAt = System.nanoTime();
+        em.createNativeQuery("REFRESH MATERIALIZED VIEW CONCURRENTLY bird_profile_mv")
                 .executeUpdate();
+        log.info("Refreshed bird_profile_mv concurrently in {} ms", (System.nanoTime() - startedAt) / 1_000_000);
     }
 }

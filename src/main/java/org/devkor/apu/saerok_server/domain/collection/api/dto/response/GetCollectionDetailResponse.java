@@ -53,6 +53,9 @@ public class GetCollectionDetailResponse {
     @Schema(description = "내 컬렉션인지 여부", example = "false")
     private Boolean isMine;
 
+    @Schema(description = "동정 의견을 받을 수 있는 상태인지 여부", example = "true")
+    private Boolean canSuggestBirdId;
+
     @Schema(description = "새 정보")
     private BirdInfo bird;
 

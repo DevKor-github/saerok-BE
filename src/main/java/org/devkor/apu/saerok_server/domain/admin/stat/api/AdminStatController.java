@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.admin.stat.api.dto.response.StatSeriesResponse;
 import org.devkor.apu.saerok_server.domain.admin.stat.application.StatAggregationService;
 import org.devkor.apu.saerok_server.domain.admin.stat.application.StatQueryService;
+import org.devkor.apu.saerok_server.domain.admin.stat.application.CurrentUserStatQueryService;
+import org.devkor.apu.saerok_server.domain.admin.stat.api.dto.response.CurrentUserStatResponse;
 import org.devkor.apu.saerok_server.domain.admin.stat.core.entity.StatMetric;
 import org.devkor.apu.saerok_server.global.shared.util.EnumParser;
 import org.springframework.http.HttpStatus;
@@ -28,6 +30,25 @@ public class AdminStatController {
 
     private final StatQueryService queryService;
     private final StatAggregationService aggregationService;
+    private final CurrentUserStatQueryService currentUserStatQueryService;
+
+    @GetMapping("/current-users")
+    @PreAuthorize("@perm.has('ADMIN_STAT_READ')")
+    @Operation(
+            summary = "현재 사용자 현황 조회",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+            조회 시점의 가입 완료 사용자 현황을 반환합니다. 일별 통계 테이블을 사용하지 않습니다.
+            플랫폼별 수는 활성 푸시 토큰을 보유한 사용자 수이며, 한 사용자가 여러 플랫폼에 중복 포함될 수 있습니다.
+            """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "조회 성공",
+                            content = @Content(schema = @Schema(implementation = CurrentUserStatResponse.class)))
+            }
+    )
+    public CurrentUserStatResponse getCurrentUserStats() {
+        return currentUserStatQueryService.getCurrentUserStats();
+    }
 
     @GetMapping("/series")
     @PreAuthorize("@perm.has('ADMIN_STAT_READ')")
@@ -37,7 +58,8 @@ public class AdminStatController {
             description = """
             metric 목록을 지정하면, 각 metric에 대한 시계열을 반환합니다.
             - 단일값: COLLECTION_TOTAL_COUNT, COLLECTION_PRIVATE_RATIO, BIRD_ID_PENDING_COUNT, BIRD_ID_RESOLVED_COUNT  → payload.value
-            - 멀티값: BIRD_ID_RESOLUTION_STATS (min_hours, max_hours, avg_hours, stddev_hours)
+            - 멀티값: BIRD_ID_RESOLUTION_STATS_28D (min_hours, max_hours, avg_hours, stddev_hours),
+              USER_DEVICE_PLATFORM_SIGNUP_CUMULATIVE (IOS, ANDROID 누적 가입 사용자 수)
             
             """,
             responses = {

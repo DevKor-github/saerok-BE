@@ -44,7 +44,7 @@ public class CollectionLikeQueryService {
     }
 
     /**
-     * 사용자가 좋아요한 컬렉션 ID 목록 조회
+     * 사용자가 좋아요한 컬렉션 목록 조회
      */
     public GetLikedCollectionsResponse getLikedCollectionIdsResponse(Long userId) {
         userRepository.findById(userId)

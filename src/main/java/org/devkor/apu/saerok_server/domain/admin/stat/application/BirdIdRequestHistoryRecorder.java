@@ -23,10 +23,20 @@ public class BirdIdRequestHistoryRecorder {
 
     /** 컬렉션 생성 직후, bird가 비어있고 PUBLIC인 경우 pending 시작을 기록 */
     public void onCollectionCreatedIfPending(UserBirdCollection collection, OffsetDateTime startedAt) {
-        if (collection.getBird() != null) return;
-        if (collection.getAccessLevel() != PUBLIC) return;
+        if (!collection.canReceiveBirdIdSuggestions()) return;
         if (repo.findOpenByCollectionId(collection.getId()).isPresent()) return;
         repo.save(BirdIdRequestHistory.start(collection, startedAt));
+    }
+
+    /** 현재 컬렉션 상태를 기준으로 열린 동정 요청 이력을 생성하거나 취소 */
+    public void syncOpenState(UserBirdCollection collection, OffsetDateTime now) {
+        if (collection.canReceiveBirdIdSuggestions()) {
+            if (repo.findOpenByCollectionId(collection.getId()).isEmpty()) {
+                repo.save(BirdIdRequestHistory.start(collection, now));
+            }
+            return;
+        }
+        repo.deleteOpenByCollectionId(collection.getId());
     }
 
     /** 채택(ADOPT)으로 해결된 순간 */
@@ -42,7 +52,7 @@ public class BirdIdRequestHistoryRecorder {
 
     /** not null -> null 로 바뀌는 순간: PUBLIC이면 새 pending 시작 */
     public void onBirdSetToUnknown(UserBirdCollection collection, OffsetDateTime startedAt) {
-        if (collection.getAccessLevel() != PUBLIC) return;
+        if (!collection.canReceiveBirdIdSuggestions()) return;
         if (repo.findOpenByCollectionId(collection.getId()).isPresent()) return;
         repo.save(BirdIdRequestHistory.start(collection, startedAt));
     }
@@ -55,7 +65,7 @@ public class BirdIdRequestHistoryRecorder {
             repo.deleteOpenByCollectionId(collection.getId());
         } else if (oldLevel == PRIVATE && newLevel == PUBLIC) {
             // 공개로 바뀌었고 아직 미식별이면 새로 오픈
-            if (collection.getBird() == null && repo.findOpenByCollectionId(collection.getId()).isEmpty()) {
+            if (collection.canReceiveBirdIdSuggestions() && repo.findOpenByCollectionId(collection.getId()).isEmpty()) {
                 repo.save(BirdIdRequestHistory.start(collection, now));
             }
         }

@@ -13,6 +13,7 @@ public record CreateCollectionCommand (
         String locationAlias,
         String address,
         String note,
-        AccessLevelType accessLevel
+        AccessLevelType accessLevel,
+        Boolean birdIdSuggestionEnabled
 ){
 }

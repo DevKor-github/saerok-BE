@@ -53,6 +53,9 @@ public class GetNearbyCollectionsResponse {
         @Schema(description = "내가 좋아요 눌렀는지 여부", example = "true")
         private Boolean isLiked;
 
+        @Schema(description = "동정 의견을 받을 수 있는 상태인지 여부", example = "true")
+        private Boolean canSuggestBirdId;
+
         @Schema(description = "컬렉션 소유자 정보")
         private UserInfo user;
     }

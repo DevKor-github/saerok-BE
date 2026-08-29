@@ -51,6 +51,9 @@ public record CommunityCollectionInfo(
         
         @Schema(description = "동정 돕기에 참여한 유저 수 (동정 요청 컬렉션인 경우에만)", example = "5", nullable = true)
         Long suggestionUserCount,
+
+        @Schema(description = "동정 의견을 받을 수 있는 상태인지 여부", example = "true")
+        Boolean canSuggestBirdId,
         
         @Schema(description = "새 정보")
         BirdInfo bird,

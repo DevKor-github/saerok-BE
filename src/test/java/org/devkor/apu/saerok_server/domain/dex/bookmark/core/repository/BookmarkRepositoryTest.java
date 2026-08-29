@@ -63,7 +63,7 @@ class BookmarkRepositoryTest extends AbstractPostgresContainerTest {
         // BirdName 설정 (NOT NULL 필드들)
         BirdName birdName = new BirdName();
         birdName.setKoreanName("테스트새");
-        birdName.setScientificName("Test bird");
+        birdName.setScientificName("Test bird " + System.nanoTime());
         birdNameField.set(b, birdName);
         
         // BirdTaxonomy 설정 (모든 필드가 NOT NULL)

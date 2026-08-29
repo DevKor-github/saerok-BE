@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.application;
 
 import lombok.RequiredArgsConstructor;
+import org.devkor.apu.saerok_server.domain.community.application.CommunityQueryService;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdAutocompleteResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdChangesResponse;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.BirdDetailResponse;
@@ -44,6 +45,7 @@ public class BirdQueryService {
     private final SizeCategoryRulesMapper sizeCategoryRulesMapper;
     private final SizeCategoryService sizeCategoryService;
     private final SizeCategoryRulesConfig sizeCategoryRulesConfig;
+    private final CommunityQueryService communityQueryService;
 
     public BirdFullSyncResponse getBirdFullSyncResponse() {
         List<BirdProfileView> birdProfileViews = birdProfileViewRepository.findAll();
@@ -60,11 +62,12 @@ public class BirdQueryService {
         return response;
     }
 
-    public BirdDetailResponse getBirdDetailResponse(Long birdId) {
+    public BirdDetailResponse getBirdDetailResponse(Long birdId, Long userId) {
         BirdProfileView birdProfileView = birdProfileViewRepository.findById(birdId)
                 .orElseThrow(() -> new NotFoundException("해당 id의 birdProfileView를 찾지 못했어요"));
         BirdDetailResponse response = birdProfileViewMapper.toBirdDetailResponse(birdProfileView);
         response.sizeCategory = sizeCategoryService.getSizeCategory(birdProfileView).getLabel();
+        response.relatedCollections = communityQueryService.getRecentPublicCollectionsByBirdId(birdId, userId);
         return response;
     }
 

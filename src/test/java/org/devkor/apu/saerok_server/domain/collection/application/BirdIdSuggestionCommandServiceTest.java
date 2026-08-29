@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SuggestBirdIdResponse;
+import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.BirdIdSuggestion.SuggestionType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
@@ -58,6 +59,7 @@ class BirdIdSuggestionCommandServiceTest {
         UserBirdCollection c = new UserBirdCollection();
         ReflectionTestUtils.setField(c, "id", id);
         ReflectionTestUtils.setField(c, "user", owner);
+        c.setAccessLevel(AccessLevelType.PUBLIC);
         return c;
     }
 
@@ -142,6 +144,22 @@ class BirdIdSuggestionCommandServiceTest {
         void userNotFound() {
             when(userRepo.findById(1L)).thenReturn(Optional.empty());
             assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L)).isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.NotFoundException.class);
+        }
+
+        @Test @DisplayName("동정요청 비활성 컬렉션이면 제안 불가")
+        void suggestionDisabled() {
+            User u = user(1L);
+            UserBirdCollection col = collection(100L, user(2L));
+            col.changeBirdIdSuggestionEnabled(false);
+
+            when(userRepo.findById(1L)).thenReturn(Optional.of(u));
+            when(collectionRepo.findById(100L)).thenReturn(Optional.of(col));
+
+            assertThatThrownBy(() -> sut.suggest(1L, 100L, 5L))
+                    .isInstanceOf(org.devkor.apu.saerok_server.global.shared.exception.BadRequestException.class)
+                    .hasMessage("동정 의견을 받지 않는 컬렉션이에요");
+
+            verifyNoInteractions(birdRepo);
         }
 
         // … 이하 생략 (원본과 동일)

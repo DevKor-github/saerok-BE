@@ -38,4 +38,7 @@ public class UpdateCollectionRequest {
 
     @Schema(description = "공개/비공개 여부", example = "PUBLIC", nullable = true)
     private AccessLevelType accessLevel;
+
+    @Schema(description = "birdId가 null일 때 동정 의견을 받을지 여부. null이면 변경하지 않음", example = "false", nullable = true)
+    private Boolean birdIdSuggestionEnabled;
 }

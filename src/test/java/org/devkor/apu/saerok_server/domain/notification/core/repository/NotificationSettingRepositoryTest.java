@@ -81,16 +81,19 @@ class NotificationSettingRepositoryTest extends AbstractPostgresContainerTest {
         assertThat(missing).isEmpty();
     }
 
-    @Test @DisplayName("findEnabledDeviceIdsByUserAndType - enabled devices만 반환")
-    void findEnabledDeviceIdsByUserAndType_returnsEnabled() {
+    @Test @DisplayName("findEnabledDeviceIdsByUserAndType - enabled이면서 token이 활성인 디바이스만 반환")
+    void findEnabledDeviceIdsByUserAndType_returnsEnabledActiveDevices() {
         User user = user();
         User otherUser = user();
         UserDevice enabledDevice = device(user, "device-enabled");
         UserDevice disabledDevice = device(user, "device-disabled");
+        UserDevice inactiveDevice = device(user, "device-inactive");
         UserDevice otherDevice = device(otherUser, "device-other");
         setting(enabledDevice, NotificationType.COMMENTED_ON_COLLECTION, true);
         setting(disabledDevice, NotificationType.COMMENTED_ON_COLLECTION, false);
+        setting(inactiveDevice, NotificationType.COMMENTED_ON_COLLECTION, true);
         setting(otherDevice, NotificationType.COMMENTED_ON_COLLECTION, true);
+        inactiveDevice.deactivateToken();
         em.flush(); em.clear();
 
         List<Long> deviceIds =

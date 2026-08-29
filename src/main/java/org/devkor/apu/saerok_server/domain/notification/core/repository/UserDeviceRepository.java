@@ -19,26 +19,49 @@ public class UserDeviceRepository {
     public void save(UserDevice userDevice) { em.persist(userDevice); }
     public void flush() { em.flush(); }
 
-    // 특정 디바이스 삭제
-    public void deleteByUserIdAndDeviceIdAndPlatform(Long userId, String deviceId, DevicePlatform platform) {
-        em.createQuery("DELETE FROM UserDevice ud WHERE ud.user.id = :userId AND ud.deviceId = :deviceId AND ud.platform = :platform")
+    public int deactivateByTokens(List<String> tokens) {
+        if (tokens == null || tokens.isEmpty()) {
+            return 0;
+        }
+
+        return em.createQuery("""
+                UPDATE UserDevice ud
+                   SET ud.token = NULL,
+                       ud.updatedAt = CURRENT_TIMESTAMP
+                 WHERE ud.token IN :tokens
+                """)
+                .setParameter("tokens", tokens)
+                .executeUpdate();
+    }
+
+    public int deactivateConflictingTokensForRegistration(Long userId, String deviceId,
+                                                          DevicePlatform platform, String token) {
+        return em.createQuery("""
+                UPDATE UserDevice ud
+                   SET ud.token = NULL,
+                       ud.updatedAt = CURRENT_TIMESTAMP
+                 WHERE ud.token IS NOT NULL
+                   AND (
+                           ud.token = :token
+                        OR (ud.deviceId = :deviceId AND ud.platform = :platform)
+                       )
+                   AND NOT (
+                           ud.user.id = :userId
+                       AND ud.deviceId = :deviceId
+                       AND ud.platform = :platform
+                   )
+                """)
                 .setParameter("userId", userId)
                 .setParameter("deviceId", deviceId)
                 .setParameter("platform", platform)
+                .setParameter("token", token)
                 .executeUpdate();
     }
 
-    // 모든 토큰 삭제
+    // 회원 탈퇴 시에만 사용하는 영구 삭제
     public int deleteByUserId(Long userId) {
         return em.createQuery("DELETE FROM UserDevice ud WHERE ud.user.id = :userId")
                 .setParameter("userId", userId)
-                .executeUpdate();
-    }
-
-    // 개별 토큰 삭제
-    public void deleteByToken(String token) {
-        em.createQuery("DELETE FROM UserDevice ud WHERE ud.token = :token")
-                .setParameter("token", token)
                 .executeUpdate();
     }
 
@@ -66,10 +89,13 @@ public class UserDeviceRepository {
         return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
     }
 
-    public List<UserDevice> findAllByUserId(Long userId) {
-        return em.createQuery(
-                        "SELECT ud FROM UserDevice ud WHERE ud.user.id = :userId",
-                        UserDevice.class)
+    public List<UserDevice> findAllActiveByUserId(Long userId) {
+        return em.createQuery("""
+                SELECT ud
+                  FROM UserDevice ud
+                 WHERE ud.user.id = :userId
+                   AND ud.token IS NOT NULL
+                """, UserDevice.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }
@@ -80,14 +106,24 @@ public class UserDeviceRepository {
             return List.of();
         }
         
-        return em.createQuery("SELECT ud.token FROM UserDevice ud WHERE ud.id IN :userDeviceIds", String.class)
+        return em.createQuery("""
+                SELECT ud.token
+                  FROM UserDevice ud
+                 WHERE ud.id IN :userDeviceIds
+                   AND ud.token IS NOT NULL
+                """, String.class)
                 .setParameter("userDeviceIds", userDeviceIds)
                 .getResultList();
     }
     
     // 사용자 ID로 모든 FCM 토큰 조회 (사일런트 푸시용)
     public List<String> findTokensByUserId(Long userId) {
-        return em.createQuery("SELECT ud.token FROM UserDevice ud WHERE ud.user.id = :userId", String.class)
+        return em.createQuery("""
+                SELECT ud.token
+                  FROM UserDevice ud
+                 WHERE ud.user.id = :userId
+                   AND ud.token IS NOT NULL
+                """, String.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }

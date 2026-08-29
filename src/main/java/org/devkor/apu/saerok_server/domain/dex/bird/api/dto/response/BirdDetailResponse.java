@@ -1,6 +1,7 @@
 package org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.devkor.apu.saerok_server.domain.community.api.dto.common.CommunityCollectionInfo;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.enums.ConservationGrade;
 
 import java.util.List;
@@ -36,6 +37,9 @@ public class BirdDetailResponse {
 
     @Schema(description = "국내 관찰 가능 계절 목록")
     public List<SeasonWithRarity> seasonsWithRarity;
+
+    @Schema(description = "이 조류가 지정된 공개 컬렉션 목록 (최신순, 최대 5개)")
+    public List<CommunityCollectionInfo> relatedCollections;
 
     @Schema(description = "분류학적 정보")
     public static class BirdTaxonomy {

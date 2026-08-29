@@ -62,8 +62,11 @@ public class UserBirdCollection extends Auditable {
     @Setter
     private AccessLevelType accessLevel;
 
+    @Column(name = "bird_id_suggestion_enabled", nullable = false)
+    private boolean birdIdSuggestionEnabled = true;
+
     @Builder
-    public UserBirdCollection(User user, Bird bird, String tempBirdName, LocalDate discoveredDate, Point location, String locationAlias, String address, String note, boolean isPinned, AccessLevelType accessLevel) {
+    public UserBirdCollection(User user, Bird bird, String tempBirdName, LocalDate discoveredDate, Point location, String locationAlias, String address, String note, boolean isPinned, AccessLevelType accessLevel, Boolean birdIdSuggestionEnabled) {
 
         if (user == null) throw new IllegalArgumentException("user는 null일 수 없습니다.");
         if (discoveredDate == null) throw new IllegalArgumentException("discoveredDate는 null일 수 없습니다.");
@@ -79,11 +82,23 @@ public class UserBirdCollection extends Auditable {
         this.note = note;
         this.isPinned = isPinned;
         this.accessLevel = accessLevel == null ? AccessLevelType.PUBLIC : accessLevel;
+        this.birdIdSuggestionEnabled = bird == null && (birdIdSuggestionEnabled == null || birdIdSuggestionEnabled);
     }
 
     /** 단순 변경: 동정 요청 기록 열고/닫기는 별도 Recorder가 처리 */
     public void changeBird(Bird newBird) {
         this.bird = newBird;
+        if (newBird != null) {
+            this.birdIdSuggestionEnabled = false;
+        }
+    }
+
+    public void changeBirdIdSuggestionEnabled(boolean enabled) {
+        this.birdIdSuggestionEnabled = getBird() == null && enabled;
+    }
+
+    public boolean canReceiveBirdIdSuggestions() {
+        return bird == null && accessLevel == AccessLevelType.PUBLIC && birdIdSuggestionEnabled;
     }
 
     public double getLongitude() { return location.getX(); }

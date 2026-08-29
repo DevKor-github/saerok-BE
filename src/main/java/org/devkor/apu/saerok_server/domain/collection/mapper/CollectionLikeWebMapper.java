@@ -16,7 +16,7 @@ import java.util.Map;
 )
 public interface CollectionLikeWebMapper {
 
-    // 좋아요한 컬렉션 ID 목록 조회
+    // 좋아요한 컬렉션 목록 조회
     default GetLikedCollectionsResponse toGetLikedCollectionsResponse(List<UserBirdCollection> collections) {
         if (collections == null || collections.isEmpty()) {
             return new GetLikedCollectionsResponse(List.of());
@@ -29,6 +29,7 @@ public interface CollectionLikeWebMapper {
     List<GetLikedCollectionsResponse.Item> toLikedCollectionItems(List<UserBirdCollection> collections);
 
     @Mapping(target = "collectionId", source = "id")
+    @Mapping(target = "canSuggestBirdId", expression = "java(collection.canReceiveBirdIdSuggestions())")
     GetLikedCollectionsResponse.Item toLikedCollectionItem(UserBirdCollection collection);
 
     // 컬렉션을 좋아요한 사용자 목록 조회

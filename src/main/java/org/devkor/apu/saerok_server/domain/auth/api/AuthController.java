@@ -5,18 +5,22 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.request.AppleLoginRequest;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.request.KakaoLoginRequest;
+import org.devkor.apu.saerok_server.domain.auth.api.dto.request.LogoutRequest;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.request.RefreshRequest;
 import org.devkor.apu.saerok_server.domain.auth.api.dto.response.AccessTokenResponse;
 import org.devkor.apu.saerok_server.domain.auth.application.AppleLoginService;
 import org.devkor.apu.saerok_server.domain.auth.application.LoginResult;
+import org.devkor.apu.saerok_server.domain.auth.application.LogoutService;
 import org.devkor.apu.saerok_server.domain.auth.application.KakaoLoginService;
 import org.devkor.apu.saerok_server.domain.auth.application.TokenRefreshService;
+import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
 import org.devkor.apu.saerok_server.global.shared.exception.UnauthorizedException;
 import org.devkor.apu.saerok_server.global.shared.util.ClientInfoExtractor;
@@ -25,18 +29,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Auth API", description = "소셜 인증 관련 API")
+@Tag(name = "Authentication API", description = "소셜 인증 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api_prefix}/auth/")
 public class AuthController {
 
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+    private static final String REFRESH_TOKEN_COOKIE_PATH = "/api/v1/auth/refresh";
+
     private final AppleLoginService appleAuthService;
     private final KakaoLoginService kakaoAuthService;
     private final TokenRefreshService tokenRefreshService;
     private final ClientInfoExtractor clientInfoExtractor;
+    private final LogoutService logoutService;
 
     @Value("${app.cookie.secure}")
     private boolean isCookieSecure;
@@ -169,7 +179,7 @@ public class AuthController {
     )
     public ResponseEntity<AccessTokenResponse> refresh(
             @Parameter(hidden = true)
-            @CookieValue(name = "refreshToken", required = false) String refreshTokenCookie,
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshTokenCookie,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "쿠키에 리프레시 토큰이 없을 때, JSON 바디로 전달된 리프레시 토큰 " +
                             "(iOS App에서 요청할 때 쓰면 편리. 웹 브라우저는 알아서 쿠키를 서버와 주고받으므로 이것을 사용할 필요 없음)"
@@ -185,6 +195,40 @@ public class AuthController {
         ClientInfo clientInfo = clientInfoExtractor.extract(httpServletRequest);
         LoginResult loginResult = tokenRefreshService.refresh(refreshToken, clientInfo);
         return toAuthResponse(loginResult);
+    }
+
+    @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "로그아웃",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            description = """
+                    현재 인증된 사용자의 로그아웃을 처리합니다.<br>
+                    refreshToken이 요청에 포함되면 해당 세션을 revoke하고,
+                    deviceId가 포함되면 현재 디바이스의 푸시 토큰도 삭제합니다.<br>
+                    모바일 앱은 refreshTokenJson을 사용할 수 있고,
+                    refreshToken 쿠키가 요청에 포함된 경우에도 해당 값을 사용합니다.
+                    """,
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "로그아웃 완료"),
+                    @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content)
+            }
+    )
+    public ResponseEntity<Void> logout(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Parameter(hidden = true)
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshTokenCookie,
+            @RequestBody(required = false) LogoutRequest request
+    ) {
+        LogoutRequest body = request != null ? request : new LogoutRequest(null, null, null);
+        String refreshToken = refreshTokenCookie != null ? refreshTokenCookie : body.refreshTokenJson();
+
+        logoutService.logout(userPrincipal.getId(), refreshToken, body.deviceId(), body.platform());
+
+        return ResponseEntity
+                .noContent()
+                .header(HttpHeaders.SET_COOKIE, clearRefreshTokenCookie().toString())
+                .build();
     }
 
     /**
@@ -204,12 +248,22 @@ public class AuthController {
     }
 
     private ResponseCookie createRefreshTokenCookie(String refreshToken) {
-        return ResponseCookie.from("refreshToken", refreshToken)
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .httpOnly(true)
                 .secure(isCookieSecure)
                 .sameSite("Lax")
-                .path("/api/v1/auth/refresh")
+                .path(REFRESH_TOKEN_COOKIE_PATH)
                 .maxAge(RefreshTokenProvider.validDuration)
+                .build();
+    }
+
+    private ResponseCookie clearRefreshTokenCookie() {
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(isCookieSecure)
+                .sameSite("Lax")
+                .path(REFRESH_TOKEN_COOKIE_PATH)
+                .maxAge(0)
                 .build();
     }
 }

@@ -11,9 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.devkor.apu.saerok_server.domain.dex.bird.api.dto.response.*;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.BirdQueryService;
 import org.devkor.apu.saerok_server.domain.dex.bird.application.dto.BirdSearchCommand;
+import org.devkor.apu.saerok_server.global.security.principal.UserPrincipal;
 import org.devkor.apu.saerok_server.global.shared.exception.BadRequestException;
 import org.devkor.apu.saerok_server.global.shared.exception.ErrorResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
@@ -147,8 +149,11 @@ public class BirdController {
             }
     )
     public ResponseEntity<BirdDetailResponse> getBirdDetail(
-            @Parameter(description = "조회할 조류의 ID", example = "1") @PathVariable Long birdId) {
-        BirdDetailResponse response = birdQueryService.getBirdDetailResponse(birdId);
+            @Parameter(description = "조회할 조류의 ID", example = "1") @PathVariable Long birdId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        Long userId = userPrincipal != null ? userPrincipal.getId() : null;
+        BirdDetailResponse response = birdQueryService.getBirdDetailResponse(birdId, userId);
         return ResponseEntity.ok(response);
     }
 

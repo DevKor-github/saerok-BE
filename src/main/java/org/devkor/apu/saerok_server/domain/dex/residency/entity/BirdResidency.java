@@ -1,14 +1,16 @@
 package org.devkor.apu.saerok_server.domain.dex.residency.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.devkor.apu.saerok_server.domain.dex.bird.core.entity.Bird;
 import org.devkor.apu.saerok_server.global.shared.entity.Auditable;
 
 @Entity
+@Getter
 public class BirdResidency extends Auditable {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -25,4 +27,16 @@ public class BirdResidency extends Auditable {
 
     @Column(name = "month_bitmask")
     private Integer monthBitmask;
+
+    public static BirdResidency of(Bird bird,
+                                   ResidencyTypeEntity residencyTypeEntity,
+                                   RarityTypeEntity rarityTypeEntity,
+                                   Integer monthBitmask) {
+        BirdResidency residency = new BirdResidency();
+        residency.bird = bird;
+        residency.residencyTypeEntity = residencyTypeEntity;
+        residency.rarityTypeEntity = rarityTypeEntity;
+        residency.monthBitmask = monthBitmask;
+        return residency;
+    }
 }

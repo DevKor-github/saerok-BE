@@ -1,10 +1,14 @@
 package org.devkor.apu.saerok_server.domain.collection.application;
 
 import org.devkor.apu.saerok_server.domain.collection.api.dto.response.GetCollectionDetailResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.MyCollectionsResponse;
+import org.devkor.apu.saerok_server.domain.collection.api.dto.response.SearchNearbyCollectionsResponse;
+import org.devkor.apu.saerok_server.domain.collection.application.dto.SearchNearbyCollectionsCommand;
 import org.devkor.apu.saerok_server.domain.collection.application.helper.CollectionImageUrlService;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.AccessLevelType;
 import org.devkor.apu.saerok_server.domain.collection.core.entity.UserBirdCollection;
 import org.devkor.apu.saerok_server.domain.collection.core.repository.*;
+import org.devkor.apu.saerok_server.domain.collection.core.util.PointFactory;
 import org.devkor.apu.saerok_server.domain.collection.mapper.CollectionWebMapper;
 import org.devkor.apu.saerok_server.domain.user.core.entity.User;
 import org.devkor.apu.saerok_server.domain.user.core.repository.UserRepository;
@@ -22,10 +26,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
@@ -211,5 +221,127 @@ class CollectionQueryServiceTest {
 
         assertThrows(NotFoundException.class,
                 () -> collectionQueryService.getCollectionDetailResponse(badUserId, collectionId));
+    }
+
+    @Test
+    @DisplayName("내 컬렉션 목록에 동정 의견 가능 여부를 포함한다")
+    void getMyCollections_includesCanSuggestBirdId() throws IllegalAccessException {
+        Long userId = 1L;
+        User owner = new User();
+        userIdField.set(owner, userId);
+
+        UserBirdCollection enabled = UserBirdCollection.builder()
+                .user(owner)
+                .discoveredDate(LocalDate.of(2026, 7, 22))
+                .location(PointFactory.create(37.5, 127.0))
+                .accessLevel(AccessLevelType.PUBLIC)
+                .birdIdSuggestionEnabled(true)
+                .build();
+        collectionIdField.set(enabled, 1L);
+        org.springframework.test.util.ReflectionTestUtils.setField(enabled, "createdAt", OffsetDateTime.now());
+
+        UserBirdCollection disabled = UserBirdCollection.builder()
+                .user(owner)
+                .discoveredDate(LocalDate.of(2026, 7, 21))
+                .location(PointFactory.create(37.5, 127.0))
+                .accessLevel(AccessLevelType.PUBLIC)
+                .birdIdSuggestionEnabled(false)
+                .build();
+        collectionIdField.set(disabled, 2L);
+        org.springframework.test.util.ReflectionTestUtils.setField(disabled, "createdAt", OffsetDateTime.now());
+
+        List<UserBirdCollection> collections = List.of(enabled, disabled);
+        given(userRepository.findById(userId)).willReturn(Optional.of(owner));
+        given(collectionRepository.findByUserId(userId)).willReturn(collections);
+        given(collectionImageUrlService.getPrimaryImageUrlsFor(collections)).willReturn(Map.of());
+        given(collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(collections)).willReturn(Map.of());
+
+        MyCollectionsResponse response = collectionQueryService.getMyCollections(userId);
+
+        assertThat(response.items())
+                .extracting(MyCollectionsResponse.Item::canSuggestBirdId)
+                .containsExactly(true, false);
+    }
+
+    @Test
+    @DisplayName("새 이름 주변 검색은 반경 확장마다 반환 제한을 줄이고 최대 150km에서 결과 없음 플래그를 반환한다")
+    void searchNearbyCollectionsByBirdName_expandsRadiusUntilMaximumAndReturnsNoResults() {
+        SearchNearbyCollectionsCommand command = new SearchNearbyCollectionsCommand(
+                null,
+                37.5665,
+                126.9780,
+                1_250.0,
+                "까치",
+                null
+        );
+        given(collectionRepository.findNearbyByBirdName(any(), eq(1_250.0), eq("까치"), eq(null), eq(60)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(2_500.0), eq("까치"), eq(null), eq(30)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(5_000.0), eq("까치"), eq(null), eq(15)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(10_000.0), eq("까치"), eq(null), eq(10)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(20_000.0), eq("까치"), eq(null), eq(10)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(40_000.0), eq("까치"), eq(null), eq(10)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(80_000.0), eq("까치"), eq(null), eq(10)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(150_000.0), eq("까치"), eq(null), eq(10)))
+                .willReturn(List.of());
+
+        SearchNearbyCollectionsResponse response = collectionQueryService.searchNearbyCollectionsByBirdName(command);
+
+        assertTrue(response.isNoResults());
+        assertTrue(response.getItems().isEmpty());
+
+        var inOrder = inOrder(collectionRepository);
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(1_250.0), eq("까치"), eq(null), eq(60));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(2_500.0), eq("까치"), eq(null), eq(30));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(5_000.0), eq("까치"), eq(null), eq(15));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(10_000.0), eq("까치"), eq(null), eq(10));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(20_000.0), eq("까치"), eq(null), eq(10));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(40_000.0), eq("까치"), eq(null), eq(10));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(80_000.0), eq("까치"), eq(null), eq(10));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(150_000.0), eq("까치"), eq(null), eq(10));
+    }
+
+    @Test
+    @DisplayName("새 이름 주변 검색은 확장된 반경에서 결과를 찾으면 해당 결과를 반환한다")
+    void searchNearbyCollectionsByBirdName_returnsCollectionsFoundAfterRadiusExpansion() throws IllegalAccessException {
+        User owner = new User();
+        userIdField.set(owner, 10L);
+        UserBirdCollection collection = new UserBirdCollection();
+        collectionIdField.set(collection, 1L);
+        collectionUserField.set(collection, owner);
+
+        SearchNearbyCollectionsCommand command = new SearchNearbyCollectionsCommand(
+                null,
+                37.5665,
+                126.9780,
+                10.0,
+                "까치",
+                5
+        );
+        given(collectionRepository.findNearbyByBirdName(any(), eq(10.0), eq("까치"), eq(null), eq(5)))
+                .willReturn(List.of());
+        given(collectionRepository.findNearbyByBirdName(any(), eq(1_250.0), eq("까치"), eq(null), eq(5)))
+                .willReturn(List.of(collection));
+        given(collectionImageUrlService.getPrimaryImageUrlsFor(List.of(collection))).willReturn(Map.of());
+        given(collectionImageUrlService.getPrimaryImageThumbnailUrlsFor(List.of(collection))).willReturn(Map.of());
+        given(collectionLikeRepository.countLikesByCollectionIds(List.of(1L))).willReturn(Map.of());
+        given(collectionCommentRepository.countByCollectionIds(List.of(1L))).willReturn(Map.of());
+        given(userProfileImageUrlService.getProfileImageUrlsFor(List.of(owner))).willReturn(Map.of());
+        given(userProfileImageUrlService.getProfileThumbnailImageUrlsFor(List.of(owner))).willReturn(Map.of());
+
+        SearchNearbyCollectionsResponse response = collectionQueryService.searchNearbyCollectionsByBirdName(command);
+
+        assertFalse(response.isNoResults());
+        assertEquals(1, response.getItems().size());
+
+        var inOrder = inOrder(collectionRepository);
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(10.0), eq("까치"), eq(null), eq(5));
+        inOrder.verify(collectionRepository).findNearbyByBirdName(any(), eq(1_250.0), eq("까치"), eq(null), eq(5));
     }
 }
