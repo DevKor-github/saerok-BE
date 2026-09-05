@@ -52,7 +52,7 @@ public class KakaoApiClient {
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response ->
                         response.bodyToMono(KakaoErrorResponse.class).flatMap(error -> {
-                                    log.error("Kakao 인증 에러: {} (code: {}), redirect_uri={}", error.getErrorCode(), authorizationCode, redirectUri);
+                                    log.error("Kakao 인증 에러: {}", error.getErrorCode());
 
                                     RuntimeException ex = switch (error.getErrorCode()) {
                                         case "KOE320" -> new OAuthException("유효하지 않거나 만료된 인가 토큰", 401);
@@ -68,12 +68,12 @@ public class KakaoApiClient {
         try {
             response = responseMono.block();
         } catch (RuntimeException e) {
-            log.error("Kakao 인증 서버 통신 중 예외 발생 (code: {})", authorizationCode);
+            log.error("Kakao 인증 서버 통신 중 예외 발생");
             throw e;
         }
 
         if (response == null || response.getIdToken() == null) {
-            log.error("Kakao 인증 서버 응답 오류: idToken 없음 (code: {})", authorizationCode);
+            log.error("Kakao 인증 서버 응답 오류: idToken 없음");
             throw new IllegalStateException("Kakao 인증 서버 응답 오류");
         }
 

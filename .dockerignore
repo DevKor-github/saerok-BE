@@ -1,0 +1,13 @@
+.git
+.github
+.gradle
+.idea
+.env
+.env.*
+build
+deploy
+docs
+node_modules
+**/postgres-data
+**/redis-data
+*.log

@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 //                log.info("JWT 인증 성공 - id: {}", userId);
             } catch (Exception e) {
-                log.warn("JWT 인증 실패: {}", e.getMessage());
+                log.warn("JWT 인증 실패: {}", e.getClass().getSimpleName());
 
                 jwtAuthenticationEntryPoint.commence(request, response, new InsufficientAuthenticationException("JWT Invalid", e));
                 return;
