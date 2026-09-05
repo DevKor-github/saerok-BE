@@ -74,6 +74,17 @@ jobs:
           cache-from: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache-arm64
           cache-to: type=registry,ref=${{ steps.normalize.outputs.image_repo }}:buildcache-arm64,mode=max
 
+      - name: 📁 Prepare deployment directory
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            # 최초 배포 시에도 사용자가 디렉터리를 직접 만들 필요가 없게 한다.
+            install -d -m 0750 "${HOME}/saerok"
+
       - name: 📤 Copy compose files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -81,7 +92,8 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           source: "deploy/docker-compose.yml,deploy/docker-compose.dev.yml,deploy/postgres-ko/Dockerfile,deploy/nginx/saerok-dev-http.conf"
-          target: /srv/saerok/
+          # 기존 개발 서버와 동일하게 ubuntu 사용자의 홈 아래에 배포한다.
+          target: ~/saerok/
           strip_components: 1
 
       - name: 🚀 Deploy on EC2 (pull & up)
@@ -95,18 +107,22 @@ jobs:
 
             DEPLOY_MODE="${{ inputs.deploy_mode || 'full' }}"
             IMAGE_REF="${{ steps.normalize.outputs.image_repo }}@${{ steps.build.outputs.digest }}"
+            DEPLOY_DIR="${HOME}/saerok"
 
-            # 기존 DB 디렉터리의 소유권은 강제로 바꾸지 않는다.
+            # 최초 배포에서도 별도 서버 설정 없이 필요한 영속 디렉터리를 자동 생성한다.
+            # 이미 생성된 DB 디렉터리의 소유권은 강제로 바꾸지 않는다.
             # 각 컨테이너의 시작 스크립트가 데이터 디렉터리 소유권을 관리한다.
-            for data_path in \
-              /srv/saerok/data/postgres \
-              /srv/saerok/data/redis \
-              /srv/saerok/backup; do
+            for relative_path in \
+              data/postgres \
+              data/redis \
+              backup \
+              accesslogs; do
+              data_path="${DEPLOY_DIR}/${relative_path}"
               if [ ! -d "$data_path" ]; then
                 sudo install -d -m 0750 -o "$(id -un)" -g "$(id -gn)" "$data_path"
               fi
             done
-            cd /srv/saerok
+            cd "$DEPLOY_DIR"
 
             # 0) Docker & Compose 확인
             docker --version

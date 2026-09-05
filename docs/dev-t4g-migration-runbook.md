@@ -5,7 +5,7 @@
 - Ubuntu 24.04 ARM64 / `t4g.micro`
 - 앱, PostgreSQL 17 + PostGIS, Redis를 Docker Compose로 실행
 - 앱은 호스트의 `127.0.0.1:8080`에만 바인딩하고 Nginx가 80/443을 프록시
-- PostgreSQL과 Redis 데이터는 `/srv/saerok/data`에 영속화
+- 배포 파일과 영속 데이터는 기존 개발 서버와 동일한 `~/saerok` 아래에 배치
 - 기존 개발 서버와 동일하게 Elastic IP는 사용하지 않고, EC2의 일반 퍼블릭 IPv4를 사용
 - 기존 t2 서버는 검증과 DNS 전환이 끝날 때까지 유지
 
@@ -50,9 +50,11 @@ PostGIS 패키지를 설치하도록 변경했다. 기존 DB와 동일하게 `ko
   네트워크에서 `postgres:5432`로 접속한다.
 - DB 접속 주소를 `jdbc:postgresql://postgres:5432/saerok`으로 고정한다. 개발
   환경에서는 더 이상 외부 RDS 주소를 사용하지 않는다.
-- PostgreSQL 데이터는 `/srv/saerok/data/postgres`, Redis 데이터는
-  `/srv/saerok/data/redis`에 저장한다. 컨테이너를 삭제하거나 이미지를 교체해도 이
+- PostgreSQL 데이터는 `~/saerok/data/postgres`, Redis 데이터는
+  `~/saerok/data/redis`에 저장한다. 컨테이너를 삭제하거나 이미지를 교체해도 이
   디렉터리는 남는다.
+- 애플리케이션 접근 로그는 `~/saerok/accesslogs`에 저장한다. 컨테이너 내부의
+  `/app/accesslogs`와 연결하므로 앱 컨테이너를 다시 만들어도 로그가 유지된다.
 - PostgreSQL과 Redis가 `healthy`가 된 뒤에만 앱을 시작한다. DB가 준비되기 전에
   앱이 먼저 시작되어 반복적으로 실패하는 상황을 줄인다.
 - 앱에도 `/health` 기반 상태 확인을 추가했다. 컨테이너 실행 여부뿐 아니라 실제
@@ -92,7 +94,7 @@ EBS 스냅샷이 필요하다.
 2. 이미지를 GHCR에 push하고, 배포에는 변경되지 않는 digest 참조값을 사용한다.
    같은 `dev-latest` 태그가 나중에 바뀌어도 현재 실행에서 선택한 이미지는 바뀌지
    않는다.
-3. Compose 파일, PostGIS Dockerfile, Nginx 설정을 `/srv/saerok`으로 복사한다.
+3. Compose 파일, PostGIS Dockerfile, Nginx 설정을 `~/saerok`으로 복사한다.
 4. GitHub Secrets와 Variables로 `/run/saerok/env.dev`를 만들고 권한을 제한한다.
    작업이 끝나면 이 임시 파일을 삭제한다.
 5. 새 서버에서 PostGIS 이미지를 빌드하고 PostgreSQL과 Redis부터 시작한다.
@@ -201,7 +203,7 @@ scp -i dev-Saerok.pem \
 
 scp -i dev-Saerok.pem \
   saerok-dev-final.dump \
-  ubuntu@NEW_PUBLIC_IP:/srv/saerok/backup/
+  ubuntu@NEW_PUBLIC_IP:~/saerok/backup/
 ```
 
 여기서 `OLD_PUBLIC_IP`와 `NEW_PUBLIC_IP`는 각각 AWS 콘솔에 표시되는 기존 서버와
@@ -213,7 +215,7 @@ scp -i dev-Saerok.pem \
 docker exec -i saerok-postgres-dev sh -lc \
   'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
     --clean --if-exists --no-owner --no-privileges --exit-on-error' \
-  < /srv/saerok/backup/saerok-dev-final.dump
+  < ~/saerok/backup/saerok-dev-final.dump
 ```
 
 복원 결과를 확인한다.
@@ -233,8 +235,8 @@ curl -fsS http://127.0.0.1:8080/health
 docker compose \
   --env-file /run/saerok/env.dev \
   -p saerok \
-  -f /srv/saerok/docker-compose.yml \
-  -f /srv/saerok/docker-compose.dev.yml ps
+  -f ~/saerok/docker-compose.yml \
+  -f ~/saerok/docker-compose.dev.yml ps
 ```
 
 배포 종료 후 `/run/saerok/env.dev`는 보안상 삭제되므로 두 번째 명령은 배포 중
@@ -246,7 +248,7 @@ docker compose \
 
 ```bash
 sudo install -m 0644 \
-  /srv/saerok/nginx/saerok-dev-http.conf \
+  ~/saerok/nginx/saerok-dev-http.conf \
   /etc/nginx/sites-available/saerok-dev
 sudo ln -sfn /etc/nginx/sites-available/saerok-dev \
   /etc/nginx/sites-enabled/saerok-dev
