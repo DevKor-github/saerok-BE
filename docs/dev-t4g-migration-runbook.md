@@ -3,8 +3,9 @@
 ## 목표 구성
 
 - Ubuntu 24.04 ARM64 / `t4g.micro`
-- 앱, PostgreSQL 17 + PostGIS, Redis를 Docker Compose로 실행
-- 앱은 호스트의 `127.0.0.1:8080`에만 바인딩하고 Nginx가 80/443을 프록시
+- API, 관리자 앱, PostgreSQL 17 + PostGIS, Redis를 Docker Compose로 실행
+- API는 `127.0.0.1:8080`, 관리자 앱은 `127.0.0.1:8081`에만 바인딩하고
+  Nginx가 도메인별로 80/443 요청을 전달
 - 배포 파일과 영속 데이터는 기존 개발 서버와 동일한 `~/saerok` 아래에 배치
 - 기존 개발 서버와 동일하게 Elastic IP는 사용하지 않고, EC2의 일반 퍼블릭 IPv4를 사용
 - 기존 t2 서버는 검증과 DNS 전환이 끝날 때까지 유지
@@ -78,12 +79,14 @@ EBS 스냅샷이 필요하다.
 | 애플리케이션 | 0.75 vCPU | 320MB | 512MB |
 | PostgreSQL | 0.50 vCPU | 128MB | 256MB |
 | Redis | 0.25 vCPU | 64MB | 192MB |
+| 관리자 앱 | 0.25 vCPU | 64MB | 256MB |
 
-실측 테스트에서는 앱 약 340MiB, PostgreSQL 약 139MiB, Redis 약 10MiB를 사용했다.
-다만 세 컨테이너가 동시에 상한까지 사용하면 호스트 메모리를 초과할 수 있다. 현재
-설정한 1GiB 비상 스왑은 순간적인 메모리 급증 때 종료 가능성을 낮추지만, 지속적인
-메모리 부족을 해결하지는 않는다. 스왑 사용량 증가, OOM 종료 또는 응답 지연이
-반복되면 `t4g.small`로 올리는 것이 다음 조치다.
+기존 개발 서버 실측값은 API 약 251MiB, PostgreSQL 약 60MiB, Redis 약 1.4MiB,
+관리자 앱 약 34MiB로 합계 약 347MiB였다. 낮은 트래픽에서는 `t4g.micro`로 시작할
+수 있지만 모든 컨테이너가 동시에 상한까지 사용하면 호스트 메모리를 초과한다. 현재
+설정한 1GiB 비상 스왑은 순간적인 메모리 급증 때 종료 가능성을 낮출 뿐, 지속적인
+메모리 부족을 해결하지는 않는다. 전체 배포 뒤 가용 메모리와 스왑을 반드시 다시
+측정하고, 스왑 증가, OOM 종료 또는 응답 지연이 반복되면 `t4g.small`로 올린다.
 
 ### GitHub Actions 배포 흐름
 
@@ -99,7 +102,8 @@ EBS 스냅샷이 필요하다.
    작업이 끝나면 이 임시 파일을 삭제한다.
 5. 새 서버에서 PostGIS 이미지를 빌드하고 PostgreSQL과 Redis부터 시작한다.
 6. 두 컨테이너가 정상 상태인지 확인한다.
-7. `full` 모드라면 앱 이미지를 받고 앱만 새로 생성한 뒤 `/health`를 확인한다.
+7. 빈 DB에도 PostGIS 확장을 활성화하고 버전을 확인한다.
+8. `full` 모드라면 앱 이미지를 받고 앱만 새로 생성한 뒤 `/health`를 확인한다.
 
 수동 실행에서 `infrastructure-only`를 선택하면 6단계에서 멈춘다. 데이터 복원 전에
 새 앱이 빈 DB에 접속하거나 Flyway를 먼저 실행하지 않도록 하기 위한 이전 전용
@@ -116,11 +120,12 @@ EBS 스냅샷이 필요하다.
 
 ### Nginx와 빌드 컨텍스트
 
-[`saerok-dev-http.conf`](../deploy/nginx/saerok-dev-http.conf)는 두 개발 도메인의 HTTP
-요청을 호스트 내부의 `127.0.0.1:8080`으로 전달한다. 실제 클라이언트 IP와 프로토콜
-정보, WebSocket 업그레이드 헤더를 앱에 넘기며 업로드 최대 크기는 20MB다. 첫 전환
-때는 HTTP 설정으로 문법과 연결을 확인하고, DNS 변경 후 Certbot이 HTTPS 설정을
-추가한다.
+[`saerok-dev-http.conf`](../deploy/nginx/saerok-dev-http.conf)는
+`dev-api.saerok.app`을 `127.0.0.1:8080`으로,
+`dev-admin.saerok.app`을 `127.0.0.1:8081`로 전달한다. 실제 클라이언트 IP와
+프로토콜 정보, WebSocket 업그레이드 헤더를 앱에 넘기며 업로드 최대 크기는 20MB다.
+첫 전환 때는 HTTP 설정으로 두 localhost 연결을 확인하고, DNS 변경 후 Certbot이
+HTTPS 설정을 추가한다.
 
 루트의 [`.dockerignore`](../.dockerignore)는 `.env`, Git 메타데이터, 빌드 결과,
 문서와 로컬 DB 데이터가 Docker 빌드 컨텍스트에 포함되지 않게 한다. 비밀값이나 큰
@@ -171,17 +176,109 @@ docker inspect --format '{{.State.Health.Status}}' saerok-redis-dev
 
 두 컨테이너 모두 `healthy`여야 한다.
 
-## 4. 기존 PostgreSQL 최종 백업
+PostGIS도 자동 활성화되어야 한다.
+
+```bash
+docker exec saerok-postgres-dev sh -lc \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
+    "SELECT postgis_version();"'
+```
+
+## 4. 관리자 앱 ARM64 배포
+
+`saerok-admin` 저장소의 ARM64 변경을 먼저 `develop`에 반영한다. 전환이 끝날
+때까지 해당 저장소의 `DEV_ARM64_AUTODEPLOY`도 만들지 않거나 `false`로 둔다.
+머지 작업이 `Skipped`된 것을 확인한 뒤 `dev` Environment Secret `EC2_HOST`를
+새 서버의 퍼블릭 IPv4로 바꾼다.
+
+Admin 저장소의 `Deploy Admin to Dev (ARM64 EC2 + Docker Compose)`를 수동
+실행한다. 새 서버에서 확인한다.
+
+```bash
+docker inspect --format \
+  'status={{.State.Status}} health={{.State.Health.Status}} ports={{json .HostConfig.PortBindings}}' \
+  saerok-admin-dev
+curl -fsSI http://127.0.0.1:8081/login
+```
+
+8081 포트는 `127.0.0.1`에만 바인딩되어야 한다. 전체 컨테이너의 실제 자원 사용량도
+확인한다.
+
+```bash
+free -h
+swapon --show
+docker stats --no-stream \
+  --format 'table {{.Name}}\t{{.MemUsage}}\t{{.CPUPerc}}'
+```
+
+가용 메모리가 지속적으로 150MiB 미만이거나 스왑 사용량이 계속 증가하면 최종
+전환 전에 `t4g.small`로 올린다.
+
+## 5. 무중단 시험 백업과 복원
+
+기존 앱을 중지하기 전에 시험 dump를 만들어 새 PostgreSQL 17.11과 PostGIS
+3.6에서 복원되는지 확인한다. `pg_dump`는 일관된 스냅샷을 사용하므로 시험 중에도
+기존 서비스를 계속 운영할 수 있다.
+
+기존 서버에서 실행한다.
+
+```bash
+mkdir -p ~/migration-backup
+
+docker exec saerok-postgres-dev sh -lc \
+  'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+    -Fc --no-owner --no-privileges' \
+  > ~/migration-backup/saerok-dev-trial.dump
+
+test -s ~/migration-backup/saerok-dev-trial.dump
+sha256sum ~/migration-backup/saerok-dev-trial.dump
+docker exec -i saerok-postgres-dev pg_restore -l \
+  < ~/migration-backup/saerok-dev-trial.dump | head
+```
+
+로컬 PC를 경유해 신규 서버로 전송한다.
+
+```bash
+scp -i dev-Saerok.pem \
+  ubuntu@OLD_PUBLIC_IP:~/migration-backup/saerok-dev-trial.dump .
+
+scp -i dev-Saerok.pem \
+  saerok-dev-trial.dump \
+  ubuntu@NEW_PUBLIC_IP:~/saerok/backup/
+```
+
+신규 서버에서 복원하고 확인한다.
+
+```bash
+docker exec -i saerok-postgres-dev sh -lc \
+  'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+    --clean --if-exists --no-owner --no-privileges --exit-on-error' \
+  < ~/saerok/backup/saerok-dev-trial.dump
+
+docker exec saerok-postgres-dev sh -lc \
+  'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
+    "SELECT count(*) FROM flyway_schema_history;
+     SELECT postgis_version();
+     SELECT pg_size_pretty(pg_database_size(current_database()));
+     SELECT count(*) FROM users;
+     SELECT count(*) FROM user_bird_collection;"'
+```
+
+Flyway 이력은 기존과 같은 93개여야 한다. 시험 복원이 실패해도 기존 앱과 DNS에는
+영향이 없다.
+
+## 6. 기존 PostgreSQL 최종 백업
 
 새 DB가 준비된 뒤, 기존 t2 서버에서 애플리케이션을 중지해 추가
 쓰기를 막고 dump를 만든다.
 
 ```bash
-docker stop saerok-dev
+docker stop saerok-dev saerok-admin-dev
 mkdir -p ~/migration-backup
 
 docker exec saerok-postgres-dev sh -lc \
-  'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc --no-owner' \
+  'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+    -Fc --no-owner --no-privileges' \
   > ~/migration-backup/saerok-dev-final.dump
 
 test -s ~/migration-backup/saerok-dev-final.dump
@@ -190,10 +287,14 @@ docker exec -i saerok-postgres-dev pg_restore -l \
   < ~/migration-backup/saerok-dev-final.dump | head
 ```
 
-DNS는 아직 기존 서버를 가리키므로 복원이 실패하면 `docker start saerok-dev`로
-기존 서비스를 즉시 되돌릴 수 있다.
+DNS는 아직 기존 서버를 가리키므로 복원이 실패하면 아래 명령으로 기존 서비스를
+즉시 되돌릴 수 있다.
 
-## 5. dump 전송 및 복원
+```bash
+docker start saerok-dev saerok-admin-dev
+```
+
+## 7. 최종 dump 전송 및 복원
 
 로컬 PC를 경유해 기존 서버의 dump를 새 서버로 복사한다.
 
@@ -226,12 +327,13 @@ docker exec saerok-postgres-dev sh -lc \
     "SELECT count(*) FROM flyway_schema_history; SELECT postgis_version();"'
 ```
 
-## 6. 애플리케이션 시작
+## 8. API 애플리케이션 시작
 
 같은 GitHub Actions를 `deploy_mode=full`로 다시 실행한다. 새 서버에서 확인한다.
 
 ```bash
 curl -fsS http://127.0.0.1:8080/health
+curl -fsSI http://127.0.0.1:8081/login
 docker compose \
   --env-file /run/saerok/env.dev \
   -p saerok \
@@ -242,7 +344,9 @@ docker compose \
 배포 종료 후 `/run/saerok/env.dev`는 보안상 삭제되므로 두 번째 명령은 배포 중
 진단용이다. 평상시에는 `docker ps`와 `docker logs`를 사용한다.
 
-## 7. Nginx와 HTTPS 전환
+두 localhost 확인이 모두 성공해야 Nginx와 DNS 전환을 진행한다.
+
+## 9. Nginx와 HTTPS 전환
 
 새 서버에서 HTTP 설정을 설치한다.
 
@@ -254,6 +358,13 @@ sudo ln -sfn /etc/nginx/sites-available/saerok-dev \
   /etc/nginx/sites-enabled/saerok-dev
 sudo nginx -t
 sudo systemctl reload nginx
+```
+
+DNS 변경 전에 도메인 Host 헤더로 두 프록시를 확인한다.
+
+```bash
+curl -fsS -H 'Host: dev-api.saerok.app' http://127.0.0.1/health
+curl -fsSI -H 'Host: dev-admin.saerok.app' http://127.0.0.1/login
 ```
 
 AWS 콘솔에서 새 서버의 퍼블릭 IPv4가 2단계에서 기록한 값과 같은지 한 번 더
@@ -280,17 +391,22 @@ curl -sSI https://dev-admin.saerok.app | head
 sudo certbot renew --dry-run
 ```
 
-## 8. 전환 완료
+## 10. 전환 완료
 
-GitHub Repository variable `DEV_ARM64_AUTODEPLOY=true`를 설정해 `develop` push
-자동 배포를 다시 활성화한다. 기존 t2 서버는 즉시 삭제하지 않고 3~7일 보관한다.
-문제가 없으면 최종 EBS 스냅샷과 dump를 확인한 뒤 기존 인스턴스를 종료한다.
-기존 루트 볼륨은 종료 시 자동 삭제되지 않으므로 보관 기간 이후 별도로 삭제한다.
+BE와 Admin 두 저장소에 GitHub Repository variable
+`DEV_ARM64_AUTODEPLOY=true`를 설정해 `develop` push 자동 배포를 다시
+활성화한다. 기존 t2 서버는 즉시 삭제하지 않고 중지 상태로 3~7일 보관한다. 문제가
+없으면 최종 EBS 스냅샷과 dump를 확인한 뒤 기존 인스턴스를 종료한다. 기존 루트
+볼륨은 종료 시 자동 삭제되지 않으므로 보관 기간 이후 별도로 삭제한다.
+
+Redis에는 광고 중복 방지용 단기 키와 만료되는 알림 배치가 저장된다. 개발 서버
+전환에서는 기존 Redis 데이터를 옮기지 않으므로 전환 시점에 남은 임시 키와 미처리
+배치는 사라질 수 있다.
 
 향후 새 개발 서버를 중지/시작하거나 인스턴스 유형을 변경했다면 아래 항목을 한
 묶음으로 처리한다.
 
 1. EC2 콘솔에서 새 퍼블릭 IPv4 확인
-2. GitHub `dev` environment의 `EC2_HOST` 수정
+2. BE와 Admin 저장소 `dev` environment의 `EC2_HOST` 수정
 3. Route 53의 `dev-api.saerok.app`, `dev-admin.saerok.app` A 레코드 수정
 4. 두 HTTPS 주소와 GitHub Actions 배포를 다시 확인
