@@ -43,7 +43,7 @@ public class AppleApiClient {
                 .onStatus(HttpStatusCode::isError, response ->
                         response.bodyToMono(AppleErrorResponse.class).flatMap(error -> {
 
-                            log.error("Apple 인증 에러: {} (code: {})", error.getError(), authorizationCode);
+                            log.error("Apple 인증 에러: {}", error.getError());
 
                             RuntimeException ex = switch (error.getError()) {
                                 case "invalid_grant"  -> new OAuthException("유효하지 않거나 만료된 인가 코드", 401);
@@ -58,16 +58,14 @@ public class AppleApiClient {
         try {
             response = responseMono.block();
         } catch (RuntimeException e) {
-            log.error("Apple 인증 서버 통신 중 예외 발생 (code: {})", authorizationCode, e);
+            log.error("Apple 인증 서버 통신 중 예외 발생", e);
             throw e;
         }
 
         if (response == null || response.getIdToken() == null) {
-            log.error("Apple 인증 서버 응답 오류: idToken 없음 (code: {})", authorizationCode);
+            log.error("Apple 인증 서버 응답 오류: idToken 없음");
             throw new IllegalStateException("Apple 인증 서버 응답 오류");
         }
-
-        log.info("Apple response 전체 정보: {}", response);
 
         return response;
     }

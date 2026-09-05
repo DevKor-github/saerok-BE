@@ -2,7 +2,6 @@ package org.devkor.apu.saerok_server.domain.auth.application;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenService;
 import org.devkor.apu.saerok_server.domain.auth.core.entity.UserRefreshToken;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.UserRefreshTokenRepository;
@@ -11,7 +10,6 @@ import org.devkor.apu.saerok_server.global.security.token.RefreshTokenProvider;
 import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -29,9 +27,6 @@ public class TokenRefreshService {
      * @param refreshTokenCookie 클라이언트가 보낸 리프레시 토큰
      */
     public LoginResult refresh(String refreshTokenCookie, ClientInfo clientInfo) {
-
-        log.info("refreshTokenCookie: {}", refreshTokenCookie);
-
         UserRefreshToken userRefreshToken = userRefreshTokenRepository
                 .findByRefreshTokenHash(refreshTokenProvider.hash(refreshTokenCookie))
                 .orElseThrow(() -> new UnauthorizedException("리프레시 토큰이 유효하지 않아요 (not found)"));
