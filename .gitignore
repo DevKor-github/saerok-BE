@@ -46,4 +46,7 @@ node_modules
 # Firebase Admin Key
 src/main/resources/config/firebase-admin-key.json
 
+# 실제 인프라 구성과 비용이 포함된 로컬 분석 문서는 공개 저장소에 올리지 않는다.
+docs/rds-to-ec2-docker-plan.md
+
 .claude

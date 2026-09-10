@@ -26,11 +26,13 @@ server:
   tomcat:
     accesslog:
       enabled: true
-      directory: /home/ubuntu/saerok/accesslogs
+      # Docker 호스트의 ~/saerok/accesslogs와 연결되는 컨테이너 내부 경로
+      directory: /app/accesslogs
       prefix: access_log
       suffix: .log
       rotate: true
-      pattern: '%h %t "%m %U%q" %s %b %D'
+      # OAuth 인가 코드 등이 포함될 수 있는 쿼리 문자열(%q)은 기록하지 않는다.
+      pattern: '%h %t "%m %U" %s %b %D'
 
 logging:
   level:

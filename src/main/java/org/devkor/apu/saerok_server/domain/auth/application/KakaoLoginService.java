@@ -1,6 +1,5 @@
 package org.devkor.apu.saerok_server.domain.auth.application;
 
-import lombok.extern.slf4j.Slf4j;
 import org.devkor.apu.saerok_server.domain.auth.application.facade.AuthTokenService;
 import org.devkor.apu.saerok_server.domain.auth.core.dto.SocialUserInfo;
 import org.devkor.apu.saerok_server.domain.auth.core.repository.SocialAuthRepository;
@@ -12,7 +11,6 @@ import org.devkor.apu.saerok_server.global.security.crypto.DataCryptoService;
 import org.devkor.apu.saerok_server.global.shared.util.dto.ClientInfo;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
 public class KakaoLoginService extends AbstractSocialLoginService {
 
@@ -55,8 +53,6 @@ public class KakaoLoginService extends AbstractSocialLoginService {
         } else {
             userInfo = kakaoAuthClient.fetch(null, accessToken);
         }
-
-        log.info("[fixlog] sub: {}, email: {}, channel: {}", userInfo.sub(), userInfo.email(), channel);
 
         return authenticateWithUserInfo(userInfo, ci);
     }

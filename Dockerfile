@@ -1,5 +1,8 @@
-# ===== Build stage =====
-FROM gradle:8.8-jdk21 AS builder
+# syntax=docker/dockerfile:1
+
+# Spring Boot JAR는 CPU 아키텍처와 무관하다. 시간이 오래 걸리는 빌드는 CI 러너에서
+# 실행하고, Buildx가 요청한 실행 아키텍처(운영 amd64, 개발 arm64) 이미지를 만든다.
+FROM --platform=$BUILDPLATFORM gradle:8.8-jdk21-jammy AS builder
 WORKDIR /app
 
 COPY build.gradle settings.gradle gradlew ./
@@ -11,8 +14,8 @@ COPY . .
 RUN chmod +x gradlew
 RUN ./gradlew --no-daemon clean bootJar
 
-# ===== Runtime stage =====
-FROM eclipse-temurin:21-jre
+# 이 런타임 이미지는 amd64와 arm64를 모두 지원한다.
+FROM eclipse-temurin:21-jre-jammy
 ENV TZ=Asia/Seoul
 WORKDIR /app
 
