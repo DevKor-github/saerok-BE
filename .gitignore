@@ -50,3 +50,4 @@ src/main/resources/config/firebase-admin-key.json
 docs/rds-to-ec2-docker-plan.md
 
 .claude
+.agents
