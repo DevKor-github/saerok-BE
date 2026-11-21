@@ -22,6 +22,8 @@ import static org.devkor.apu.saerok_server.global.shared.util.TransactionUtils.r
 @RequiredArgsConstructor
 public class UserProfileUpdateService {
 
+    private static final int MAX_BIO_LENGTH = 100;
+
     private final NicknamePolicy nicknamePolicy;
     private final UserRepository userRepository;
     private final UserProfileImageRepository userProfileImageRepository;
@@ -42,6 +44,14 @@ public class UserProfileUpdateService {
         }
 
         user.setNickname(nickname);
+    }
+
+    public void changeBio(User user, String bio) {
+        if (bio.codePointCount(0, bio.length()) > MAX_BIO_LENGTH) {
+            throw new IllegalArgumentException("자기소개는 100자 이하로 입력해 주세요.");
+        }
+
+        user.setBio(bio.isEmpty() ? null : bio);
     }
 
     public void changeProfileImage(User user, String objectKey, String contentType) {

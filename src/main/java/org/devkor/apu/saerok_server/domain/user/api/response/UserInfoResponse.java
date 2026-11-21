@@ -5,6 +5,7 @@ import java.time.LocalDate;
 public record UserInfoResponse(
         String nickname,
         String email,
+        String bio,
         LocalDate joinedDate,
         String profileImageUrl,
         String thumbnailProfileImageUrl

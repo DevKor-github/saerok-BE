@@ -35,6 +35,10 @@ public class User extends SoftDeletableAuditable {
     @Column(name = "gender")
     private GenderType gender;
 
+    @Setter
+    @Column(name = "bio")
+    private String bio;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "signup_status")
     @Setter
