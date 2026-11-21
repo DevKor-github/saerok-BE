@@ -67,6 +67,7 @@ public class User extends SoftDeletableAuditable {
         this.phone = null;
         this.gender = null;
         this.birthDate = null;
+        this.bio = null;
         this.setDefaultProfileImageVariant(null);
         this.setSignupStatus(SignupStatusType.WITHDRAWN);
         this.softDelete();

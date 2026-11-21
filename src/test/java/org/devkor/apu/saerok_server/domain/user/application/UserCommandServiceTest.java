@@ -224,6 +224,7 @@ class UserCommandServiceTest {
         @DisplayName("정상 플로우: revoke → hard delete → soft delete")
         void ok() {
             long userId = 42L;
+            user.setBio("주말마다 탐조해요");
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
             given(kakaoLink.getProvider()).willReturn(SocialProviderType.KAKAO);
@@ -241,6 +242,7 @@ class UserCommandServiceTest {
 
             assertThat(user.getSignupStatus()).isEqualTo(SignupStatusType.WITHDRAWN);
             assertThat(user.getDeletedAt()).isNotNull();
+            assertThat(user.getBio()).isNull();
         }
 
         @Test
