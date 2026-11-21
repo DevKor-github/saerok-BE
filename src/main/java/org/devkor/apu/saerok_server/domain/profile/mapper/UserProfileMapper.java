@@ -18,6 +18,7 @@ public interface UserProfileMapper {
 
     /* 메인 매핑 */
     @Mapping(target = "nickname",        source = "user.nickname")
+    @Mapping(target = "bio", source = "user.bio")
     @Mapping(target = "joinedDate",
             expression = "java(OffsetDateTimeLocalizer.toSeoulLocalDate(user.getJoinedAt()))")
     @Mapping(target = "profileImageUrl",
