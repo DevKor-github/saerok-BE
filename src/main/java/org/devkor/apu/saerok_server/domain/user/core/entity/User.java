@@ -35,6 +35,10 @@ public class User extends SoftDeletableAuditable {
     @Column(name = "gender")
     private GenderType gender;
 
+    @Setter
+    @Column(name = "bio")
+    private String bio;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "signup_status")
     @Setter
@@ -63,6 +67,7 @@ public class User extends SoftDeletableAuditable {
         this.phone = null;
         this.gender = null;
         this.birthDate = null;
+        this.bio = null;
         this.setDefaultProfileImageVariant(null);
         this.setSignupStatus(SignupStatusType.WITHDRAWN);
         this.softDelete();

@@ -93,7 +93,7 @@ class UserCommandServiceTest {
             given(userProfileImageUrlService.getProfileImageUrlFor(user)).willReturn(null);
             given(userProfileImageUrlService.getProfileThumbnailImageUrlFor(user)).willReturn(null);
 
-            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "newNick", null, null);
+            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "newNick", null, null, null);
 
             UpdateUserProfileResponse res = sut.updateUserProfile(cmd);
 
@@ -116,7 +116,7 @@ class UserCommandServiceTest {
             doThrow(new IllegalArgumentException("정책 위반"))
                     .when(userProfileUpdateService).changeNickname(user, "bad");
 
-            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "bad", null, null);
+            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "bad", null, null, null);
 
             assertThatThrownBy(() -> sut.updateUserProfile(cmd))
                     .isInstanceOf(BadRequestException.class)
@@ -128,7 +128,7 @@ class UserCommandServiceTest {
         void userNotFound() {
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
-            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(999L, "nick", null, null);
+            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(999L, "nick", null, null, null);
 
             assertThatThrownBy(() -> sut.updateUserProfile(cmd))
                     .isInstanceOf(NotFoundException.class);
@@ -224,6 +224,7 @@ class UserCommandServiceTest {
         @DisplayName("정상 플로우: revoke → hard delete → soft delete")
         void ok() {
             long userId = 42L;
+            user.setBio("주말마다 탐조해요");
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
             given(kakaoLink.getProvider()).willReturn(SocialProviderType.KAKAO);
@@ -241,6 +242,7 @@ class UserCommandServiceTest {
 
             assertThat(user.getSignupStatus()).isEqualTo(SignupStatusType.WITHDRAWN);
             assertThat(user.getDeletedAt()).isNotNull();
+            assertThat(user.getBio()).isNull();
         }
 
         @Test

@@ -5,6 +5,7 @@ import lombok.Data;
 public record UpdateUserProfileResponse(
         String nickname,
         String email,
+        String bio,
         String profileImageUrl,
         String thumbnailProfileImageUrl
 ) {
