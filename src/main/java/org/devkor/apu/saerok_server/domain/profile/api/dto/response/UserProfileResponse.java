@@ -14,6 +14,9 @@ public record UserProfileResponse(
         @Schema(description = "자기소개", example = "주말마다 카메라와 도감을 들고 전국의 탐조지를 찾아다니는 평범한 직장인입니다.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         String bio,
 
+        @Schema(description = "표시 순서대로 정렬된 외부 프로필 링크 목록", requiredMode = Schema.RequiredMode.REQUIRED)
+        List<String> profileLinks,
+
         @Schema(description = "가입일", example = "2024-01-15", requiredMode = Schema.RequiredMode.REQUIRED)
         LocalDate joinedDate,
 

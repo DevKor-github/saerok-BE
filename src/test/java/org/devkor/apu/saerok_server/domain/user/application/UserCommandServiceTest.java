@@ -83,6 +83,7 @@ class UserCommandServiceTest {
         @Test
         @DisplayName("닉네임만 변경하면 닉네임 변경 도메인 서비스 호출 및 응답 반영")
         void nicknameOnly() {
+            user.setProfileLinks(List.of("http://example.com"));
             given(userRepository.findById(42L)).willReturn(Optional.of(user));
             doAnswer(invocation -> {
                 User u = invocation.getArgument(0);
@@ -93,12 +94,13 @@ class UserCommandServiceTest {
             given(userProfileImageUrlService.getProfileImageUrlFor(user)).willReturn(null);
             given(userProfileImageUrlService.getProfileThumbnailImageUrlFor(user)).willReturn(null);
 
-            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "newNick", null, null, null);
+            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "newNick", null, null, null, null);
 
             UpdateUserProfileResponse res = sut.updateUserProfile(cmd);
 
             assertThat(res.nickname()).isEqualTo("newNick");
             assertThat(res.email()).isEqualTo("old@example.com");
+            assertThat(res.profileLinks()).containsExactly("http://example.com");
             assertThat(res.profileImageUrl()).isNull();
             assertThat(res.thumbnailProfileImageUrl()).isNull();
 
@@ -116,7 +118,7 @@ class UserCommandServiceTest {
             doThrow(new IllegalArgumentException("정책 위반"))
                     .when(userProfileUpdateService).changeNickname(user, "bad");
 
-            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "bad", null, null, null);
+            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(42L, "bad", null, null, null, null);
 
             assertThatThrownBy(() -> sut.updateUserProfile(cmd))
                     .isInstanceOf(BadRequestException.class)
@@ -128,10 +130,32 @@ class UserCommandServiceTest {
         void userNotFound() {
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
-            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(999L, "nick", null, null, null);
+            UpdateUserProfileCommand cmd = new UpdateUserProfileCommand(999L, "nick", null, null, null, null);
 
             assertThatThrownBy(() -> sut.updateUserProfile(cmd))
                     .isInstanceOf(NotFoundException.class);
+        }
+
+        @Test
+        void emptyProfileLinksArePassedToUpdateService() {
+            given(userRepository.findById(42L)).willReturn(Optional.of(user));
+            var command = new UpdateUserProfileCommand(42L, null, null, List.of(), null, null);
+
+            assertThat(sut.updateUserProfile(command).profileLinks()).isEmpty();
+            verify(userProfileUpdateService).changeProfileLinks(user, List.of());
+        }
+
+        @Test
+        void invalidProfileLinksAreReportedAsBadRequest() {
+            var links = List.of("invalid");
+            given(userRepository.findById(42L)).willReturn(Optional.of(user));
+            doThrow(new IllegalArgumentException("잘못된 링크"))
+                    .when(userProfileUpdateService).changeProfileLinks(user, links);
+            var command = new UpdateUserProfileCommand(42L, null, null, links, null, null);
+
+            assertThatThrownBy(() -> sut.updateUserProfile(command))
+                    .isInstanceOf(BadRequestException.class)
+                    .hasMessageContaining("잘못된 링크");
         }
     }
 
@@ -225,6 +249,7 @@ class UserCommandServiceTest {
         void ok() {
             long userId = 42L;
             user.setBio("주말마다 탐조해요");
+            user.setProfileLinks(List.of("http://example.com"));
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
             given(kakaoLink.getProvider()).willReturn(SocialProviderType.KAKAO);
@@ -243,6 +268,7 @@ class UserCommandServiceTest {
             assertThat(user.getSignupStatus()).isEqualTo(SignupStatusType.WITHDRAWN);
             assertThat(user.getDeletedAt()).isNotNull();
             assertThat(user.getBio()).isNull();
+            assertThat(user.getProfileLinks()).isEmpty();
         }
 
         @Test
