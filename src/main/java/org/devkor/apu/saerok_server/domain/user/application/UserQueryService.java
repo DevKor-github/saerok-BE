@@ -30,6 +30,7 @@ public class UserQueryService {
                 user.getNickname(),
                 user.getEmail(),
                 user.getBio(),
+                user.getProfileLinks(),
                 OffsetDateTimeLocalizer.toSeoulLocalDate(user.getJoinedAt()),
                 userProfileImageUrlService.getProfileImageUrlFor(user),
                 userProfileImageUrlService.getProfileThumbnailImageUrlFor(user)

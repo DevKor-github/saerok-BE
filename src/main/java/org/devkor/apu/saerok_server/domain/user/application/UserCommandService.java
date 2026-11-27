@@ -46,6 +46,7 @@ public class UserCommandService {
         try {
             if (command.nickname() != null) userProfileUpdateService.changeNickname(user, command.nickname());
             if (command.bio() != null) userProfileUpdateService.changeBio(user, command.bio());
+            if (command.profileLinks() != null) userProfileUpdateService.changeProfileLinks(user, command.profileLinks());
 
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("사용자 정보 수정이 거부되었습니다: " + e.getMessage());
@@ -61,6 +62,7 @@ public class UserCommandService {
                 user.getNickname(),
                 user.getEmail(),
                 user.getBio(),
+                user.getProfileLinks(),
                 userProfileImageUrlService.getProfileImageUrlFor(user),
                 userProfileImageUrlService.getProfileThumbnailImageUrlFor(user)
         );

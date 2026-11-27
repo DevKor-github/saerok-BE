@@ -72,6 +72,10 @@ public class UserController {
 
             수정 가능한 항목:
               - nickname: 닉네임 (정책 미준수 또는 중복 시 400 Bad Request)
+              - profileLinks: 외부 프로필 링크 목록 (최대 3개, 제출 순서대로 교체, 최대 100자/URL)
+                생략하거나 null이면 유지하고, 빈 배열이면 전체 삭제합니다.
+                주소에는 앞뒤에 문자가 있는 점(.)이 하나 이상 있어야 합니다.
+                스킴이 없는 주소에는 http://를 붙이며, 100자 제한은 저장할 주소에 적용합니다.
               - profileImageObjectKey: 프로필 사진 Object Key (Presigned URL 발급 시 받은 것)
               - profileImageContentType: 프로필 사진 Content-Type
             

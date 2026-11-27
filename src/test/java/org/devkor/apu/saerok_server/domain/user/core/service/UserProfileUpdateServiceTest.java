@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -116,6 +117,67 @@ class UserProfileUpdateServiceTest {
         assertTrue(ex.getMessage().contains("이미 사용 중인 닉네임"));
         verify(nicknamePolicy).isNicknameValid(dupNick);
         verify(userRepository).findByNickname(dupNick);
+    }
+
+    @Test
+    void changeProfileLinks_preservesOrderAndDuplicates() {
+        User user = new User();
+
+        userProfileUpdateService.changeProfileLinks(user,
+                List.of("https://example.com", "naver.com", "http://naver.com"));
+
+        assertEquals(List.of("https://example.com", "http://naver.com", "http://naver.com"), user.getProfileLinks());
+    }
+
+    @Test
+    void changeProfileLinks_addsDefaultSchemeToHostWithPort() {
+        User user = new User();
+
+        userProfileUpdateService.changeProfileLinks(user, List.of("example.com:8080/birds"));
+
+        assertEquals(List.of("http://example.com:8080/birds"), user.getProfileLinks());
+    }
+
+    @Test
+    void changeProfileLinks_emptyListClearsExistingLinks() {
+        User user = new User();
+        user.setProfileLinks(List.of("http://example.com"));
+
+        userProfileUpdateService.changeProfileLinks(user, List.of());
+
+        assertTrue(user.getProfileLinks().isEmpty());
+    }
+
+    @Test
+    void changeProfileLinks_validatesStoredLengthIncludingDefaultScheme() {
+        User user = new User();
+        String linkWithoutScheme = "a." + "b".repeat(91);
+        String normalizedLink = "http://" + linkWithoutScheme;
+
+        userProfileUpdateService.changeProfileLinks(user, List.of(linkWithoutScheme));
+        assertEquals(List.of(normalizedLink), user.getProfileLinks());
+        userProfileUpdateService.changeProfileLinks(user, user.getProfileLinks());
+        assertThrows(IllegalArgumentException.class,
+                () -> userProfileUpdateService.changeProfileLinks(user, List.of(linkWithoutScheme + "b")));
+    }
+
+    @Test
+    void changeProfileLinks_invalidListKeepsExistingLinks() {
+        User user = new User();
+        var existingLinks = List.of("https://example.com");
+        user.setProfileLinks(existingLinks);
+        List<List<String>> invalidLists = List.of(
+                List.of("a.com", "b.com", "c.com", "d.com"),
+                Arrays.asList("valid.com", null),
+                List.of("valid.com", ".invalid"),
+                List.of("valid.com", "invalid."),
+                List.of("valid.com", "invalid"));
+
+        for (var links : invalidLists) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> userProfileUpdateService.changeProfileLinks(user, links));
+            assertEquals(existingLinks, user.getProfileLinks());
+        }
     }
 
     @Test

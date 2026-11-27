@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.devkor.apu.saerok_server.global.shared.entity.SoftDeletableAuditable;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -39,6 +42,11 @@ public class User extends SoftDeletableAuditable {
     @Column(name = "bio")
     private String bio;
 
+    @Setter
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "profile_links", nullable = false, columnDefinition = "text[]")
+    private List<String> profileLinks = List.of();
+
     @Enumerated(EnumType.STRING)
     @Column(name = "signup_status")
     @Setter
@@ -68,6 +76,7 @@ public class User extends SoftDeletableAuditable {
         this.gender = null;
         this.birthDate = null;
         this.bio = null;
+        this.profileLinks = List.of();
         this.setDefaultProfileImageVariant(null);
         this.setSignupStatus(SignupStatusType.WITHDRAWN);
         this.softDelete();
